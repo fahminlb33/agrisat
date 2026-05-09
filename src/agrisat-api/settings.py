@@ -1,0 +1,13 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
+    dsn: str
+
+    api_username: str
+    api_password: str
+
+    gemini_model: str
+    gemini_api_key: str
