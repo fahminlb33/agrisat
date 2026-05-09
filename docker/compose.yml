@@ -1,55 +1,21 @@
 volumes:
-  postgis:
-  geoserver:
+  llamacpp:
 
 services:
-  # llamacpp-gemma:
-  #   image: ghcr.io/ggml-org/llama.cpp:server-cuda
-  #   command: -hf ggml-org/gemma-4-E2B-it-GGUF
-  #   ports:
-  #     - "8001:8080"
-  #   # environment:
-  #   #   - LLAMA_ARG_N_GPU_LAYERS=999
-  #   volumes:
-  #     - /mnt/data/workspace/local-llm-server/llama-cpp:/root/.cache/huggingface
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: all
-  #             capabilities: [gpu]
-
-  geoserver:
-    image: docker.osgeo.org/geoserver:3.0.x
+  llamacpp-gemma:
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    command: -hf ggml-org/gemma-4-E2B-it-GGUF
     ports:
-      - "8002:8080"
-    environment:
-      - INSTALL_EXTENSIONS=true
-      - STABLE_EXTENSIONS=ysld,ogcapi-features
+      - "8001:8080"
+    # environment:
+    #   - LLAMA_ARG_N_GPU_LAYERS=999
     volumes:
-      - geoserver:/opt/geoserver_data
-      - /mnt/data/workspace/bogor-agrisat/data:/mnt/data
-
-  postgis:
-    image: postgis/postgis:17-3.5
-    restart: on-failure
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASS=${POSTGRES_PASS}
-    volumes:
-      - postgis:/var/lib/postgresql
-      - ./pg_hba.conf:/var/lib/postgresql/pg_hba.conf:ro
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U geoserver"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - /mnt/data/workspace/local-llm-server/llama-cpp:/root/.cache/huggingface
     deploy:
       resources:
-        limits:
-          cpus: '4.0'
-          memory: 4G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
