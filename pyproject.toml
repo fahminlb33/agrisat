@@ -1,27 +1,32 @@
 [project]
 name = "agrisat"
 version = "0.1.0"
-description = "Add your description here"
+description = "AgriSAT is a geospatial intelligence platform for precision agriculture"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    # AI
+    "haystack-ai>=2.28.0",
+    "google-genai-haystack>=4.2.0",
+    # API
+    "pydantic-settings>=2.14.0",
+    "fastapi[standard-no-fastapi-cloud-cli]>=0.136.1",
     # Data Sources
     "cql2>=0.5.5",
     "boto3>=1.42.92",
     "cdsapi>=0.7.7",
     "pystac-client>=0.9.0",
     "ecmwf-opendata>=0.3.26",
-    # Data Manipulation
+    # Data Operations
     "numpy>=2.4.4",
     "pandas>=2.3.3",
     "geopandas>=1.1.3",
-    "pyarrow>=23.0.1",
     "netcdf4>=1.7.4",
+    "pyarrow>=23.0.1",
+    "openpyxl>=3.1.5",
     "rioxarray>=0.21.0",
     # Plotting
     "hvplot>=0.12.2",
-    # LLM
-    "openai>=2.32.0",
     # Utilities
     "rich>=15.0.0",
     "httpx>=0.28.1",
