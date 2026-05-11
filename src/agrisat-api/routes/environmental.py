@@ -6,15 +6,12 @@ from pydantic import BaseModel
 from fastapi import APIRouter, Depends, Query
 
 from ..dependencies import get_db
-from ..repository.layers import (
-    list_zones,
-    list_wms_layers,
-    list_wms_time_range,
-    get_environmental_time_series,
-    get_weather_time_series,
+from ..repository.environmental import (
+    list_indices,
+    get_time_series,
 )
 
-router = APIRouter(prefix="/environmental", tags=["Layers"])
+router = APIRouter(prefix="/environmental", tags=["Environmental"])
 
 # ------------------------------------------------------
 # Schemas
@@ -23,8 +20,7 @@ router = APIRouter(prefix="/environmental", tags=["Layers"])
 
 class TimeSeriesQuery(BaseModel):
     zone_id: int
-    start: datetime
-    end: datetime
+    ts: datetime
 
 
 # ------------------------------------------------------
@@ -33,34 +29,13 @@ class TimeSeriesQuery(BaseModel):
 
 
 @router.get("/indices")
-async def api_list_statitics_indices(db: Annotated[Connection, Depends(get_db)]):
-    return list_wms_time_range(db)
+async def api_list_indices(db: Annotated[Connection, Depends(get_db)]):
+    return list_indices(db)
 
 
-@router.get("/statistics")
-async def api_get_statistics(
+@router.get("/")
+async def api_time_series(
     db: Annotated[Connection, Depends(get_db)],
     query: Annotated[TimeSeriesQuery, Query()],
 ):
-    return get_weather_time_series(db, query.start, query.end, query.zone_id)
-
-
-@router.get("/statistics")
-async def api_get_statistics(
-    db: Annotated[Connection, Depends(get_db)],
-    query: Annotated[TimeSeriesQuery, Query()],
-):
-    return get_weather_time_series(db, query.start, query.end, query.zone_id)
-
-
-@router.get("/weather/indices")
-async def api_list_weather_indices(db: Annotated[Connection, Depends(get_db)]):
-    return list_wms_time_range(db)
-
-
-@router.get("/weather")
-async def api_get_weather(
-    db: Annotated[Connection, Depends(get_db)],
-    query: Annotated[TimeSeriesQuery, Query()],
-):
-    return get_weather_time_series(db, query.start, query.end, query.zone_id)
+    return get_time_series(db, query.zone_id, query.ts)

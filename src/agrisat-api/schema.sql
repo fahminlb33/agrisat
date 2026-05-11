@@ -6,21 +6,21 @@
 -- Master
 -- ------------------------------------------------------
 
-CREATE TABLE zone_polygons (
+CREATE TABLE zone_level (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    level           TEXT NOT NULL,
+    level           TEXT NOT NULL, -- extent, city, subdistrict, rice_paddy 
     geometry_json   TEXT NOT NULL
 );
 
 CREATE TABLE zones (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    level_id        INTEGER NOT NULL, -- extent, city, subdistrict, rice_paddy 
+    level_id        INTEGER NOT NULL,
     hash            TEXT NOT NULL UNIQUE,
     name            TEXT NOT NULL,
     city            TEXT NOT NULL,
     area            REAL NOT NULL,
 
-    FOREIGN KEY(level_id) REFERENCES zone_polygons(id)
+    FOREIGN KEY(level_id) REFERENCES zone_level(id)
 );
 
 CREATE TABLE variables (

@@ -8,8 +8,13 @@ from pydantic import BaseModel
 # ------------------------------------------------------
 
 
+class ZoneLevel(BaseModel):
+    id: int
+    level: str
+
+
 class Zone(BaseModel):
-    zone_id: int
+    id: int
     hash: str
     level: str
     name: str
@@ -17,8 +22,8 @@ class Zone(BaseModel):
     area: float
 
 
-class LayerVariable(BaseModel):
-    variable_id: int
+class Variable(BaseModel):
+    id: int
     type: str
     category: str
     key: str
@@ -38,40 +43,41 @@ class LayerRaster(BaseModel):
 # ------------------------------------------------------
 
 
+def list_levels(db: Connection) -> list[ZoneLevel]:
+    cursor = db.cursor()
+    cursor.row_factory = Row
+    statement = cursor.execute("SELECT id, level FROM zone_level")
+    rows = statement.fetchall()
+
+    return [ZoneLevel(**row) for row in rows]
+
+
 def list_zones(db: Connection) -> list[Zone]:
     cursor = db.cursor()
     cursor.row_factory = Row
-    statement = cursor.execute("SELECT *, id AS zone_id FROM zones")
+    statement = cursor.execute("SELECT * FROM zones")
     rows = statement.fetchall()
 
     return [Zone(**row) for row in rows]
 
 
-def list_variables(db: Connection) -> list[LayerVariable]:
+def list_variables(db: Connection) -> list[Variable]:
     cursor = db.cursor()
     cursor.row_factory = Row
-    statement = cursor.execute("SELECT *, id AS variable_id FROM variables")
+    statement = cursor.execute("SELECT * FROM variables")
     rows = statement.fetchall()
 
-    return [LayerVariable(**row) for row in rows]
+    return [Variable(**row) for row in rows]
 
 
-def list_indices(db: Connection) -> list[str]:
+def get_zone_polygon(db: Connection, level_id: int) -> str | None:
     cursor = db.cursor()
-    statement = cursor.execute(
-        "SELECT DISTINCT date(timestamp) AS ts_date FROM zonal_raster"
-    )
-    rows = statement.fetchall()
+    statement = cursor.execute("SELECT geometry_json FROM zone_polygons")
+    row = statement.fetchone()
+    if row is None:
+        return None
 
-    return [x[0] for x in rows]
-
-
-def get_zone_polygon(db: Connection, level: str) -> list[str]:
-    cursor = db.cursor()
-    cursor.row_factory = Row
-    statement = cursor.execute("SELECT *, id AS zone_id FROM zones")
-    rows = statement.fetchall()
-    pass
+    return row[0]
 
 
 def get_raster(db: Connection, variable_id: int, ts: datetime) -> LayerRaster | None:
