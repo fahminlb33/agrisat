@@ -14,3 +14,7 @@ wheels/
 
 # Database
 *.db
+*.bak
+
+# Draw.io files
+*.drawio.*
