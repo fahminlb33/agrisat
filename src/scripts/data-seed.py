@@ -1,6 +1,6 @@
 import sqlite3
-import pathlib
 import argparse
+from pathlib import Path
 
 import pandas as pd
 import geopandas as gpd
@@ -8,58 +8,84 @@ import geopandas as gpd
 from rich import print
 
 # ------------------------------------------------------
-# Database Migration and Seeding
+# Database Migration
 # ------------------------------------------------------
 
 
-def migrate_schema(db: sqlite3.Connection, schema_path: str):
+def migrate_schema(db: sqlite3.Connection, schema_path: Path):
     cursor = db.cursor()
 
     # check if the DB has already migrated
     cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
-    table_names = cursor.fetchall()
+    table_names = [x[0] for x in cursor.fetchall()]
 
-    if any(table_names) and "zonal_statistics" in [x[0] for x in table_names]:
+    if any(table_names) and "zonal_statistics" in table_names:
         print("Database already migrated")
         return
 
     # apply migrations
-    with open(schema_path, "r") as f:
+    with schema_path.open("r") as f:
         cursor.executescript(f.read())
 
+# ------------------------------------------------------
+# Database Seeding
+# ------------------------------------------------------
 
-def seed_zones(db: sqlite3.Connection, vector_path: str):
+def seed_variables(db: sqlite3.Connection, vars_path: str):
     cursor = db.cursor()
 
-    gdf = gpd.read_file(vector_path).drop(columns=["geometry"])
-    gdf = gdf[["hash", "level", "name", "city", "area"]]
-    rows = gdf.to_records(index=None).tolist()
+    # load variable details
+    df = pd.read_excel(vars_path)
+    df = df[["type", "category", "key", "name", "description"]]
+    rows = df.to_records(index=None).tolist()
 
+    # save to DB
     cursor.executemany(
         """
-        INSERT INTO zones (hash, level, name, city, area)
+        INSERT INTO variables (type, category, key, name, description)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT (key) DO NOTHING
+        """,
+        rows,
+    )
+    db.commit()
+
+
+def seed_zones(db: sqlite3.Connection, vector_path: Path):
+    cursor = db.cursor()
+
+    # insert zone level
+    level = vector_path.stem[6:]
+    geom_json = vector_path.open("r").read()
+
+    statement = cursor.execute(
+        """
+        INSERT INTO zone_level (level, geometry_json)
+        VALUES (?, ?)
+        ON CONFLICT (level) DO NOTHING
+        RETURNING id
+        """,
+        (level, geom_json),
+    )
+    level_id = statement.fetchone()[0]
+
+    # insert zone polygons
+    gdf = gpd.read_file(vector_path)
+    gdf = gdf.drop(columns=["geometry"])
+    gdf = gdf.assign(level_id=level_id)
+    gdf = gdf[["level_id", "hash", "name", "city", "area"]]
+    rows = gdf.to_records(index=None).tolist()
+
+    # save to DB
+    cursor.executemany(
+        """
+        INSERT INTO zones (level_id, hash, name, city, area)
         VALUES (?, ?, ?, ?, ?)
         ON CONFLICT (hash) DO NOTHING
         """,
         rows,
     )
-
-
-def seed_variables(db: sqlite3.Connection, vars_path: str):
-    cursor = db.cursor()
-
-    df = pd.read_excel(vars_path)
-    df = df[["type", "category", "key", "name", "description", "wmts_url"]]
-    rows = df.to_records(index=None).tolist()
-
-    cursor.executemany(
-        """
-        INSERT INTO variables (type, category, key, name, description, wmts_url)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ON CONFLICT (key) DO NOTHING
-        """,
-        rows,
-    )
+    db.commit()
 
 
 # ------------------------------------------------------
@@ -71,13 +97,13 @@ def main(args):
     con = sqlite3.connect(args["db"])
 
     print("Running database schema migration...")
-    migrate_schema(con, args["schema"])
+    migrate_schema(con, Path(args["schema"]))
 
     print("Running variable seeding...")
-    seed_variables(con, args["variables"])
+    seed_variables(con, Path(args["variables"]))
 
     print("Running zones seeding...")
-    for path in pathlib.Path(args["zones"]).glob("*.geojson"):
+    for path in Path(args["zones"]).glob("*.geojson"):
         print(f"Seeding: {path.name}")
         seed_zones(con, path)
 
