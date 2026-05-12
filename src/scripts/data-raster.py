@@ -1,26 +1,39 @@
 import re
 import sqlite3
-import pathlib
 import argparse
 import subprocess
+import multiprocessing
+from typing import TypedDict
+from pathlib import Path
+from functools import partial
 
 from tqdm import tqdm
 from rich import print
 
+
+class RenderResult(TypedDict):
+    success: bool
+    timestamp: str
+    file_name: str
+    raster_data: bytes
+
+
 # ------------------------------------------------------
-# Transactional
+# Functions
 # ------------------------------------------------------
 
-ZONAL_RASTER_SQL = """
-INSERT INTO zonal_raster (variable_id, timestamp, file_name, raster_data)
-VALUES (?, ?, ?, ?)
-ON CONFLICT (variable_id, timestamp) DO NOTHING
-"""
+
+def parse_filename(p: Path) -> str:
+    return str(p.relative_to(p.parent.parent))
 
 
 def parse_timestamp(s: str):
     ts = re.search(r"([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})", s)
     return f"{ts.group(1)}-{ts.group(2)}-{ts.group(3)} {ts.group(4)}:{ts.group(5)}:{ts.group(6)}"
+
+
+def get_color_ramp(var_name: str):
+    return "/mnt/data/workspace/bogor-agrisat/data/color-palette/greens.txt"
 
 
 def extract_raster_data(path: str, color_ramp_path: str) -> bytes:
@@ -43,21 +56,34 @@ def extract_raster_data(path: str, color_ramp_path: str) -> bytes:
     return result.stdout
 
 
-def get_color_ramp(var_name: str):
-    return "/mnt/data/workspace/bogor-agrisat/data/production-data/environmental/ndvi/greens.txt"
+# ------------------------------------------------------
+# Data Loading
+# ------------------------------------------------------
 
 
-def get_file_name(p: pathlib.Path) -> str:
-    return str(p.relative_to(p.parent.parent))
+def single_process(raster_path: Path, color_ramp_path: str) -> RenderResult:
+    file_name = parse_filename(raster_path)
+    timestamp = parse_timestamp(raster_path.name)
+    raster_data = extract_raster_data(raster_path, color_ramp_path)
+
+    if raster_data is None:
+        return {
+            "success": False,
+            "timestamp": timestamp,
+            "file_name": file_name,
+            "raster_data": None,
+        }
+
+    return {
+        "success": True,
+        "timestamp": timestamp,
+        "file_name": file_name,
+        "raster_data": raster_data,
+    }
 
 
-def load_data(db: sqlite3.Connection, var_path: pathlib.Path):
+def load_data(db: sqlite3.Connection, var_path: Path):
     cursor = db.cursor()
-
-    # discover files
-    files = list(var_path.glob("*.tif"))
-    var_name = var_path.name
-    color_ramp = get_color_ramp(var_name)
 
     # load existing data to not process the same file again
     cursor.execute("SELECT file_name FROM zonal_raster")
@@ -69,23 +95,47 @@ def load_data(db: sqlite3.Connection, var_path: pathlib.Path):
     resultset = cursor.fetchall()
     variable_id_map = {k[1]: k[0] for k in resultset}
 
+    # run params
+    var_name = var_path.name
+    variable_id = variable_id_map[var_name]
+    color_ramp = get_color_ramp(var_name)
+
+    # discover files
+    files = [x for x in var_path.glob("*.tif") if parse_filename(x) not in loaded_files]
+
+    # process in parallel
     data = []
-    for raster_path in tqdm(files):
-        file_name = str(raster_path.relative_to(raster_path.parent.parent))
-        if file_name in loaded_files:
-            continue
+    with multiprocessing.Pool(processes=args["jobs"]) as pool:
+        # spawn tasks
+        task_fun = partial(single_process, color_ramp_path=color_ramp)
+        tasks = pool.imap_unordered(task_fun, files)
 
-        variable_id = variable_id_map[var_name]
-        timestamp = parse_timestamp(raster_path.name)
-        raster_data = extract_raster_data(raster_path, color_ramp)
+        # collect results
+        for result in (pbar := tqdm(tasks, total=len(files))):
+            pbar.set_description_str(result["file_name"])
 
-        if raster_data is None:
-            print(f"Failed to process: {raster_path.name}")
-            continue
+            if not result["success"]:
+                print(f"Failed to process: {result['file_name']}")
+                continue
 
-        data.append((variable_id, timestamp, file_name, raster_data))
+            data.append(
+                (
+                    variable_id,
+                    result["timestamp"],
+                    result["file_name"],
+                    result["raster_data"],
+                )
+            )
 
-    cursor.executemany(ZONAL_RASTER_SQL, data)
+    # save to DB
+    cursor.executemany(
+        """
+        INSERT INTO zonal_raster (variable_id, timestamp, file_name, raster_data)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT (variable_id, timestamp) DO NOTHING
+        """,
+        data,
+    )
     db.commit()
 
 
@@ -95,17 +145,15 @@ def load_data(db: sqlite3.Connection, var_path: pathlib.Path):
 
 
 def main(args):
-    root_dir = pathlib.Path(args["data_dir"])
+    root_dir = Path(args["data_dir"])
     con = sqlite3.connect(args["db"])
 
     print("Discovering variables...")
     var_paths = list(root_dir.glob("*"))
 
-    for path in tqdm(var_paths):
-        if path.name != "ndvi":
-            continue
-
-        print(f"Loading: {path.name}")
+    print("Processing...")
+    for path in (pbar := tqdm(var_paths)):
+        pbar.set_description_str(path.name)
         load_data(con, path)
 
     con.close()
@@ -113,13 +161,14 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--jobs", type=int, default=4)
     parser.add_argument(
         "--db",
         type=str,
         default="/home/fahmi/workspace/projects/bogor-agrisat/src/agrisat-api/data.db",
     )
     parser.add_argument(
-        "--data_dir",
+        "--data-dir",
         type=str,
         default="/mnt/data/workspace/bogor-agrisat/data/production-data/environmental",
     )
