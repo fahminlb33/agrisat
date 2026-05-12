@@ -1,30 +1,45 @@
-import json
-import shutil
-import zipfile
 import argparse
 import subprocess
+import multiprocessing
 from io import StringIO
-from abc import ABC, abstractmethod
-from pathlib import Path
-from datetime import datetime
 from typing import TypedDict
+from pathlib import Path
+from functools import partial
 
 from tqdm import tqdm
 from rich import print
-from dotenv import dotenv_values
 
-import xarray as xr
 import pandas as pd
 import geopandas as gpd
+
+# ------------------------------------------------
+# Data Processing
+# ------------------------------------------------
 
 
 class FileEntry(TypedDict):
     timestamp: str
     variable: str
-    path: str
+    file_path: str
+    file_name: str
 
 
-def derive_statistics(reproject: bool, mask: Path, raster: Path):
+class StatisticsResult(TypedDict):
+    success: bool
+    csv_data: str
+    timestamp: str
+    variable: str
+    file_path: str
+    file_name: str
+
+
+def parse_filename(p: Path) -> str:
+    return str(p.relative_to(p.parent.parent))
+
+
+def derive_statistics(
+    entry: FileEntry, mask: Path, reproject: bool
+) -> StatisticsResult:
     cmd_reproject = []
     if reproject:
         cmd_reproject = [
@@ -38,7 +53,7 @@ def derive_statistics(reproject: bool, mask: Path, raster: Path):
         # start pipeline
         "gdal", "pipeline", 
         # read input
-        "read", raster, "!",
+        "read", entry["file_path"], "!",
         # reproject CRS
         *cmd_reproject,
         # perform zonal statistics
@@ -60,28 +75,9 @@ def derive_statistics(reproject: bool, mask: Path, raster: Path):
         print("STDOUT", result.stdout)
         print("STDERR", result.stderr)
         print("--------------------------------------------------")
-        return None
+        return {"success": False, "csv_data": None, **entry}
 
-    return pd.read_csv(StringIO(result.stdout))
-
-
-def discover_files(path: Path) -> list[FileEntry]:
-    print("Discovering files...")
-
-    files = []
-    for file_path in path.glob("**/*.tif"):
-        timestamp = file_path.stem
-        variable_name = file_path.parent.name
-
-        files.append(
-            {
-                "timestamp": timestamp,
-                "variable": variable_name,
-                "path": file_path,
-            }
-        )
-
-    return files
+    return {"success": True, "csv_data": result.stdout, **entry}
 
 
 # ------------------------------------------------
@@ -95,24 +91,42 @@ def discover_files(path: Path) -> list[FileEntry]:
 
 
 def main(args):
-    data_path = Path(args["data_path"])
-
-    data = []
-    files = discover_files(data_path)
+    # load mask vector
     df_mask = gpd.read_file(args["mask_path"])
 
-    # process all variables
-    for file in tqdm(files):
-        df_stats = derive_statistics(args["reproject"], args["mask_path"], file["path"])
-        if df_stats is None:
-            continue
+    # dicover files
+    files = [
+        {
+            "timestamp": file_path.stem,
+            "variable": file_path.parent.name,
+            "file_path": str(file_path),
+            "file_name": parse_filename(file_path),
+        }
+        for file_path in Path(args["data_path"]).glob("**/*.tif")
+    ]
 
-        df_stats = df_stats.assign(
-            timestamp=file["timestamp"], variable=file["variable"]
+    # process in parallel
+    data = []
+    with multiprocessing.Pool(processes=args["jobs"]) as pool:
+        # spawn tasks
+        task_fun = partial(
+            derive_statistics, mask=args["mask_path"], reproject=args["reproject"]
         )
-        df_stats["hash"] = df_mask["hash"]
+        tasks = pool.imap_unordered(task_fun, files)
 
-        data.append(df_stats)
+        # collect results
+        for zonal_data in (pbar := tqdm(tasks, total=len(files))):
+            pbar.set_description_str(zonal_data["file_name"])
+
+            # parse gdal zonal statistics csv
+            df_stats = pd.read_csv(StringIO(zonal_data["csv_data"]))
+            df_stats = df_stats.assign(
+                timestamp=zonal_data["timestamp"],
+                variable=zonal_data["variable"],
+                hash=df_mask["hash"],
+            )
+
+            data.append(df_stats)
 
     # save data
     df = pd.concat(data, ignore_index=True)
@@ -124,6 +138,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--reproject", action="store_true")
+    parser.add_argument("--jobs", type=int, default=4)
     parser.add_argument(
         "--data-path",
         type=str,
@@ -132,7 +147,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--mask-path",
         type=str,
-        default="/mnt/data/workspace/bogor-agrisat/data/production-data/area-of-interest/bogor-sawah.geojson",
+        default="/mnt/data/workspace/bogor-agrisat/data/production-data/area-of-interest/bogor-extent.geojson",
     )
     parser.add_argument(
         "--output-path",
