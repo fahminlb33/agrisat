@@ -6,16 +6,30 @@
 -- Master
 -- ------------------------------------------------------
 
+
+CREATE TABLE variables (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    type            TEXT NOT NULL, -- static, dynamic
+    category        TEXT NOT NULL, -- topography, true-color, vegetation, chlorophyll, water_stress
+    key             TEXT NOT NULL,
+    name            TEXT NOT NULL,
+    description     TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX ix_variables_key ON variables (key);
+
 CREATE TABLE zone_level (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    level           TEXT NOT NULL, -- extent, city, subdistrict, rice_paddy 
+    level           TEXT NOT NULL, -- extent, kota, kecamatan, sawah 
     geometry_json   TEXT NOT NULL
 );
+
+CREATE UNIQUE INDEX ix_zone_level_level ON zone_level (level);
 
 CREATE TABLE zones (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
     level_id        INTEGER NOT NULL,
-    hash            TEXT NOT NULL UNIQUE,
+    hash            TEXT NOT NULL,
     name            TEXT NOT NULL,
     city            TEXT NOT NULL,
     area            REAL NOT NULL,
@@ -23,21 +37,13 @@ CREATE TABLE zones (
     FOREIGN KEY(level_id) REFERENCES zone_level(id)
 );
 
-CREATE TABLE variables (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    type            TEXT NOT NULL, -- static, dynamic
-    category        TEXT NOT NULL, -- topography, true_color, vegetation, chlorophyll, water stress
-    key             TEXT NOT NULL UNIQUE,
-    name            TEXT NOT NULL,
-    description     TEXT NOT NULL
-);
+CREATE UNIQUE INDEX ix_zones_hash ON zones (hash);
 
 
 -- ------------------------------------------------------
 -- Transactional
 -- ------------------------------------------------------
 
--- Environmental & Weather
 
 CREATE TABLE zonal_raster (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,23 +89,3 @@ CREATE TABLE zonal_weather (
 );
 
 CREATE UNIQUE INDEX ix_zonal_weather_zone_ts ON zonal_weather (zone_id, timestamp);
-
--- Chatbot
-
-CREATE TABLE chat_sessions (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    name            TEXT NOT NULL,
-    created_at      TEXT NOT NULL
-);
-
-CREATE TABLE chat_history (
-    id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id      INTEGER NOT NULL,
-    role            TEXT NOT NULL,
-    contents        TEXT NOT NULL,
-    created_at      TEXT NOT NULL,
-
-    FOREIGN KEY(session_id) REFERENCES chat_sessions(id)
-);
-
-CREATE INDEX ix_chat_history_session_id ON chat_history (session_id);
