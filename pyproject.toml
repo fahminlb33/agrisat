@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     # AI
-    "haystack-ai>=2.28.0",
+    "google-adk>=1.33.0",
     "google-genai-haystack>=4.2.0",
     # API
     "pydantic-settings>=2.14.0",
