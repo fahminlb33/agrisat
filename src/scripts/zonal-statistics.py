@@ -103,6 +103,7 @@ def main(args):
             "file_name": parse_filename(file_path),
         }
         for file_path in Path(args["data_path"]).glob("**/*.tif")
+        if "true-color" not in str(file_path)
     ]
 
     # process in parallel
