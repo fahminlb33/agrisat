@@ -44,7 +44,9 @@ def seed_variables(db: sqlite3.Connection, vars_path: str):
         """
         INSERT INTO variables (type, category, key, name, description)
         VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT (key) DO NOTHING
+        ON CONFLICT (key) DO UPDATE SET 
+            name = excluded.name,
+            description = excluded.description
         """,
         rows,
     )
@@ -67,7 +69,12 @@ def seed_zones(db: sqlite3.Connection, vector_path: Path):
         """,
         (level, geom_json),
     )
-    level_id = statement.fetchone()[0]
+
+    level_id = statement.fetchone()
+    if level_id is None:
+        return
+    
+    level_id = level_id[0]
 
     # insert zone polygons
     gdf = gpd.read_file(vector_path)
