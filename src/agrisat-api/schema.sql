@@ -84,6 +84,8 @@ CREATE TABLE zonal_weather (
     timestamp       TEXT NOT NULL,
     temperature     REAL NOT NULL,
     precipitation   REAL NOT NULL,
+    cloud_cover     REAL NOT NULL,
+    is_raining      BOOLEAN NOT NULL,
 
     FOREIGN KEY(zone_id) REFERENCES zones(id)
 );

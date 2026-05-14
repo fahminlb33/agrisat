@@ -1,5 +1,6 @@
 from sqlite3 import Connection, Row
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -9,13 +10,13 @@ from pydantic import BaseModel
 
 
 class ZoneLevel(BaseModel):
-    id: int
+    level_id: int
     level: str
 
 
 class Zone(BaseModel):
-    id: int
-    hash: str
+    zone_id: int
+    level_id: int
     level: str
     name: str
     city: str
@@ -23,7 +24,7 @@ class Zone(BaseModel):
 
 
 class Variable(BaseModel):
-    id: int
+    variable_id: int
     type: str
     category: str
     key: str
@@ -46,33 +47,76 @@ class LayerRaster(BaseModel):
 def list_levels(db: Connection) -> list[ZoneLevel]:
     cursor = db.cursor()
     cursor.row_factory = Row
-    statement = cursor.execute("SELECT id, level FROM zone_level")
-    rows = statement.fetchall()
+    statement = cursor.execute(
+        """
+        SELECT id AS level_id, level FROM zone_level
+        """
+    )
 
-    return [ZoneLevel(**row) for row in rows]
+    return [ZoneLevel(**row) for row in statement.fetchall()]
 
 
-def list_zones(db: Connection) -> list[Zone]:
+def list_zones(db: Connection, level_id: Optional[int]) -> list[Zone]:
     cursor = db.cursor()
     cursor.row_factory = Row
-    statement = cursor.execute("SELECT * FROM zones")
-    rows = statement.fetchall()
 
-    return [Zone(**row) for row in rows]
+    sql = """
+    SELECT 
+        z.id AS zone_id,
+        z.level_id, 
+        zl.level, 
+        z.name, 
+        z.city, 
+        z.area
+    FROM 
+        zones z
+    INNER JOIN 
+        zone_level zl ON zl.id = z.level_id
+    """
+
+    if level_id is not None:
+        sql += "\nWHERE z.level_id = ?"
+        statement = cursor.execute(sql, (level_id,))
+    else:
+        statement = cursor.execute(sql)
+
+    return [Zone(**row) for row in statement.fetchall()]
 
 
 def list_variables(db: Connection) -> list[Variable]:
     cursor = db.cursor()
     cursor.row_factory = Row
-    statement = cursor.execute("SELECT * FROM variables")
-    rows = statement.fetchall()
+    statement = cursor.execute(
+        """
+        SELECT 
+            id AS variable_id,
+            type,
+            category,
+            key,
+            name,
+            description
+        FROM
+            variables
+        """
+    )
 
-    return [Variable(**row) for row in rows]
+    return [Variable(**row) for row in statement.fetchall()]
 
 
 def get_zone_polygon(db: Connection, level_id: int) -> str | None:
     cursor = db.cursor()
-    statement = cursor.execute("SELECT geometry_json FROM zone_polygons")
+    statement = cursor.execute(
+        """
+        SELECT 
+            geometry_json
+        FROM 
+            zone_level
+        WHERE 
+            id = ?
+        """,
+        (level_id,),
+    )
+
     row = statement.fetchone()
     if row is None:
         return None
@@ -85,10 +129,11 @@ def get_raster(db: Connection, variable_id: int, ts: datetime) -> LayerRaster | 
     statement = cursor.execute(
         """
         SELECT
-            id,
+            id AS raster_id,
             file_name, 
             raster_data
-        FROM zonal_raster
+        FROM
+            zonal_raster
         WHERE 
             variable_id = ?
             AND date(timestamp) = ?
@@ -100,8 +145,9 @@ def get_raster(db: Connection, variable_id: int, ts: datetime) -> LayerRaster | 
     if row is None:
         return None
 
-    file_name = f"{row[1][:-4]}.webp"
-
     return LayerRaster(
-        raster_id=row[0], file_name=file_name, data_blob=row[2], variable_id=variable_id
+        raster_id=row[0],
+        file_name=f"{row[1][:-4]}.webp",
+        data_blob=row[2],
+        variable_id=variable_id,
     )

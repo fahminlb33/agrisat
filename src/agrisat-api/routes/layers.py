@@ -1,6 +1,7 @@
 from typing import Annotated
 from sqlite3 import Connection
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
 from fastapi import APIRouter, Response, HTTPException, Depends, Query
@@ -21,6 +22,10 @@ router = APIRouter(prefix="/layers", tags=["Layers"])
 # ------------------------------------------------------
 
 
+class GetLayerZones(BaseModel):
+    level_id: Optional[int] = None
+
+
 class GetLayerRequest(BaseModel):
     variable_id: int
     ts: datetime
@@ -37,8 +42,10 @@ async def api_list_levels(db: Annotated[Connection, Depends(get_db)]):
 
 
 @router.get("/zones")
-async def api_list_zones(db: Annotated[Connection, Depends(get_db)]):
-    return list_zones(db)
+async def api_list_zones(
+    db: Annotated[Connection, Depends(get_db)], query: Annotated[GetLayerZones, Query()]
+):
+    return list_zones(db, level_id=query.level_id)
 
 
 @router.get("/variables")
@@ -49,18 +56,16 @@ async def api_list_variables(db: Annotated[Connection, Depends(get_db)]):
 @router.get("/polygons")
 async def api_get_polygons(
     db: Annotated[Connection, Depends(get_db)],
-    query: Annotated[GetLayerRequest, Query()],
+    level_id: int,
 ):
-    geojson = get_zone_polygon(db, query.variable_id, query.ts)
+    geojson = get_zone_polygon(db, level_id=level_id)
     if geojson is None:
         raise HTTPException(status_code=404, detail="Polygon not found")
 
     return Response(
         content=geojson,
         media_type="application/geo+json",
-        headers={
-            "Content-Disposition": f"attachment; filename={query.variable_id}.json"
-        },
+        headers={"Content-Disposition": f"attachment; filename={level_id}.json"},
     )
 
 

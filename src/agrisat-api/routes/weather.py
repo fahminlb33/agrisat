@@ -1,8 +1,9 @@
 from typing import Annotated
 from sqlite3 import Connection
 from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from fastapi import APIRouter, Depends, Query
 
 from ..dependencies import get_db
@@ -19,8 +20,17 @@ router = APIRouter(prefix="/weather", tags=["Weather"])
 
 
 class TimeSeriesQuery(BaseModel):
-    zone_id: int
-    ts: datetime
+    level_id: Optional[int] = None
+    zone_id: Optional[int] = None
+    start_ts: datetime
+    end_ts: datetime
+
+    @model_validator(mode="after")
+    def level_or_zone_provided(self) -> "TimeSeriesQuery":
+        if self.level_id is None and self.zone_id is None:
+            raise ValueError("Either 'level_id' or 'zone_id' must be provided")
+
+        return self
 
 
 # ------------------------------------------------------
@@ -38,4 +48,6 @@ async def api_time_series(
     db: Annotated[Connection, Depends(get_db)],
     query: Annotated[TimeSeriesQuery, Query()],
 ):
-    return get_time_series(db, query.zone_id, query.ts)
+    return get_time_series(
+        db, query.level_id, query.zone_id, query.start_ts, query.end_ts
+    )
