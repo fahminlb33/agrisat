@@ -281,18 +281,14 @@ def main(args: dict[str, str | int]):
         for feature in (
             pbar := tqdm(ALL_FEATURES, leave=False, desc="Deriving features")
         ):
-            target_path = prod_path
             pbar.set_postfix_str(feature)
 
-            if feature == "TRUE_COLOR":
-                target_path = prod_path / "true-color" / f"{current_ts}.tif"
-            else:
-                target_path = (
-                    prod_path
-                    / "environmental"
-                    / feature.lower().replace("_", "-").replace("/", "_")
-                    / f"{current_ts}.tif"
-                )
+            target_path = (
+                prod_path
+                / "environmental"
+                / feature.lower().replace("_", "-").replace("/", "_")
+                / f"{current_ts}.tif"
+            )
 
             if target_path.exists():
                 continue
@@ -310,7 +306,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--mask-path",
         type=str,
-        default="/mnt/data/workspace/bogor-agrisat/data/bogor-vectors/bogor-extent.shp",
+        default="/mnt/data/workspace/bogor-agrisat/data/production-data/area-of-interest/bogor-extent.geojson",
     )
     parser.add_argument(
         "--output-path",

@@ -1,4 +1,6 @@
 import json
+import time
+import random
 import shutil
 import zipfile
 import argparse
@@ -8,7 +10,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from datetime import datetime
 
-from tqdm import tqdm
+from tqdm import tqdm, trange
 from rich import print
 from dotenv import dotenv_values
 
@@ -153,20 +155,20 @@ class ERA5LandContext(BaseContext):
         self.client = cdsapi.Client()
         self.root_path = Path(download_root) / "era5-land"
 
+    def execute(self):
         parts = self.time_range.split("-")
         year = int(parts[0])
         month = int(parts[1])
 
-        self.download_path = self.root_path / f"{year:02d}{month:02d}.zip"
-        self.extract_path = self.root_path / f"{year:02d}{month:02d}"
+        download_path = self.root_path / f"{year:02d}{month:02d}.zip"
+        extract_path = self.root_path / f"{year:02d}{month:02d}"
 
-    def execute(self):
-        if not self.download_path.exists():
-            self.__download()
+        if not download_path.exists():
+            self.__download(year, month, download_path)
 
-        self.__extract_all()
+        self.__extract_all(download_path, extract_path)
 
-    def __download(self, year: int, month: int):
+    def __download(self, year: int, month: int, download_path: str):
         days_in_month = calendar.monthrange(year, month)[1]
         days_list = [f"{x:02d}" for x in range(1, days_in_month + 1)]
         time_list = [f"{x:02d}:00" for x in range(1, 24)]
@@ -178,14 +180,17 @@ class ERA5LandContext(BaseContext):
             self.bbox[2],
         ]
 
-        dataset = "reanalysis-era5-land"
+        dataset = "reanalysis-era5-single-levels"
         request = {
+            "product_type": ["reanalysis"],
             "variable": [
                 "2m_temperature",
                 "total_precipitation",
+                "total_cloud_cover",
+                "precipitation_type",
             ],
-            "year": year,
-            "month": month,
+            "year": [f"{year}"],
+            "month": [f"{month}"],
             "day": days_list,
             "time": time_list,
             "area": bbox_transform,
@@ -193,22 +198,22 @@ class ERA5LandContext(BaseContext):
             "download_format": "zip",
         }
 
-        self.client.retrieve(dataset, request, self.download_path)
+        self.client.retrieve(dataset, request, download_path)
 
-    def __extract_all(self):
+    def __extract_all(self, download_path: str, extract_path: str):
         # extract ZIP
-        with zipfile.ZipFile(self.download_path, "r") as zip_ref:
-            zip_ref.extractall(self.extract_path)
+        with zipfile.ZipFile(download_path, "r") as zip_ref:
+            zip_ref.extractall(extract_path)
 
         # find all datasets
-        extracted_path = Path(self.extract_path)
+        extracted_path = Path(extract_path)
         for file_path in extracted_path.glob("*.nc"):
             # open dataset
             ds = xr.open_dataset(file_path, engine="netcdf4")
 
             # process each variables
             for variable in (pv := tqdm(list(ds.data_vars.keys()), position=0)):
-                if variable not in ["t2m", "tp"]:
+                if variable not in ["t2m", "tp", "tcc", "ptype"]:
                     continue
 
                 pv.set_description_str(variable)
@@ -229,78 +234,82 @@ class ERA5LandContext(BaseContext):
 
 
 class ECMWFContext(BaseContext):
+    # to store the correct bands and timestamps
+    # we follow the variable names from ERA5
+    BAND_NAMES = {
+        "Temperature": "t2m",
+        "subcat 192": "tcc",
+        "subcat 193": "tp",
+        "Precipitation type": "ptype",
+    }
+
     def __init__(self, download_root: str, time_range: str, bbox: list[float]):
         self.ENV = dotenv_values()
 
         self.bbox = bbox  # bbox is unused
         self.time_range = time_range  # time range must be single date
 
-        self.client = ECMWFClient()
+        self.client = ECMWFClient(source="ecmwf")
         self.root_path = Path(download_root) / "ecmwf"
-        self.download_path = self.root_path / f"{time_range}.grib2"
 
     def execute(self):
-        if not self.download_path.exists():
-            self.__download()
+        # Forecast horizon: 144 hours = 6 days, 72 hours = 3 days
+        # 0 to 144 with 3 hours step
+        for time_step in trange(0, 72, 3):
+            # download prediction
+            download_path = self.root_path / f"{self.time_range}-h{time_step}.grib2"
+            if not download_path.exists():
+                self.client.retrieve(
+                    type="fc",
+                    time=0,  # GMT/UTC 00.00
+                    step=time_step,
+                    date=self.time_range,
+                    param=["2t", "tp", "tcc", "ptype"],
+                    target=download_path,
+                )
 
-        self.__preprocess()
+            # extract GRIB2 to GeoTIFF
+            self.__preprocess(download_path)
+            time.sleep(random.random() * 10)
 
-    def __download(self):
-        # 48 forecast steps, 144/3=48
-        # GMT 00.00 to 6 days ahead (144 hours)
-        steps = list(range(0, 144, 3))
-        result = self.client.retrieve(
-            type="fc",
-            time=0,  # GMT/UTC 00.00
-            step=steps,
-            date=self.time_range,
-            param=["2t", "tp"],
-            target=self.download_path,
-        )
-
-        print(result)
-
-    def __preprocess(self):
+    def __preprocess(self, download_path: str):
         # extract metadata
-        result = subprocess.run(
-            ["gdalinfo", "-json", self.download_path], capture_output=True, text=True
-        )
+        args = ["gdalinfo", "-json", download_path]
+        result = subprocess.run(args, capture_output=True, text=True)
         data = json.loads(result.stdout)
 
-        # to store the correct bands and timestamps
-        BAND_NAMES = {
-            "TMP": "t2m",
-            "unknown": "tp",
-        }
-
         # create target dirs
-        for band_name in BAND_NAMES.values():
+        for band_name in self.BAND_NAMES.values():
             target_path = self.root_path / band_name
             target_path.mkdir(parents=True, exist_ok=True)
 
         # extract bands
-        for band in (pbar := tqdm(data["bands"], desc="Extracting...")):
+        for band in data["bands"]:
             band_num = band["band"]
-            element = band["metadata"][""]["GRIB_ELEMENT"]
+            band_comment = band["metadata"][""]["GRIB_COMMENT"]
             valid_time = int(band["metadata"][""]["GRIB_VALID_TIME"])
             ts = datetime.fromtimestamp(valid_time).strftime("%Y%m%dT%H%M%S")
 
-            if element not in BAND_NAMES.keys():
+            # match this band to predefined var
+            match_key = next(
+                (x for x in self.BAND_NAMES.keys() if x in band_comment), None
+            )
+
+            if not match_key:
                 continue
 
-            band_name = BAND_NAMES[element]
-            pbar.set_description_str(f"{band_name} - {ts}")
+            self.__extract_band(download_path, band_num, self.BAND_NAMES[match_key], ts)
 
-            self.__extract_band(band_num, band_name, ts)
-
-    def __extract_band(self, band_num: int, band_name: str, timestamp: str):
+    def __extract_band(
+        self, download_path: str, band_num: int, band_name: str, timestamp: str
+    ):
         cmd_final = [
             "gdal_translate",
             "-b",
             f"{band_num}",
             "-of",
             "GTiff",
-            self.download_path,
+            download_path,
             self.root_path / band_name / f"{timestamp}.tif",
         ]
 

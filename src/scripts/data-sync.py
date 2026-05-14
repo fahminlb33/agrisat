@@ -26,8 +26,8 @@ def get_sql(is_environment: bool) -> str:
         """
 
     return """
-    INSERT INTO zonal_weather (zone_id, timestamp, temperature, precipitation)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO zonal_weather (zone_id, timestamp, temperature, precipitation, cloud_cover, is_raining)
+    VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (zone_id, timestamp) DO NOTHING
     """
 
@@ -77,8 +77,10 @@ def load_data(db: sqlite3.Connection, stats_path: str):
                 (
                     zone_id,
                     timestamp,
-                    row["temperature"],
-                    row["precipitation"],
+                    row["t2m"],
+                    row["tp"],
+                    row["tcc"],
+                    1 if row["ptype"] > 0 else 0,
                 )
             )
 
