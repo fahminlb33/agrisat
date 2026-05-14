@@ -8,6 +8,3 @@ class Settings(BaseSettings):
 
     api_username: str
     api_password: str
-
-    gemini_model: str
-    gemini_api_key: str
