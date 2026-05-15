@@ -37,9 +37,16 @@ class Statistics(BaseModel):
 # ------------------------------------------------------
 
 
-def list_indices(db: Connection) -> list[str]:
+def list_indices(db: Connection, zone_id: Optional[int]) -> list[str]:
     cursor = db.cursor()
-    statement = cursor.execute("SELECT DISTINCT date(timestamp) FROM zonal_raster")
+
+    sql = "SELECT DISTINCT date(timestamp) FROM zonal_statistics "
+    if zone_id is not None:
+        sql += " WHERE zone_id = ?"
+
+    statement = (
+        cursor.execute(sql, (zone_id,)) if zone_id is not None else cursor.execute(sql)
+    )
 
     return [x[0] for x in statement.fetchall()]
 

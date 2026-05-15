@@ -19,6 +19,10 @@ router = APIRouter(prefix="/environmental", tags=["Environmental"])
 # ------------------------------------------------------
 
 
+class IndicesQuery(BaseModel):
+    zone_id: Optional[int] = None
+
+
 class TimeSeriesQuery(BaseModel):
     level_id: Optional[int] = None
     zone_id: Optional[int] = None
@@ -39,8 +43,10 @@ class TimeSeriesQuery(BaseModel):
 
 
 @router.get("/indices")
-async def api_list_indices(db: Annotated[Connection, Depends(get_db)]):
-    return list_indices(db)
+async def api_list_indices(
+    db: Annotated[Connection, Depends(get_db)], query: Annotated[IndicesQuery, Query()]
+):
+    return list_indices(db, query.zone_id)
 
 
 @router.get("/")
