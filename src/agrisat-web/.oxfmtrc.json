@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "useTabs": true,
+	"tabWidth": 2,
+	"printWidth": 80,
+	"singleQuote": false,
+	"jsxSingleQuote": false,
+	"ignorePatterns": [
+		"node_modules/**",
+		"dist/**",
+		"*.min.js",
+		".tanstack/**",
+		".scannerwork/**",
+		"**/src/routeTree.gen.ts"
+	]
+}
