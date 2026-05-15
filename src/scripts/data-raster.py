@@ -33,7 +33,7 @@ def parse_timestamp(s: str):
 
 
 def get_color_ramp(var_name: str):
-    return "/mnt/data/workspace/bogor-agrisat/data/color-palette/greens.txt"
+    return "/mnt/data/workspace/bogor-agrisat/data/color-palette/spectral.txt"
 
 
 def extract_raster_data(path: str, color_ramp_path: str) -> bytes:
