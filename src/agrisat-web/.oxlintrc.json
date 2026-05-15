@@ -1,18 +1,14 @@
 {
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "typescript",
-    "unicorn",
-    "oxc"
-  ],
-  "categories": {
-    "correctness": "error"
-  },
-  "rules": {},
-  "env": {
-    "builtin": true
-  },
-  "ignorePatterns": [
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "unicorn", "oxc"],
+	"categories": {
+		"correctness": "error"
+	},
+	"rules": {},
+	"env": {
+		"builtin": true
+	},
+	"ignorePatterns": [
 		"node_modules/**",
 		"dist/**",
 		"*.min.js",
