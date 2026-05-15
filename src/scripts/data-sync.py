@@ -47,6 +47,7 @@ def load_data(db: sqlite3.Connection, stats_path: str):
     df = pd.read_csv(stats_path)
     dd = df.pivot_table(index=["timestamp", "hash"], columns="variable", values="mean")
     dd = dd.reset_index()
+    dd = dd.fillna(0)
     print(dd.head())
 
     data = []
