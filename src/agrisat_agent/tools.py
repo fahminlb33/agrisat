@@ -61,7 +61,7 @@ def list_zones(level_id: Optional[int] = None):
     Returns:
         dict: A dictionary containing:
               - 'status' (bool): True if successful.
-              - 'data' (list): A list of zones within that level, including unique Zone IDs and names.
+              - 'data' (list): A list of zones within that level, including unique Zone IDs, names, and area (in meters squared).
     """
 
     with get_client() as client:
@@ -87,7 +87,7 @@ def list_variables():
         return res.json()
 
 
-def list_environment_time_indices():
+def list_environment_time_indices(zone_id: Optional[int]):
     """
     Returns a list of all available global timestamps where satellite data is processed.
 
@@ -98,7 +98,7 @@ def list_environment_time_indices():
     """
 
     with get_client() as client:
-        res = client.get("/environmental/indices")
+        res = client.get("/environmental/indices", params={"zone_id": zone_id})
         return res.json()
 
 
@@ -116,11 +116,54 @@ def get_environment_stats(zone_id: Optional[int], start_ts: str, end_ts: str):
               - 'status' (bool): True if successful.
               - 'data' (dict): The average values for all variables
                 over the requested time period.
+                Data that equals to zero means the satellite observation
+                is obscured by cloud and should not be misinterpreted as harvest season.
     """
 
     with get_client() as client:
         res = client.get(
             "/environmental/",
+            params={
+                "zone_id": zone_id,
+                "start_ts": start_ts,
+                "end_ts": end_ts,
+            },
+        )
+
+        return res.json()
+
+def list_weather_time_indices():
+    """
+    Returns a list of all available global timestamps where weather forecast data is processed.
+
+    Returns:
+        dict: A dictionary containing:
+              - 'status' (bool): True if successful.
+              - 'data' (list): Strings representing dates in YYYY-MM-DD format.
+    """
+
+    with get_client() as client:
+        res = client.get("/weather/indices")
+        return res.json()
+
+def get_weather_stats(zone_id: int, start_ts: str, end_ts: str):
+    """
+    Retrieves weather forecast within a specific zone and time range.
+
+    Args:
+        zone_id (str): The unique ID of the specific zone or field.
+        start_ts (str): The starting date in YYYY-MM-DD format.
+        end_ts (str): The ending date in YYYY-MM-DD format.
+
+    Returns:
+        dict: A dictionary containing:
+              - 'status' (bool): True if successful.
+              - 'data' (dict): The weather forecast information.
+    """
+
+    with get_client() as client:
+        res = client.get(
+            "/weather/",
             params={
                 "zone_id": zone_id,
                 "start_ts": start_ts,

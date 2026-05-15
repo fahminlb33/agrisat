@@ -12,6 +12,8 @@ from .tools import (
     list_variables,
     list_environment_time_indices,
     get_environment_stats,
+    list_weather_time_indices,
+    get_weather_stats
 )
 
 SYSTEM_PROMPT = """
@@ -66,5 +68,7 @@ root_agent = Agent(
         list_variables,
         list_environment_time_indices,
         get_environment_stats,
+        list_weather_time_indices,
+        get_weather_stats,
     ],
 )
