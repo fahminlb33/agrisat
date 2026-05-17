@@ -280,7 +280,7 @@ function DashboardContent({
 	// -----------------------------------------------------------
 
 	return (
-		<main className="flex h-[calc(100vh-64px)] flex-col overflow-hidden">
+		<main className="flex h-[calc(100vh-54px)] flex-col overflow-hidden">
 			{/* Top section: Controls + Map + Analysis */}
 			<div className="flex flex-1 overflow-hidden">
 				{/* Left: Controls Panel */}
