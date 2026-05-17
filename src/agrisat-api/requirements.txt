@@ -1,0 +1,10 @@
+# AI
+google-adk>=1.33.0
+
+# API
+pydantic-settings>=2.14.0
+fastapi[standard-no-fastapi-cloud-cli]>=0.136.1
+
+# Utilities
+pillow>=12.2.0
+aiosqlite>=0.22.1
