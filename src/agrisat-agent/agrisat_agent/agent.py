@@ -1,10 +1,6 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
-import os
 from google.adk.agents.llm_agent import Agent
 
+from .settings import Settings
 from .tools import (
     get_current_date,
     list_levels,
@@ -13,7 +9,8 @@ from .tools import (
     list_environment_time_indices,
     get_environment_stats,
     list_weather_time_indices,
-    get_weather_stats
+    get_weather_stats,
+    get_environment_raster,
 )
 
 SYSTEM_PROMPT = """
@@ -56,8 +53,10 @@ Tone: Expert, helpful, and empathetic. You bridge the gap between complex data s
 - Summarization: Highlight "Threshold Breaches" at the top of reports.
 """
 
+settings = Settings()
+
 root_agent = Agent(
-    model=os.environ.get("GEMINI_MODEL"),
+    model=settings.gemini_model,
     name="agrisat_agent",
     description="A helpful assistant for answering precision agriculture questions.",
     instruction="Answer user's agricultural questions by leveraging information from the provided tools.",
@@ -70,5 +69,6 @@ root_agent = Agent(
         get_environment_stats,
         list_weather_time_indices,
         get_weather_stats,
+        get_environment_raster,
     ],
 )
