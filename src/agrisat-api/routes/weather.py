@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 
 from ..dependencies import get_db
 from ..repository.weather import (
-    list_incices,
+    list_indices,
     get_time_series,
 )
 
@@ -40,7 +40,7 @@ class TimeSeriesQuery(BaseModel):
 
 @router.get("/indices")
 async def api_list_indices(db: Annotated[Connection, Depends(get_db)]):
-    return list_incices(db)
+    return list_indices(db)
 
 
 @router.get("/")

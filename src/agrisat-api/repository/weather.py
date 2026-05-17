@@ -31,7 +31,7 @@ class Weather(BaseModel):
 # ------------------------------------------------------
 
 
-def list_incices(db: Connection) -> list[str]:
+def list_indices(db: Connection) -> list[str]:
     cursor = db.cursor()
     statement = cursor.execute(
         "SELECT DISTINCT date(timestamp) AS ts FROM zonal_weather"
