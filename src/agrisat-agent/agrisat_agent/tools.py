@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 from typing import Optional
 from datetime import date, datetime
@@ -7,15 +8,14 @@ from httpx import Client, BasicAuth
 from google.genai import types
 from google.adk.tools import ToolContext
 
-from .settings import Settings
-
-settings = Settings()
-
 
 def get_client():
     return Client(
-        base_url=settings.api_host,
-        auth=BasicAuth(settings.api_username, settings.api_password),
+        base_url=os.environ.get("API_HOST", "http://localhost:8000"),
+        auth=BasicAuth(
+            os.environ.get("API_USERNAME", "agrisat-demo"),
+            os.environ.get("API_PASSWORD", "agrisat-demo"),
+        ),
     )
 
 

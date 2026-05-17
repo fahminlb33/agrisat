@@ -1,9 +1,7 @@
 # AI
 google-adk>=1.33.0
 
-# API
-pydantic-settings>=2.14.0
-
 # Utilities
 pillow>=12.2.0
 aiosqlite>=0.22.1
+python-dotenv>=1.2.2

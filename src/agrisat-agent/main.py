@@ -1,17 +1,15 @@
-import os
+from dotenv import load_dotenv
+load_dotenv()
 
+import os
 import uvicorn
 from google.adk.cli.fast_api import get_fast_api_app
 
-from settings import Settings
-
-settings = Settings()
-
 app = get_fast_api_app(
     agents_dir=os.path.dirname(os.path.abspath(__file__)),
-    session_service_uri=settings.agent_dsn,
-    allow_origins=settings.allow_origins,
-    web=settings.agent_web,
+    session_service_uri=os.environ.get("AGENT_DSN", "sqlite+aiosqlite:///./sessions.db"),
+    allow_origins=["*"],
+    web=True,
 )
 
 if __name__ == "__main__":

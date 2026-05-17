@@ -1,6 +1,7 @@
+import os
+
 from google.adk.agents.llm_agent import Agent
 
-from .settings import Settings
 from .tools import (
     get_current_date,
     list_levels,
@@ -53,10 +54,8 @@ Tone: Expert, helpful, and empathetic. You bridge the gap between complex data s
 - Summarization: Highlight "Threshold Breaches" at the top of reports.
 """
 
-settings = Settings()
-
 root_agent = Agent(
-    model=settings.gemini_model,
+    model=os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it"),
     name="agrisat_agent",
     description="A helpful assistant for answering precision agriculture questions.",
     instruction="Answer user's agricultural questions by leveraging information from the provided tools.",
