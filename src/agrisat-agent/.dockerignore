@@ -1,0 +1,24 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment variable
+.env
+
+# Database
+*.db
+*.bak
+
+# Draw.io files
+*.drawio.*
+
+# Caches
+.adk
+.ruff_cache
