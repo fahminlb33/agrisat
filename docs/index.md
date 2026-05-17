@@ -120,7 +120,7 @@ AgriSAT is built upon a two integral components: (1) batch ETL data processing p
 
 The data processing pipeline relies heavily on QGIS program to perform geographical modelling and GDAL toolkit to automate the raster data processing. We did all the data processing locally and it required lots of storage space and also compute resource. But don't worry, your average laptop can do it just fine!
 
-Here, we will split the technical discussion into two parts, (1) the Gemma 4 role as precision agriculture assistant and (2) the detailed satellite data processing methodology.
+Here, we will split the technical discussion into three parts, (1) the Gemma 4 role as precision agriculture assistant, (2) the detailed satellite data processing methodology, and (3) the technology stack.
 
 ### Precision agriculture agent with ADK & Gemma 4
 
@@ -147,6 +147,35 @@ The overall data processing pipeline is as follows:
 ![AgriSAT data lineage](./data-sources.webp)
 
 To learn more about the details of the data processing pipeline, you can check out the respective [Environmental Data Documentation](./environment.md) and [Weather Data Documentation](./weather.md).
+
+### Tech Stack
+
+How we build AgriSAT? Mainly Python 3.13 for the data analysis, backend, and agentic system and NodeJS and TypeScript for the frontend web app.
+
+Data Analysis:
+
+- [QGIS](https://qgis.org/)
+- [GDAL](https://gdal.org/en/stable/)
+- [GeoPandas](https://geopandas.org/en/stable/)
+- [rioxarray](https://corteva.github.io/rioxarray/stable/)
+
+AgriSAT API:
+
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [SQLite](https://sqlite.org/)
+
+AgriSAT Agent:
+
+- [Google Agent Development Kit (ADK)](https://adk.dev/)
+- [httpx](https://www.python-httpx.org/)
+
+AgriSAT Web App:
+
+- [React](https://react.dev/)
+- [Tanstack Start](https://tanstack.com/start/latest)
+- [MapLibre](https://maplibre.org/)
+- [Tailwind](https://tailwindcss.com/)
+- [Vite](https://vite.dev/)
 
 ## Acknowledgment
 
