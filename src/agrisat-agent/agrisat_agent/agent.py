@@ -1,6 +1,7 @@
 import os
 
-from google.adk.agents.llm_agent import Agent
+from google.adk.agents import LlmAgent
+from google.adk.models import Gemini, LiteLlm
 
 from .tools import (
     get_current_date,
@@ -54,8 +55,15 @@ Tone: Expert, helpful, and empathetic. You bridge the gap between complex data s
 - Summarization: Highlight "Threshold Breaches" at the top of reports.
 """
 
-root_agent = Agent(
-    model=os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it"),
+def get_model():
+    model_name = os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it")
+    if "ollama" not in model_name:
+        return Gemini(model=model_name)
+    
+    return LiteLlm(model=model_name)
+
+root_agent = LlmAgent(
+    model=get_model(),
     name="agrisat_agent",
     description="A helpful assistant for answering precision agriculture questions.",
     instruction="Answer user's agricultural questions by leveraging information from the provided tools.",
