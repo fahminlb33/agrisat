@@ -24,7 +24,7 @@ You can download the pre-built AgriSAT Geospatial Database before running the pr
 
 | Dataset                     | Last Updated | Download     |
 |-----------------------------|--------------|--------------|
-| AgriSAT Geospatial Database | 2026/05/16   | Google Drive |
+| AgriSAT Geospatial Database | 2026/05/16   | [Google Drive](https://drive.google.com/drive/folders/1-n0zlQabpIg2vSRHrpfYVyTvSp_0Gn_Q?usp=sharing) |
 
 ### Using Docker
 
@@ -47,7 +47,7 @@ cd docker
 # download the AgriSAT Geospatial Database
 # and store it here (data.db)
 
-# copy 
+# copy env
 cp agent.env.example agent.env
 cp api.env.example api.env
 cp web.env.example web.env
@@ -60,29 +60,89 @@ If everything goes smoothly, you can visit the app at [http://localhost:8000](ht
 
 ### Using `uv` and `node`
 
-TODO.
+If you want to run this project manually, you need to have [NodeJS](https://nodejs.org/en/download) and [uv](https://docs.astral.sh/uv/). We assumed you will be running this project in a Linux environment, if you're on Mac or Windows, you should be able to do it too. For each application in this project, you need to run the commands in a separate terminal.
+
+To make the deployment easier, we suggest you to use Gemma from Gemini API. Grab an API key and keep it for now.
+
+First, clone the repo.
+
+```bash
+git clone https://github.com/fahminlb33/agrisat.git
+```
+
+#### Starting `agrisat-api`
+
+Download and store the AgriSAT Geospatial Database at the `src/agrisat-api` directory!
+
+```bash
+cd src/agrisat-api
+
+# you can use the env as-is without modification
+cp .env.example .env
+
+# run API server port 3000
+fastapi dev --port 3000
+```
+
+#### Starting `agrisat-agent`
+
+```bash
+cd src/agrisat-agent
+
+# put your GEMINI_API_KEY in the .env
+cp .env.example .env
+
+# run ADK server port 8080
+python main.py
+```
+
+#### Starting `agrisat-web`
+
+```bash
+cd src/agrisat-api
+
+# you can use the env as-is without modification
+cp .env.example .env
+
+# run web app port 5000
+python main.py
+```
+
+Now you can visit the web app at [http://localhost:5000](http://localhost:5000).
 
 ### Running the project end-to-end
 
-TODO.
+Take a look at the `run-all.sh` in the `src/scripts` directory. It contained the detailed step-by-step process from downloading, preprocessing, and building the AgriSAT Geospatial Database.
 
 ## Technical Details
 
 AgriSAT is built upon a two integral components: (1) batch ETL data processing pipeline and (2) React & FastAPI GIS web app.
 
-The data processing pipeline relies heavily on QGIS program to perform geographical modelling and GDAL toolkit to automate the raster data processing.
+The data processing pipeline relies heavily on QGIS program to perform geographical modelling and GDAL toolkit to automate the raster data processing. We did all the data processing locally and it required lots of storage space and also compute resource. But don't worry, your average laptop can do it just fine!
+
+Here, we will split the technical discussion into two parts, (1) the Gemma 4 role as precision agriculture assistant and (2) the detailed satellite data processing methodology.
 
 ### Precision agriculture agent with ADK & Gemma 4
 
+The precision agriculture assistant powered by Gemma 4 is the key feature that AgriSAT offers to farmers, policy makers, and researchers. Gemma 4 is the brain that integrates the precision agriculture knowledge, weather, environmental, and satellite data via tools that enabled an accurate and reliable recommendations to the stakeholders. Google Agent Development Kit (ADK) is at the center of the AgriSAT Assistant that orchestrate the whole concert of Gemma 4 and its knowledge base and tools.
+
+In short, the AgriSAT Assistant work as follows:
+
 ![AgriSAT agentic chat with Gemma 4](./agentic-chat.webp)
 
-See the system prompt [here](./system-prompt.md).
+This combo of Google ADK and Gemma 4 is a match in heaven that unlocks a rapid prototyping of smart AI agentic systems without the complexity of managing sessions, memory, and contexts. A perfect solution for AgriSAT MVP.
 
-
+You can take a look at the [agent source code here](https://github.com/fahminlb33/agrisat/tree/master/src/agrisat-agent). If you're curious about the agent instructions, you can see the [instruction prompt here](./system-prompt.md).
 
 ### The science and ETL pipeline
 
-Now we're entering the science part of AgriSAT. How AgriSAT processes the satellite data and produced the high quality data used for the AI agent to help farmers.
+Now we're entering the science part of AgriSAT. How AgriSAT processes the satellite data and produced the high quality data used for the AI agent to help farmers, policy makers, and researchers.
+
+AgriSAT uses a plethora of data sources and processing methodologies to deliver the highest quality of analysis. Our research starts by digitizing the area of interest (in this case paddy rice fields) using Google Earth. The digitized polygonal area is then exported as KML and further processed in QGIS to create a Shapefile and GeoJSON for visualization in the browser. Next, we collected Sentinel-2 Level-2A dataset. This dataset contained the raster data from the onboard Multi-Spectral Instrument (MSI) that allowed us to derive environmental indices for crop monitoring. We then performed various statistical analyses to get the overall zone/area health at multiple levels (the whole Bogor area, Kota and Kabupaten, administrative area (Kecamatan), and per paddy rice field zones).
+
+Further, we collected historical and forecast weather data from ECMWF which is an integral part for paddy rice cultivation. We also collected digital elevation model (DEM) from NASA to visualize the topography of the area of interest. Lastly, we incorporated satellite orbital data to show where is the Sentinel satellites currently orbiting just for fun!
+
+The overall data processing pipeline is as follows:
 
 ![AgriSAT data lineage](./data-sources.webp)
 
