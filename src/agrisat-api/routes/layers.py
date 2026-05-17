@@ -82,6 +82,7 @@ async def api_get_raster(
         content=raster_data.data_blob,
         media_type="image/webp",
         headers={
-            "Content-Disposition": f"attachment; filename={raster_data.file_name}"
+            "Agrisat-Variable": raster_data.variable_name,
+            "Content-Disposition": f"attachment; filename={raster_data.file_name}",
         },
     )

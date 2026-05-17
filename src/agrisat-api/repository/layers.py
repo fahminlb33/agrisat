@@ -35,6 +35,7 @@ class Variable(BaseModel):
 class LayerRaster(BaseModel):
     raster_id: int
     variable_id: int
+    variable_name: str
     file_name: str
     data_blob: bytes
 
@@ -129,14 +130,18 @@ def get_raster(db: Connection, variable_id: int, ts: datetime) -> LayerRaster | 
     statement = cursor.execute(
         """
         SELECT
-            id AS raster_id,
-            file_name, 
-            raster_data
+            zr.id AS raster_id,
+            v.id AS variable_id,
+            v.name AS variable_name,
+            zr.file_name, 
+            zr.raster_data
         FROM
-            zonal_raster
+            zonal_raster zr
+        INNER JOIN
+            variables v ON v.id = zr.variable_id
         WHERE 
-            variable_id = ?
-            AND date(timestamp) = ?
+            zr.variable_id = ?
+            AND date(zr.timestamp) = ?
         """,
         (variable_id, ts.strftime("%Y-%m-%d")),
     )
@@ -147,7 +152,8 @@ def get_raster(db: Connection, variable_id: int, ts: datetime) -> LayerRaster | 
 
     return LayerRaster(
         raster_id=row[0],
-        file_name=f"{row[1][:-4]}.webp",
-        data_blob=row[2],
-        variable_id=variable_id,
+        variable_id=row[1],
+        variable_name=row[2],
+        file_name=f"{row[3][:-4]}.webp",
+        data_blob=row[4],
     )
