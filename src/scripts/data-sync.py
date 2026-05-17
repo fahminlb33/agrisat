@@ -31,9 +31,11 @@ def get_sql(is_environment: bool) -> str:
     ON CONFLICT (zone_id, timestamp) DO NOTHING
     """
 
+
 # ------------------------------------------------------
 # Data Loading
 # ------------------------------------------------------
+
 
 def load_data(db: sqlite3.Connection, stats_path: str):
     cursor = db.cursor()

@@ -27,9 +27,11 @@ def migrate_schema(db: sqlite3.Connection, schema_path: Path):
     with schema_path.open("r") as f:
         cursor.executescript(f.read())
 
+
 # ------------------------------------------------------
 # Database Seeding
 # ------------------------------------------------------
+
 
 def seed_variables(db: sqlite3.Connection, vars_path: str):
     cursor = db.cursor()
@@ -73,7 +75,7 @@ def seed_zones(db: sqlite3.Connection, vector_path: Path):
     level_id = statement.fetchone()
     if level_id is None:
         return
-    
+
     level_id = level_id[0]
 
     # insert zone polygons

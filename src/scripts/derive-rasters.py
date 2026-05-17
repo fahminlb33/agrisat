@@ -189,7 +189,7 @@ def derive_feature(type: FEATURE_TYPE, raster_root: Path, mask: Path, dest: Path
         formula = "(Green - NIR) / (Green + NIR)"
     else:
         raise ValueError("Invalid type!")
-    
+
     # cloud mask
     # 0=No Data, 1=Saturated, 3=Cloud Shadow, 8-10=Cloud
     formula = f"({formula}) * (SCL!=0)*(SCL!=3)*(SCL!=8)*(SCL!=9)*(SCL!=10)"
