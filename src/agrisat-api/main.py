@@ -6,6 +6,7 @@ from .routes.layers import router as layers_router
 from .routes.weather import router as weather_router
 from .routes.satellite import router as satellite_router
 from .routes.environmental import router as environmental_router
+from .routes.insights import router as insights_router
 
 app = FastAPI(dependencies=[Depends(get_current_user)])
 
@@ -21,3 +22,4 @@ app.include_router(layers_router)
 app.include_router(weather_router)
 app.include_router(satellite_router)
 app.include_router(environmental_router)
+app.include_router(insights_router)
