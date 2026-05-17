@@ -6,8 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     # AI
+    "pillow>=12.2.0",
     "google-adk>=1.33.0",
-    "google-genai-haystack>=4.2.0",
     # API
     "pydantic-settings>=2.14.0",
     "fastapi[standard-no-fastapi-cloud-cli]>=0.136.1",
@@ -25,13 +25,12 @@ dependencies = [
     "pyarrow>=23.0.1",
     "openpyxl>=3.1.5",
     "rioxarray>=0.21.0",
-    # Plotting
-    "hvplot>=0.12.2",
     # Utilities
     "rich>=15.0.0",
     "httpx>=0.28.1",
     "ipykernel>=7.2.0",
     "python-dotenv>=1.2.2",
+    "aiosqlite>=0.22.1",
 ]
 
 [dependency-groups]
