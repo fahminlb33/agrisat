@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Leaf } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
@@ -8,8 +9,9 @@ export default function Header() {
 				<h2 className="m-0 flex-shrink-0 text-base font-semibold tracking-tight">
 					<Link
 						to="/"
-						className="inline-flex items-center gap-2 px-3 py-1.5 text-sm   "
-					> 
+						className="inline-flex items-center gap-2 px-3 py-1.5 text-sm"
+					>
+						<Leaf className="h-5 w-5 text-emerald-500" />
 						AgriSat
 					</Link>
 				</h2>

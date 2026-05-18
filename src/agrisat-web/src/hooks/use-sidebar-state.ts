@@ -7,11 +7,11 @@ function readCollapsedState(): boolean {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "true") return true;
     if (stored === "false") return false;
-    // Key missing or invalid value — default to expanded
-    return false;
+    // Key missing or invalid value — default to collapsed
+    return true;
   } catch {
-    // localStorage unavailable — default to expanded
-    return false;
+    // localStorage unavailable — default to collapsed
+    return true;
   }
 }
 

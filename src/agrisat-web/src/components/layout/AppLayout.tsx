@@ -45,7 +45,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Center + Right wrapper */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top bar with theme toggle and AI toggle */}
-        <div className="flex h-10 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
+        <div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
           <ThemeToggle />
           <Button
             variant="ghost"

@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Trash2, Bot, User } from "lucide-react";
+import { X, Trash2, Bot, User, PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "#/components/ui/button.tsx";
 import { cn } from "#/lib/utils.ts";
@@ -16,6 +16,10 @@ import {
   Suggestion,
 } from "#/components/ai-elements/suggestion.tsx";
 import type { ChatMode } from "#/types/chat";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -68,13 +72,14 @@ const MODE_SUGGESTIONS: Record<ChatMode, string[]> = {
  */
 export function AIAssistantPanel({ open, onClose }: AIAssistantPanelProps) {
   const [activeMode, setActiveMode] = useState<ChatMode>("explain");
+  const [expanded, setExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
 
-  const { messages, status, error, sendMessage, stop, clearMessages } =
+  const { messages, status, activity, error, sendMessage, stop, clearMessages } =
     useAgentChat({ userId: "web-user" });
 
-  const isLoading = status === "streaming" || status === "creating-session";
+  const isLoading = status === "streaming" || status === "creating-session" || status === "thinking" || status === "tool-calling";
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
@@ -109,16 +114,34 @@ export function AIAssistantPanel({ open, onClose }: AIAssistantPanelProps) {
     <aside
       className={cn(
         "shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-200",
-        open ? "w-[380px] opacity-100" : "w-0 opacity-0 border-l-0",
+        open
+          ? expanded
+            ? "w-[820px] opacity-100"
+            : "w-[380px] opacity-100"
+          : "w-0 opacity-0 border-l-0",
       )}
       aria-label="AI assistant panel"
     >
       {open && (
-        <div className="flex h-full w-[380px] flex-col">
+        <div className={cn("flex h-full flex-col", expanded ? "w-[820px]" : "w-[380px]")}>
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="text-sm font-semibold">AI Agro Assistant</h2>
             <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setExpanded((prev) => !prev)}
+                aria-label={expanded ? "Collapse panel" : "Expand panel"}
+                className="h-7 w-7"
+                title={expanded ? "Collapse panel" : "Expand panel"}
+              >
+                {expanded ? (
+                  <PanelRightOpen className="h-3.5 w-3.5" />
+                ) : (
+                  <PanelLeftOpen className="h-3.5 w-3.5" />
+                )}
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -182,17 +205,16 @@ export function AIAssistantPanel({ open, onClose }: AIAssistantPanelProps) {
                 ))
               )}
 
-              {/* Streaming indicator */}
-              {isLoading && messages[messages.length - 1]?.role === "user" && (
+              {/* Streaming/thinking indicator */}
+              {isLoading && (status === "thinking" || status === "tool-calling" || status === "creating-session") && (
                 <div className="flex items-start gap-2">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
-                    <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Bot className="h-3.5 w-3.5 text-muted-foreground animate-pulse" />
                   </div>
                   <div className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
-                    <span className="inline-flex gap-1">
-                      <span className="animate-bounce">·</span>
-                      <span className="animate-bounce [animation-delay:0.1s]">·</span>
-                      <span className="animate-bounce [animation-delay:0.2s]">·</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                      <span className="animate-pulse">{activity ?? "Connecting..."}</span>
                     </span>
                   </div>
                 </div>
@@ -289,8 +311,10 @@ function MessageBubble({ role, content }: { role: "user" | "assistant"; content:
       <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
         <Bot className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
-      <div className="max-w-[85%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground whitespace-pre-wrap">
-        {content}
+      <div className="max-w-[85%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-pre:my-1 max-w-none">
+        <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+          {content}
+        </Markdown>
       </div>
     </div>
   );

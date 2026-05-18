@@ -36,6 +36,7 @@ const INITIAL_ZOOM = 11;
 const ZONE_FILL_LAYER_ID = "zones-fill";
 const ZONE_LINE_LAYER_ID = "zones-line";
 const ZONE_HEATMAP_FILL_LAYER_ID = "zones-heatmap-fill";
+const ZONE_HOVER_LAYER_ID = "zones-hover";
 const ZONES_SOURCE_ID = "zones";
 
 const RASTER_SOURCE_ID = "raster-overlay";
@@ -44,6 +45,8 @@ const RASTER_LAYER_ID = "raster-overlay-layer";
 const BOGOR_BOUNDARY_SOURCE_ID = "bogor-boundary";
 const BOGOR_BOUNDARY_FILL_LAYER_ID = "bogor-boundary-fill";
 const BOGOR_BOUNDARY_LINE_LAYER_ID = "bogor-boundary-line";
+const BOGOR_MASK_SOURCE_ID = "bogor-mask";
+const BOGOR_MASK_LAYER_ID = "bogor-mask-fill";
 
 // -----------------------------------------------------------
 // Color scale utilities
@@ -163,6 +166,54 @@ function computeFeatureBounds(feature: Feature): MapLibreGL.LngLatBoundsLike | n
 	return computeBounds(fc);
 }
 
+/**
+ * Create a mask GeoJSON: a world-covering polygon with a hole cut out
+ * for the boundary features. This hides everything outside the boundary.
+ */
+function createMaskGeojson(boundary: FeatureCollection): FeatureCollection | null {
+	// Extract the first polygon ring from the boundary
+	const feature = boundary.features[0];
+	if (!feature?.geometry) return null;
+
+	let holeCoords: number[][] | null = null;
+
+	if (feature.geometry.type === "Polygon") {
+		holeCoords = feature.geometry.coordinates[0];
+	} else if (feature.geometry.type === "MultiPolygon") {
+		// Use the largest polygon (first one typically)
+		holeCoords = feature.geometry.coordinates[0]?.[0];
+	}
+
+	if (!holeCoords || holeCoords.length < 3) return null;
+
+	// World polygon (outer ring) — covers the entire globe
+	const worldRing: number[][] = [
+		[-180, -90],
+		[180, -90],
+		[180, 90],
+		[-180, 90],
+		[-180, -90],
+	];
+
+	// The hole must be wound in the opposite direction (clockwise for GeoJSON holes)
+	// GeoJSON spec: outer ring = counter-clockwise, holes = clockwise
+	const holeRing = [...holeCoords].reverse();
+
+	return {
+		type: "FeatureCollection",
+		features: [
+			{
+				type: "Feature",
+				properties: {},
+				geometry: {
+					type: "Polygon",
+					coordinates: [worldRing, holeRing],
+				},
+			},
+		],
+	};
+}
+
 // -----------------------------------------------------------
 // Component
 // -----------------------------------------------------------
@@ -175,6 +226,7 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 	const setZone = useStore(store, (s) => s.setZone);
 
 	const mapRef = useRef<MapLibreGL.Map | null>(null);
+	const popupRef = useRef<MapLibreGL.Popup | null>(null);
 	const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
 	const [bogorBoundary, setBogorBoundary] = useState<FeatureCollection | null>(null);
 	const [loadError, setLoadError] = useState<string | null>(null);
@@ -182,11 +234,14 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 	const [rasterImageUrl, setRasterImageUrl] = useState<string | null>(null);
 	const [rasterBounds, setRasterBounds] = useState<[number, number, number, number] | null>(null);
 	const [mapReady, setMapReady] = useState(false);
+	const [hoveredZoneId, setHoveredZoneId] = useState<number | null>(null);
 
 	const layersAddedRef = useRef(false);
 	const bogorLayerAddedRef = useRef(false);
+	const maskLayerAddedRef = useRef(false);
 	const rasterLayerAddedRef = useRef(false);
 	const prevZoneIdRef = useRef<number | null>(null);
+	const prevHoveredRef = useRef<number | null>(null);
 
 	// -----------------------------------------------------------
 	// Fetch Bogor region boundary (extent level) once on mount
@@ -463,6 +518,13 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 			bogorLayerAddedRef.current = false;
 		}
 
+		// --- Mask layer (hides everything outside boundary) ---
+		if (maskLayerAddedRef.current) {
+			if (map.getLayer(BOGOR_MASK_LAYER_ID)) map.removeLayer(BOGOR_MASK_LAYER_ID);
+			if (map.getSource(BOGOR_MASK_SOURCE_ID)) map.removeSource(BOGOR_MASK_SOURCE_ID);
+			maskLayerAddedRef.current = false;
+		}
+
 		if (bogorBoundary && levelId !== null) {
 			map.addSource(BOGOR_BOUNDARY_SOURCE_ID, {
 				type: "geojson",
@@ -491,6 +553,27 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 			});
 
 			bogorLayerAddedRef.current = true;
+
+			// Create mask: world polygon with hole for the boundary
+			const maskGeojson = createMaskGeojson(bogorBoundary);
+			if (maskGeojson) {
+				map.addSource(BOGOR_MASK_SOURCE_ID, {
+					type: "geojson",
+					data: maskGeojson,
+				});
+
+				map.addLayer({
+					id: BOGOR_MASK_LAYER_ID,
+					type: "fill",
+					source: BOGOR_MASK_SOURCE_ID,
+					paint: {
+						"fill-color": "#f8f9fa",
+						"fill-opacity": 0.25,
+					},
+				});
+
+				maskLayerAddedRef.current = true;
+			}
 		}
 
 		// --- Remove raster overlay (will be re-added after zone layers) ---
@@ -503,6 +586,7 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		// --- Zone layers ---
 		// Remove existing layers/source
 		if (layersAddedRef.current) {
+			if (map.getLayer(ZONE_HOVER_LAYER_ID)) map.removeLayer(ZONE_HOVER_LAYER_ID);
 			if (map.getLayer(ZONE_HEATMAP_FILL_LAYER_ID)) map.removeLayer(ZONE_HEATMAP_FILL_LAYER_ID);
 			if (map.getLayer(ZONE_FILL_LAYER_ID)) map.removeLayer(ZONE_FILL_LAYER_ID);
 			if (map.getLayer(ZONE_LINE_LAYER_ID)) map.removeLayer(ZONE_LINE_LAYER_ID);
@@ -556,6 +640,17 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 						0,
 					] as unknown as MapLibreGL.ExpressionSpecification)
 					: 1,
+			},
+		});
+
+		// Hover highlight layer (initially hidden, updated via setPaintProperty)
+		map.addLayer({
+			id: ZONE_HOVER_LAYER_ID,
+			type: "fill",
+			source: ZONES_SOURCE_ID,
+			paint: {
+				"fill-color": "rgba(79, 184, 178, 0.3)",
+				"fill-opacity": 0,
 			},
 		});
 
@@ -626,6 +721,15 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		if (!map) return;
 		mapRef.current = map;
 
+		// Create a popup for click-based popover
+		popupRef.current = new MapLibreGL.Popup({
+			closeButton: true,
+			closeOnClick: false,
+			className: "zone-popup",
+			maxWidth: "280px",
+			anchor: "bottom",
+		});
+
 		// Poll until style is loaded — the Map component has an internal 100ms delay
 		// after styledata before it considers the style ready
 		const mapInstance = map;
@@ -638,15 +742,36 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		}
 		checkStyleReady();
 
-		// Zone click handler
+		// Zone click handler — show popover card and select zone
 		map.on("click", ZONE_FILL_LAYER_ID, (e) => {
 			const feature = e.features?.[0];
-			if (feature?.properties?.zone_id != null) {
-				setZone(Number(feature.properties.zone_id));
-			}
+			if (!feature?.properties) return;
+
+			const featureZoneId = Number(feature.properties.zone_id);
+			setZone(featureZoneId);
+
+			// Build popover card content
+			const name = feature.properties.name ?? "Unknown";
+			const city = feature.properties.city ?? "";
+			const area = feature.properties.area
+				? `${(Number(feature.properties.area) / 1_000_000).toFixed(1)} km²`
+				: "";
+
+			const html = `
+				<div style="font-family: system-ui, sans-serif; padding: 8px 4px; background: #fff; border-radius: 8px;">
+					<div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #1a1a1a;">${name}</div>
+					${city ? `<div style="font-size: 12px; color: #555; margin-bottom: 2px;">📍 ${city}</div>` : ""}
+					${area ? `<div style="font-size: 12px; color: #777;">📐 ${area}</div>` : ""}
+				</div>
+			`;
+
+			popupRef.current
+				?.setLngLat(e.lngLat)
+				.setHTML(html)
+				.addTo(map);
 		});
 
-		// Click outside zone clears selection
+		// Click outside zone clears selection and closes popup
 		map.on("click", (e) => {
 			const features = map.queryRenderedFeatures(e.point, {
 				layers: [ZONE_FILL_LAYER_ID, ZONE_HEATMAP_FILL_LAYER_ID].filter(
@@ -655,15 +780,27 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 			});
 			if (!features || features.length === 0) {
 				setZone(null);
+				popupRef.current?.remove();
 			}
 		});
 
-		// Hover feedback
-		map.on("mouseenter", ZONE_FILL_LAYER_ID, () => {
+		// Hover: only change cursor and highlight (no popup)
+		map.on("mousemove", ZONE_FILL_LAYER_ID, (e) => {
+			const feature = e.features?.[0];
+			if (!feature?.properties) return;
+
+			const featureZoneId = Number(feature.properties.zone_id);
+			if (featureZoneId !== prevHoveredRef.current) {
+				prevHoveredRef.current = featureZoneId;
+				setHoveredZoneId(featureZoneId);
+			}
 			map.getCanvas().style.cursor = "pointer";
 		});
+
 		map.on("mouseleave", ZONE_FILL_LAYER_ID, () => {
 			map.getCanvas().style.cursor = "";
+			setHoveredZoneId(null);
+			prevHoveredRef.current = null;
 		});
 	}, [setZone]);
 
@@ -671,6 +808,40 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 	useEffect(() => {
 		updateMapLayers();
 	}, [updateMapLayers]);
+
+	// Update hover styling without rebuilding layers
+	useEffect(() => {
+		const map = mapRef.current;
+		if (!map || !mapReady || !layersAddedRef.current) return;
+		if (!map.getLayer(ZONE_HOVER_LAYER_ID)) return;
+
+		map.setPaintProperty(ZONE_HOVER_LAYER_ID, "fill-opacity", [
+			"case",
+			["==", ["get", "zone_id"], hoveredZoneId ?? -1],
+			1,
+			0,
+		] as unknown as MapLibreGL.ExpressionSpecification);
+
+		if (map.getLayer(ZONE_LINE_LAYER_ID)) {
+			map.setPaintProperty(ZONE_LINE_LAYER_ID, "line-color", [
+				"case",
+				["==", ["get", "zone_id"], zoneId ?? -1],
+				"rgba(50, 143, 151, 1)",
+				["==", ["get", "zone_id"], hoveredZoneId ?? -1],
+				"rgba(50, 143, 151, 0.8)",
+				"rgba(50, 143, 151, 0.4)",
+			] as unknown as MapLibreGL.ExpressionSpecification);
+
+			map.setPaintProperty(ZONE_LINE_LAYER_ID, "line-width", [
+				"case",
+				["==", ["get", "zone_id"], zoneId ?? -1],
+				3,
+				["==", ["get", "zone_id"], hoveredZoneId ?? -1],
+				2,
+				1,
+			] as unknown as MapLibreGL.ExpressionSpecification);
+		}
+	}, [hoveredZoneId, zoneId, mapReady]);
 
 	// -----------------------------------------------------------
 	// Render
@@ -734,3 +905,4 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		</div>
 	);
 }
+

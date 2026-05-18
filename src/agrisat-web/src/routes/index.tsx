@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 
 import ControlsPanel from "#/components/panels/ControlsPanel";
@@ -53,14 +53,14 @@ function mapVariables(apiVars: ApiVariable[]): Variable[] {
 }
 
 const VARIABLE_KEY_MAP: Record<number, string> = {
-	1: "ndvi",
-	2: "gndvi",
-	3: "wdrvi",
-	4: "msavi",
-	5: "ndre",
-	6: "cire",
-	7: "ndmi",
-	8: "ndwi",
+	2: "ndvi",
+	3: "gndvi",
+	4: "wdrvi",
+	5: "msavi",
+	6: "ndre",
+	7: "cire",
+	8: "ndmi",
+	9: "ndwi",
 };
 
 // -----------------------------------------------------------
@@ -110,9 +110,24 @@ function Dashboard() {
 			registry.set(z.zone_id, z.level_id);
 		}
 
-		storeRef.current = createQueryContextStore(registry);
+		const store = createQueryContextStore(registry);
+		storeRef.current = store;
+
+		// Default to "extent" level and first zone in that level
+		if (rawLevels && rawLevels.length > 0) {
+			const extentLevel = rawLevels.find((l) => l.level === "extent");
+			const defaultLevel = extentLevel ?? rawLevels[0];
+			store.getState().setLevel(defaultLevel.level_id);
+
+			// Select the first zone for that level
+			const firstZone = rawZones.find((z) => z.level_id === defaultLevel.level_id);
+			if (firstZone) {
+				store.getState().setZone(firstZone.zone_id);
+			}
+		}
+
 		setStoreReady(true);
-	}, [rawZones]);
+	}, [rawZones, rawLevels]);
 
 	const store = storeRef.current;
 
@@ -159,7 +174,7 @@ function DashboardContent({
 	// ensuring all panels update within one render cycle (Req 1.2)
 	// -----------------------------------------------------------
 
-	const { data: envData = [] } = useEnvironmentalData({
+	const { data: envData = [], isLoading: envLoading } = useEnvironmentalData({
 		zoneId,
 		levelId,
 		startTs: timeRange.startTs,
@@ -275,6 +290,33 @@ function DashboardContent({
 		};
 	}, [envData]);
 
+	// Variable descriptions map for info popovers
+	const variableDescriptions = useMemo(() => {
+		const map: Record<string, string> = {};
+		for (const v of variables) {
+			map[v.key] = v.description;
+		}
+		return map;
+	}, [variables]);
+
+	// -----------------------------------------------------------
+	// Selected date for raster layer (single date from timeline)
+	// Dates from environmental indices can be used for both raster and env
+	// -----------------------------------------------------------
+
+	const [selectedRasterDate, setSelectedRasterDate] = useState<Date | null>(null);
+
+	// Auto-select the latest available date when data loads
+	useEffect(() => {
+		if (availableTimestamps.length > 0 && selectedRasterDate === null) {
+			setSelectedRasterDate(availableTimestamps[availableTimestamps.length - 1]);
+		}
+	}, [availableTimestamps, selectedRasterDate]);
+
+	const handleDateSelect = useCallback((date: Date) => {
+		setSelectedRasterDate(date);
+	}, []);
+
 	// -----------------------------------------------------------
 	// Render: Four-panel layout
 	// -----------------------------------------------------------
@@ -291,6 +333,7 @@ function DashboardContent({
 							zones={zones}
 							variables={variables}
 							store={store}
+							isLayerLoading={envLoading}
 						/>
 					</ErrorBoundary>
 				</div>
@@ -306,7 +349,7 @@ function DashboardContent({
 				</div>
 
 				{/* Right: Analysis Panel */}
-				<div className="w-80 shrink-0 overflow-hidden">
+				<div className="w-96 shrink-0 overflow-hidden">
 					<ErrorBoundary>
 						<AnalysisPanel
 							store={store}
@@ -319,6 +362,7 @@ function DashboardContent({
 							comparisonTargetBName={comparisonTargetBName}
 							comparisonMissingData={comparisonMissingData}
 							dataSource={dataSource}
+							variableDescriptions={variableDescriptions}
 						/>
 					</ErrorBoundary>
 				</div>
@@ -332,6 +376,10 @@ function DashboardContent({
 						availableTimestamps={availableTimestamps}
 						trendData={trendData}
 						activeVariableKey={activeVariableKey}
+						environmentalData={envData as unknown as import("#/types/api").EnvironmentalTimePoint[]}
+						weatherData={weatherData as unknown as import("#/types/api").WeatherTimePoint[]}
+						onDateSelect={handleDateSelect}
+						selectedDate={selectedRasterDate}
 					/>
 				</ErrorBoundary>
 			</div>

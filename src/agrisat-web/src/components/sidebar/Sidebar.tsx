@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { Leaf } from "lucide-react";
 import { cn } from "#/lib/utils";
 import { navigationConfig } from "#/config/navigation";
 import type { NavItem, NavSection } from "#/types/sidebar";
@@ -24,6 +25,19 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       role="navigation"
       aria-label="Main navigation"
     >
+      {/* Brand */}
+      <div className={cn(
+        "flex h-12 shrink-0 items-center border-b border-sidebar-border px-3",
+        collapsed && "justify-center px-0",
+      )}>
+        <Link to="/" className="flex items-center gap-2 text-sidebar-foreground">
+          <Leaf className="h-5 w-5 shrink-0 text-emerald-500" />
+          {!collapsed && (
+            <span className="text-sm font-semibold tracking-tight">AgriSat</span>
+          )}
+        </Link>
+      </div>
+
       {/* Navigation sections */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 py-3">
         {navigationConfig.sections.map((section, index) => (
