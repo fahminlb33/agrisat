@@ -6,13 +6,17 @@ from typing import Optional
 from pydantic import BaseModel, model_validator
 from fastapi import APIRouter, Depends, Query
 
-from ..dependencies import get_db
+from ..dependencies import get_db, get_current_user
 from ..repository.environmental import (
     list_indices,
     get_time_series,
 )
 
-router = APIRouter(prefix="/environmental", tags=["Environmental"])
+router = APIRouter(
+    prefix="/api/environmental",
+    tags=["Environmental"],
+    dependencies=[Depends(get_current_user)],
+)
 
 # ------------------------------------------------------
 # Schemas

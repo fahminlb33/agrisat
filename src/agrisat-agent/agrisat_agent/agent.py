@@ -82,9 +82,11 @@ Match your response length to the complexity and intent of the user's question:
 - Use markdown formatting: headings, bold, bullet lists, and tables where appropriate.
 """
 
+
 def get_model():
-    model_name = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+    model_name = os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it")
     return Gemini(model=model_name)
+
 
 root_agent = LlmAgent(
     model=get_model(),

@@ -6,7 +6,7 @@ from typing import Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Response, HTTPException, Depends, Query
 
-from ..dependencies import get_db
+from ..dependencies import get_db, get_current_user
 from ..repository.layers import (
     list_levels,
     list_zones,
@@ -15,7 +15,7 @@ from ..repository.layers import (
     get_raster,
 )
 
-router = APIRouter(prefix="/layers", tags=["Layers"])
+router = APIRouter(prefix="/api/layers", tags=["Layers"])
 
 # ------------------------------------------------------
 # Schemas
@@ -36,19 +36,19 @@ class GetLayerRequest(BaseModel):
 # ------------------------------------------------------
 
 
-@router.get("/levels")
+@router.get("/levels", dependencies=[Depends(get_current_user)])
 async def api_list_levels(db: Annotated[Connection, Depends(get_db)]):
     return list_levels(db)
 
 
-@router.get("/zones")
+@router.get("/zones", dependencies=[Depends(get_current_user)])
 async def api_list_zones(
     db: Annotated[Connection, Depends(get_db)], query: Annotated[GetLayerZones, Query()]
 ):
     return list_zones(db, level_id=query.level_id)
 
 
-@router.get("/variables")
+@router.get("/variables", dependencies=[Depends(get_current_user)])
 async def api_list_variables(db: Annotated[Connection, Depends(get_db)]):
     return list_variables(db)
 

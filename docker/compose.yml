@@ -1,21 +1,93 @@
 volumes:
-  llamacpp:
+  ollama-models:
+  agent-session:
+
+networks:
+  agrisat:
 
 services:
-  llamacpp-gemma:
-    image: ghcr.io/ggml-org/llama.cpp:server-cuda
-    command: -hf ggml-org/gemma-4-E2B-it-GGUF
-    ports:
-      - "8001:8080"
-    # environment:
-    #   - LLAMA_ARG_N_GPU_LAYERS=999
-    volumes:
-      - /mnt/data/workspace/local-llm-server/llama-cpp:/root/.cache/huggingface
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+  # ollama:
+  #   image: docker.io/ollama/ollama:latest
+  #   ports:
+  #     - 8001:11434
+  #   networks:
+  #     - agrisat
+  #   volumes:
+  #     - ollama-models:/root/.ollama
+  #   environment:
+  #     - OLLAMA_KEEP_ALIVE=24h
+  #     - OLLAMA_HOST=0.0.0.0
+  #   tty: true
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - driver: nvidia
+  #             count: all
+  #             capabilities: [gpu]
 
+  agrisat-api:
+    build: ../src/agrisat-api
+    ports:
+      - "8002:8000"
+    networks:
+      - agrisat
+    volumes:
+      - ./data.db:/data/data.db
+    env_file:
+      - api.env
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  agrisat-agent:
+    build: ../src/agrisat-agent
+    ports:
+      - "8004:8080"
+    networks:
+      - agrisat
+    volumes:
+      - agent-session:/data
+    env_file:
+      - agent.env
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  agrisat-web:
+    build: ../src/agrisat-web
+    ports:
+      - "8003:3000"
+    networks:
+      - agrisat
+    env_file:
+      - web.env
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  agrisat-gateway:
+    image: nginx
+    ports:
+      - "8000:80"
+    networks:
+      - agrisat
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./proxy.conf:/etc/nginx/proxy.conf:ro"
+    depends_on:
+      agrisat-api:
+        condition: service_healthy
+      agrisat-web:
+        condition: service_healthy
+      agrisat-agent:
+        condition: service_healthy
