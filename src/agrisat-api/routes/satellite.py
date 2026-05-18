@@ -1,7 +1,13 @@
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/satellite", tags=["Satellite"])
+from ..dependencies import get_current_user
+
+router = APIRouter(
+    prefix="/api/satellite",
+    tags=["Satellite"],
+    dependencies=[Depends(get_current_user)],
+)
 
 CELESTRAK_EARTH_TLE = (
     "https://celestrak.org/NORAD/elements/gp.php?GROUP=resource&FORMAT=tle"

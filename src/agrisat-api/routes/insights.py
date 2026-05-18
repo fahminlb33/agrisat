@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, model_validator
 from fastapi import APIRouter, Depends, Query
 
-from ..dependencies import get_db
+from ..dependencies import get_db, get_current_user
 from ..repository.environmental import get_time_series as env_get_time_series
 from ..repository.weather import get_time_series as weather_get_time_series
 from ..insights import (
@@ -18,7 +18,9 @@ from ..insights import (
     ComparisonDelta,
 )
 
-router = APIRouter(prefix="/insights", tags=["Insights"])
+router = APIRouter(
+    prefix="/api/insights", tags=["Insights"], dependencies=[Depends(get_current_user)]
+)
 
 # ------------------------------------------------------
 # Schemas
