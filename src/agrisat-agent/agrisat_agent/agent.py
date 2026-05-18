@@ -55,12 +55,14 @@ Tone: Expert, helpful, and empathetic. You bridge the gap between complex data s
 - Summarization: Highlight "Threshold Breaches" at the top of reports.
 """
 
+
 def get_model():
     model_name = os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it")
     if "ollama" not in model_name:
         return Gemini(model=model_name)
-    
+
     return LiteLlm(model=model_name)
+
 
 root_agent = LlmAgent(
     model=get_model(),
