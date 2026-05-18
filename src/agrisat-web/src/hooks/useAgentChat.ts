@@ -12,7 +12,7 @@ export interface ChatMessage {
   timestamp: Date;
 }
 
-export type ChatStatus = "idle" | "creating-session" | "streaming" | "error";
+export type ChatStatus = "idle" | "creating-session" | "thinking" | "tool-calling" | "streaming" | "error";
 
 export interface UseAgentChatOptions {
   /** Unique user identifier. Defaults to "web-user". */
@@ -22,6 +22,8 @@ export interface UseAgentChatOptions {
 export interface UseAgentChatReturn {
   messages: ChatMessage[];
   status: ChatStatus;
+  /** Human-readable label for what the agent is currently doing */
+  activity: string | null;
   error: string | null;
   sendMessage: (text: string) => Promise<void>;
   stop: () => void;
@@ -38,6 +40,25 @@ function generateId(): string {
 }
 
 /**
+ * Maps ADK tool/function names to user-friendly activity labels.
+ */
+const TOOL_LABELS: Record<string, string> = {
+  get_current_date: "Checking date...",
+  list_levels: "Loading zone hierarchy...",
+  list_zones: "Fetching zones...",
+  list_variables: "Loading variables...",
+  list_environment_time_indices: "Checking available dates...",
+  get_environment_stats: "Analyzing satellite data...",
+  list_weather_time_indices: "Checking weather data...",
+  get_weather_stats: "Fetching weather stats...",
+  get_environment_raster: "Generating raster map...",
+};
+
+function getToolLabel(toolName: string): string {
+  return TOOL_LABELS[toolName] ?? "Processing...";
+}
+
+/**
  * Custom hook for communicating with the ADK agent via SSE streaming.
  *
  * Manages session creation, message history, and streaming state.
@@ -48,6 +69,7 @@ export function useAgentChat(options: UseAgentChatOptions = {}): UseAgentChatRet
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>("idle");
+  const [activity, setActivity] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const sessionRef = useRef<ADKSession | null>(null);
@@ -92,7 +114,8 @@ export function useAgentChat(options: UseAgentChatOptions = {}): UseAgentChatRet
         const abort = new AbortController();
         abortRef.current = abort;
 
-        setStatus("streaming");
+        setStatus("thinking");
+        setActivity("Thinking...");
 
         // Add placeholder assistant message
         const assistantId = generateId();
@@ -114,12 +137,24 @@ export function useAgentChat(options: UseAgentChatOptions = {}): UseAgentChatRet
           // Check if aborted
           if (abort.signal.aborted) break;
 
-          // Extract text from event content parts
+          // Extract text and detect tool calls from event content parts
           const parts = event.content?.parts;
           if (parts) {
             for (const part of parts) {
               if (part.text) {
                 fullText += part.text;
+                // Once we have text, we're streaming the response
+                setStatus("streaming");
+                setActivity(null);
+              }
+              if (part.function_call) {
+                setStatus("tool-calling");
+                setActivity(getToolLabel(part.function_call.name));
+              }
+              if (part.function_response) {
+                // Tool finished, back to thinking before next action
+                setStatus("thinking");
+                setActivity("Thinking...");
               }
             }
           }
@@ -145,15 +180,18 @@ export function useAgentChat(options: UseAgentChatOptions = {}): UseAgentChatRet
         }
 
         setStatus("idle");
+        setActivity(null);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
           setStatus("idle");
+          setActivity(null);
           return;
         }
 
         const errorMessage = err instanceof Error ? err.message : "Unknown error";
         setError(errorMessage);
         setStatus("error");
+        setActivity(null);
       } finally {
         abortRef.current = null;
       }
@@ -167,6 +205,7 @@ export function useAgentChat(options: UseAgentChatOptions = {}): UseAgentChatRet
   const stop = useCallback(() => {
     abortRef.current?.abort();
     setStatus("idle");
+    setActivity(null);
   }, []);
 
   /**
@@ -176,12 +215,14 @@ export function useAgentChat(options: UseAgentChatOptions = {}): UseAgentChatRet
     setMessages([]);
     setError(null);
     setStatus("idle");
+    setActivity(null);
     sessionRef.current = null;
   }, []);
 
   return {
     messages,
     status,
+    activity,
     error,
     sendMessage,
     stop,

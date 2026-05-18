@@ -60,8 +60,6 @@ function renderPanel(overrides?: Partial<TimelinePanelProps>) {
 		availableTimestamps: timestamps,
 		trendData,
 		activeVariableKey: "ndvi",
-		onTimestampSelect: undefined,
-		rasterUnavailableMessage: null,
 		...overrides,
 	};
 	const result = render(<TimelinePanel {...props} />);
@@ -77,34 +75,7 @@ afterEach(() => {
 // -----------------------------------------------------------
 
 describe("TimelinePanel", () => {
-	describe("Requirement 3.1: Display available timestamps as selectable points", () => {
-		it("should render all available timestamps as selectable points", () => {
-			const timestamps = generateTimestamps("2024-01-01", 5, 5);
-			renderPanel({ availableTimestamps: timestamps });
-
-			const listbox = screen.getByRole("listbox", { name: "Available timestamps" });
-			expect(listbox).toBeTruthy();
-
-			const options = screen.getAllByRole("option");
-			expect(options.length).toBe(5);
-		});
-
-		it("should display timestamps in chronological order", () => {
-			const timestamps = [
-				dayjs("2024-01-15").toDate(),
-				dayjs("2024-01-01").toDate(),
-				dayjs("2024-01-10").toDate(),
-			];
-			renderPanel({ availableTimestamps: timestamps });
-
-			const options = screen.getAllByRole("option");
-			expect(options[0].getAttribute("aria-label")).toContain("2024-01-01");
-			expect(options[1].getAttribute("aria-label")).toContain("2024-01-10");
-			expect(options[2].getAttribute("aria-label")).toContain("2024-01-15");
-		});
-	});
-
-	describe("Requirement 3.2: Range selection slider updates QueryContext timeRange", () => {
+	describe("Range selection slider updates QueryContext timeRange", () => {
 		it("should render range selection slider", () => {
 			renderPanel();
 
@@ -139,80 +110,92 @@ describe("TimelinePanel", () => {
 		});
 	});
 
-	describe("Requirement 3.3: Single timestamp selection updates map raster", () => {
-		it("should call onTimestampSelect when a timestamp is clicked", () => {
+	describe("Single date selection for raster", () => {
+		it("should call onDateSelect when a date dot is clicked", () => {
 			const timestamps = generateTimestamps("2024-01-01", 5, 5);
-			const onTimestampSelect = vi.fn();
+			const onDateSelect = vi.fn();
 
-			renderPanel({ availableTimestamps: timestamps, onTimestampSelect });
+			renderPanel({ availableTimestamps: timestamps, onDateSelect });
 
-			const options = screen.getAllByRole("option");
-			fireEvent.click(options[2]);
+			// Date dots are rendered as buttons with aria-label containing the date
+			const buttons = screen.getAllByRole("button", { name: /Select/ });
+			// Click the third date dot
+			fireEvent.click(buttons[2]);
 
-			expect(onTimestampSelect).toHaveBeenCalledWith(timestamps[2]);
+			expect(onDateSelect).toHaveBeenCalledWith(timestamps[2]);
 		});
 
-		it("should mark the clicked timestamp as selected", () => {
+		it("should render date stepper when onDateSelect is provided", () => {
 			const timestamps = generateTimestamps("2024-01-01", 5, 5);
-			renderPanel({ availableTimestamps: timestamps });
+			const onDateSelect = vi.fn();
 
-			const options = screen.getAllByRole("option");
-			fireEvent.click(options[2]);
-
-			expect(options[2].getAttribute("aria-selected")).toBe("true");
-		});
-	});
-
-	describe("Requirement 3.4: Handle unavailable raster on timestamp select", () => {
-		it("should display raster unavailable message when provided", () => {
 			renderPanel({
-				rasterUnavailableMessage: "No satellite image available for the selected date",
+				availableTimestamps: timestamps,
+				onDateSelect,
+				selectedDate: timestamps[2],
 			});
 
-			const alert = screen.getByRole("alert");
-			expect(alert.textContent).toContain("No satellite image available");
-		});
-
-		it("should not display message when rasterUnavailableMessage is null", () => {
-			renderPanel({ rasterUnavailableMessage: null });
-
-			expect(screen.queryByRole("alert")).toBeNull();
+			expect(screen.getByLabelText("Previous date")).toBeTruthy();
+			expect(screen.getByLabelText("Next date")).toBeTruthy();
 		});
 	});
 
-	describe("Requirement 3.5: Trend preview line chart for active variable", () => {
-		it("should display trend preview chart when trendData has 2+ points", () => {
+	describe("Time range presets", () => {
+		it("should render time range preset buttons", () => {
+			renderPanel();
+
+			expect(screen.getByLabelText("Set time range to 7d")).toBeTruthy();
+			expect(screen.getByLabelText("Set time range to 30d")).toBeTruthy();
+			expect(screen.getByLabelText("Set time range to 90d")).toBeTruthy();
+			expect(screen.getByLabelText("Set time range to All")).toBeTruthy();
+		});
+	});
+
+	describe("Chart view toggle", () => {
+		it("should render chart view toggle when environmental data is provided", () => {
 			const timestamps = generateTimestamps("2024-01-01", 5, 5);
-			const trendData = generateTrendData(timestamps);
+			const envData = timestamps.map((ts, i) => ({
+				timestamp: ts.toISOString(),
+				zone_id: 1,
+				zone_name: "Zone A",
+				zone_city: "City",
+				level_id: 1,
+				level: "extent",
+				ndvi: 0.5 + i * 0.01,
+				gndvi: 0.4,
+				wdrvi: 0.3,
+				msavi: 0.4,
+				ndre: 0.2,
+				cire: 0.3,
+				ndmi: 0.5,
+				ndwi: 0.4,
+			}));
 
-			renderPanel({ availableTimestamps: timestamps, trendData, activeVariableKey: "ndvi" });
+			renderPanel({ availableTimestamps: timestamps, environmentalData: envData });
 
-			const chart = screen.getByLabelText("Trend preview for ndvi");
-			expect(chart).toBeTruthy();
+			expect(screen.getByLabelText("Environmental chart")).toBeTruthy();
+			expect(screen.getByLabelText("Weather chart")).toBeTruthy();
+			expect(screen.getByLabelText("Combined chart")).toBeTruthy();
+		});
+	});
+
+	describe("Empty state when no timestamps available", () => {
+		it("should display empty state message when no timestamps are available", () => {
+			renderPanel({ availableTimestamps: [], trendData: [] });
+
+			expect(
+				screen.getByText(/No observations available for the current selection/),
+			).toBeTruthy();
 		});
 
-		it("should not display chart when trendData has fewer than 2 points", () => {
-			const timestamps = generateTimestamps("2024-01-01", 1, 5);
-			const trendData = [{ ts: timestamps[0], value: 0.5 }];
+		it("should not render timeline controls in empty state", () => {
+			renderPanel({ availableTimestamps: [], trendData: [] });
 
-			// Suppress CSS parsing errors from jsdom (modern CSS syntax not fully supported)
-			const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-
-			renderPanel({ availableTimestamps: timestamps, trendData, activeVariableKey: "ndvi" });
-
-			expect(screen.queryByLabelText("Trend preview for ndvi")).toBeNull();
-			consoleError.mockRestore();
+			expect(screen.queryByRole("slider")).toBeNull();
 		});
+	});
 
-		it("should not display chart when activeVariableKey is null", () => {
-			const timestamps = generateTimestamps("2024-01-01", 5, 5);
-			const trendData = generateTrendData(timestamps);
-
-			renderPanel({ availableTimestamps: timestamps, trendData, activeVariableKey: null });
-
-			expect(screen.queryByLabelText(/Trend preview/)).toBeNull();
-		});
-
+	describe("Active variable display", () => {
 		it("should display the variable key in uppercase", () => {
 			const timestamps = generateTimestamps("2024-01-01", 5, 5);
 			const trendData = generateTrendData(timestamps);
@@ -220,63 +203,6 @@ describe("TimelinePanel", () => {
 			renderPanel({ availableTimestamps: timestamps, trendData, activeVariableKey: "ndvi" });
 
 			expect(screen.getByText("NDVI")).toBeTruthy();
-		});
-	});
-
-	describe("Requirement 3.6: Data gap visual indicators (gaps > 10 days)", () => {
-		it("should display gap indicator when consecutive timestamps are more than 10 days apart", () => {
-			const timestamps = [
-				dayjs("2024-01-01").toDate(),
-				dayjs("2024-01-05").toDate(),
-				dayjs("2024-01-20").toDate(), // 15-day gap from Jan 5
-				dayjs("2024-01-25").toDate(),
-			];
-
-			renderPanel({ availableTimestamps: timestamps, trendData: generateTrendData(timestamps) });
-
-			// Should show a gap indicator with "15d"
-			expect(screen.getByText("15d")).toBeTruthy();
-		});
-
-		it("should not display gap indicator when timestamps are 10 days or fewer apart", () => {
-			const timestamps = generateTimestamps("2024-01-01", 5, 5); // 5-day intervals
-
-			renderPanel({ availableTimestamps: timestamps, trendData: generateTrendData(timestamps) });
-
-			// No gap indicators should be present
-			expect(screen.queryByText(/\d+d/)).toBeNull();
-		});
-
-		it("should display multiple gap indicators for multiple gaps", () => {
-			const timestamps = [
-				dayjs("2024-01-01").toDate(),
-				dayjs("2024-01-20").toDate(), // 19-day gap
-				dayjs("2024-02-05").toDate(), // 16-day gap
-				dayjs("2024-02-10").toDate(),
-			];
-
-			renderPanel({ availableTimestamps: timestamps, trendData: generateTrendData(timestamps) });
-
-			expect(screen.getByText("19d")).toBeTruthy();
-			expect(screen.getByText("16d")).toBeTruthy();
-		});
-	});
-
-	describe("Requirement 3.7: Empty state when no timestamps available", () => {
-		it("should display empty state message when no timestamps are available", () => {
-			renderPanel({ availableTimestamps: [], trendData: [] });
-
-			expect(
-				screen.getByText(/No data available for the current selection/),
-			).toBeTruthy();
-		});
-
-		it("should not render timeline controls in empty state", () => {
-			renderPanel({ availableTimestamps: [], trendData: [] });
-
-			expect(screen.queryByRole("listbox")).toBeNull();
-			expect(screen.queryByLabelText("Range start")).toBeNull();
-			expect(screen.queryByLabelText("Range end")).toBeNull();
 		});
 	});
 });

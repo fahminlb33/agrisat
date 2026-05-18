@@ -37,6 +37,9 @@ export const InsightSeveritySchema = z.enum(["info", "warning", "critical"]);
 /** Vegetation/environmental index value constrained to [-1, 1] */
 const indexValue = z.number().min(-1).max(1);
 
+/** CIre (Chlorophyll Index Red Edge) can exceed 1 — it's a ratio, not a normalized difference */
+const cireValue = z.number().min(-1);
+
 export const EnvironmentalTimePointSchema = z.object({
   timestamp: z.string(),
   zone_id: z.number().int(),
@@ -49,7 +52,7 @@ export const EnvironmentalTimePointSchema = z.object({
   wdrvi: indexValue,
   msavi: indexValue,
   ndre: indexValue,
-  cire: indexValue,
+  cire: cireValue,
   ndmi: indexValue,
   ndwi: indexValue,
 });

@@ -33,9 +33,14 @@ class AnalysisQuery(BaseModel):
     variable_keys: list[str] = DEFAULT_VARIABLE_KEYS
 
     @model_validator(mode="after")
-    def start_before_end(self) -> "AnalysisQuery":
+    def validate_query(self) -> "AnalysisQuery":
         if self.start_ts >= self.end_ts:
             raise ValueError("'start_ts' must be before 'end_ts'")
+        # Support comma-separated variable_keys (e.g. "ndvi,gndvi" as a single item)
+        expanded: list[str] = []
+        for key in self.variable_keys:
+            expanded.extend(k.strip() for k in key.split(",") if k.strip())
+        self.variable_keys = expanded
         return self
 
 
@@ -47,9 +52,14 @@ class CompareZonesQuery(BaseModel):
     variable_keys: list[str] = DEFAULT_VARIABLE_KEYS
 
     @model_validator(mode="after")
-    def start_before_end(self) -> "CompareZonesQuery":
+    def validate_query(self) -> "CompareZonesQuery":
         if self.start_ts >= self.end_ts:
             raise ValueError("'start_ts' must be before 'end_ts'")
+        # Support comma-separated variable_keys
+        expanded: list[str] = []
+        for key in self.variable_keys:
+            expanded.extend(k.strip() for k in key.split(",") if k.strip())
+        self.variable_keys = expanded
         return self
 
 

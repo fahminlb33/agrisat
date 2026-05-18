@@ -55,7 +55,7 @@ export type ZoneLevelRegistry = Map<number, number>;
 
 export function getDefaultTimeRange(): { startTs: Date; endTs: Date } {
 	return {
-		startTs: dayjs().subtract(30, "day").startOf("day").toDate(),
+		startTs: dayjs().subtract(90, "day").startOf("day").toDate(),
 		endTs: dayjs().startOf("day").toDate(),
 	};
 }

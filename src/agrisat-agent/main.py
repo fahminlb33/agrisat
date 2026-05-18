@@ -1,5 +1,10 @@
+from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
+
+# Load .env.local (primary) then .env as fallback
+env_dir = Path(__file__).parent
+load_dotenv(env_dir / ".env.local")
+load_dotenv(env_dir / ".env")  # won't override already-set vars
 
 import os
 import uvicorn

@@ -61,7 +61,12 @@ export interface RunAgentSSEParams {
 export interface ADKEvent {
   /** Raw event content from ADK */
   content: {
-    parts?: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }>;
+    parts?: Array<{
+      text?: string;
+      inline_data?: { mime_type: string; data: string };
+      function_call?: { name: string; args: Record<string, unknown> };
+      function_response?: { name: string; response: unknown };
+    }>;
     role?: string;
   };
   /** Whether this is a partial streaming chunk */

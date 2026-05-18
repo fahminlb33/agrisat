@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useStore } from "zustand";
+import { Info } from "lucide-react";
 import type {
 	TrendDirection,
 	ZoneInsight,
@@ -10,8 +11,17 @@ import type {
 
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "#/components/ui/dialog";
 import { ScrollArea } from "#/components/ui/scroll-area";
 import { Separator } from "#/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "#/components/ui/tabs";
 
 // -----------------------------------------------------------
 // Types
@@ -87,6 +97,8 @@ export interface AnalysisPanelProps {
 	comparisonTargetBName?: string;
 	comparisonMissingData?: "target_a" | "target_b" | "both" | null;
 	dataSource?: DataSourceAttribution | null;
+	/** Variable descriptions for info popovers */
+	variableDescriptions?: Record<string, string>;
 }
 
 // -----------------------------------------------------------
@@ -235,23 +247,49 @@ function TrendIndicator({ trend }: { trend: TrendDirection }) {
 	);
 }
 
-function MetricCard({ metric, dataPointCount }: { metric: VariableMetric; dataPointCount: number }) {
+function MetricCard({ metric, dataPointCount, description }: { metric: VariableMetric; dataPointCount: number; description?: string }) {
 	return (
 		<Card size="sm">
 			<CardHeader className="pb-1">
 				<CardTitle className="flex items-center justify-between text-sm">
 					<span>{VARIABLE_LABELS[metric.variableKey] ?? metric.variableKey.toUpperCase()}</span>
-					{dataPointCount >= 2 ? (
-						<TrendIndicator trend={metric.trend} />
-					) : (
-						<span className="text-xs text-muted-foreground" aria-label="Trend unavailable">
-							— No trend
-						</span>
-					)}
+					<div className="flex items-center gap-1.5">
+						{dataPointCount >= 2 ? (
+							<TrendIndicator trend={metric.trend} />
+						) : (
+							<span className="text-xs text-muted-foreground" aria-label="Trend unavailable">
+								— No trend
+							</span>
+						)}
+						{description && (
+							<Dialog>
+								<DialogTrigger asChild>
+									<button
+										type="button"
+										className="shrink-0 rounded p-0.5 text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors"
+										aria-label={`Info about ${VARIABLE_LABELS[metric.variableKey] ?? metric.variableKey}`}
+									>
+										<Info className="h-3.5 w-3.5" />
+									</button>
+								</DialogTrigger>
+								<DialogContent>
+									<DialogHeader>
+										<DialogTitle>{VARIABLE_LABELS[metric.variableKey] ?? metric.variableKey.toUpperCase()}</DialogTitle>
+										<DialogDescription className="text-xs text-muted-foreground">
+											{metric.variableKey.toUpperCase()}
+										</DialogDescription>
+									</DialogHeader>
+									<p className="text-sm leading-relaxed text-foreground/90">
+										{description}
+									</p>
+								</DialogContent>
+							</Dialog>
+						)}
+					</div>
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<div className="grid grid-cols-2 gap-2 text-xs">
+				<div className="grid grid-cols-4 gap-2 text-xs">
 					<div>
 						<span className="block text-muted-foreground">Current</span>
 						<span className="font-medium text-foreground">
@@ -277,12 +315,19 @@ function MetricCard({ metric, dataPointCount }: { metric: VariableMetric; dataPo
 						</span>
 					</div>
 				</div>
+				{dataPointCount >= 2 && (
+					<div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
+						<span>Δ {metric.trendMagnitude >= 0 ? "+" : ""}{metric.trendMagnitude.toFixed(5)}/obs</span>
+						<span>·</span>
+						<span>{dataPointCount} data points</span>
+					</div>
+				)}
 			</CardContent>
 		</Card>
 	);
 }
 
-function WeatherCard({ summary }: { summary: WeatherSummary }) {
+function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSummary; weatherData: WeatherTimePoint[]; zoneName?: string }) {
 	if (
 		summary.currentTemperature === null &&
 		summary.avgTemperature === null &&
@@ -292,18 +337,65 @@ function WeatherCard({ summary }: { summary: WeatherSummary }) {
 		return null;
 	}
 
+	// Get the latest few data points for the horizontal timeline (3h intervals)
+	const timelinePoints = weatherData.slice(-24); // Last 24 entries (up to 72h)
+
 	return (
 		<Card size="sm">
 			<CardHeader className="pb-1">
-				<CardTitle className="text-sm">Weather</CardTitle>
+				<CardTitle className="flex items-center justify-between text-sm">
+					<span>Weather</span>
+					{zoneName && (
+						<span className="text-[10px] font-normal text-muted-foreground">
+							📍 {zoneName}
+						</span>
+					)}
+				</CardTitle>
 			</CardHeader>
 			<CardContent>
+				{/* Horizontal weather timeline */}
+				{timelinePoints.length > 0 && (
+					<div className="mb-3 -mx-1 overflow-x-auto">
+						<div className="flex gap-0 min-w-max">
+							{timelinePoints.map((point, idx) => {
+								const tempRaw = point.temperature;
+								const tempC = tempRaw > 100 ? tempRaw - 273.15 : tempRaw;
+								const hour = new Date(point.timestamp).getHours();
+
+								let icon = "☀️";
+								if (point.is_raining && point.precipitation > 0.001) icon = "🌧️";
+								else if (point.is_raining) icon = "🌦️";
+								else if (point.cloud_cover_pct > 80) icon = "☁️";
+								else if (point.cloud_cover_pct > 40) icon = "⛅";
+
+								return (
+									<div
+										key={`${idx}-${point.timestamp}`}
+										className="flex flex-col items-center px-1.5 py-1"
+									>
+										<span className="text-[9px] text-muted-foreground">
+											{hour.toString().padStart(2, "0")}
+										</span>
+										<span className="text-sm" role="img" aria-hidden="true">
+											{icon}
+										</span>
+										<span className="text-[10px] font-medium">
+											{tempC.toFixed(0)}°
+										</span>
+									</div>
+								);
+							})}
+						</div>
+					</div>
+				)}
+
+				{/* Summary stats */}
 				<div className="grid grid-cols-2 gap-2 text-xs">
 					{summary.currentTemperature !== null && (
 						<div>
 							<span className="block text-muted-foreground">Temperature</span>
 							<span className="font-medium text-foreground">
-								{summary.currentTemperature.toFixed(1)} °C
+								{(summary.currentTemperature > 100 ? summary.currentTemperature - 273.15 : summary.currentTemperature).toFixed(1)} °C
 							</span>
 						</div>
 					)}
@@ -311,7 +403,7 @@ function WeatherCard({ summary }: { summary: WeatherSummary }) {
 						<div>
 							<span className="block text-muted-foreground">Avg Temp</span>
 							<span className="font-medium text-foreground">
-								{summary.avgTemperature.toFixed(1)} °C
+								{(summary.avgTemperature > 100 ? summary.avgTemperature - 273.15 : summary.avgTemperature).toFixed(1)} °C
 							</span>
 						</div>
 					)}
@@ -319,7 +411,7 @@ function WeatherCard({ summary }: { summary: WeatherSummary }) {
 						<div>
 							<span className="block text-muted-foreground">Precipitation</span>
 							<span className="font-medium text-foreground">
-								{summary.totalPrecipitation.toFixed(1)} mm
+								{summary.totalPrecipitation.toFixed(4)} kg/m²
 							</span>
 						</div>
 					)}
@@ -565,6 +657,7 @@ export default function AnalysisPanel({
 	comparisonTargetBName,
 	comparisonMissingData,
 	dataSource,
+	variableDescriptions,
 }: AnalysisPanelProps) {
 	const zoneId = useStore(store, (s) => s.zoneId);
 	const comparisonMode = useStore(store, (s) => s.comparisonMode);
@@ -643,7 +736,7 @@ export default function AnalysisPanel({
 
 	return (
 		<aside
-			className="flex h-full flex-col border-l border-border bg-card"
+			className="flex h-full flex-col border-l pr-4 border-border bg-card"
 			aria-label="Analysis Panel"
 		>
 			<ScrollArea className="h-full">
@@ -667,6 +760,19 @@ export default function AnalysisPanel({
 						</p>
 					)}
 
+					{/* Weather timeline (above environmental data) */}
+					{weatherData.length > 0 && (
+						<section aria-labelledby="weather-label">
+							<h3
+								id="weather-label"
+								className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+							>
+								Weather
+							</h3>
+							<WeatherCard summary={weatherSummary} weatherData={weatherData} zoneName={zoneInfo?.zoneName} />
+						</section>
+					)}
+
 					{/* Environmental metrics */}
 					{metrics.length > 0 && (
 						<section aria-labelledby="env-metrics-label">
@@ -682,22 +788,10 @@ export default function AnalysisPanel({
 										key={metric.variableKey}
 										metric={metric}
 										dataPointCount={dataPointCount}
+										description={variableDescriptions?.[metric.variableKey]}
 									/>
 								))}
 							</div>
-						</section>
-					)}
-
-					{/* Weather summary */}
-					{weatherData.length > 0 && (
-						<section aria-labelledby="weather-label">
-							<h3
-								id="weather-label"
-								className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-							>
-								Weather Summary
-							</h3>
-							<WeatherCard summary={weatherSummary} />
 						</section>
 					)}
 
