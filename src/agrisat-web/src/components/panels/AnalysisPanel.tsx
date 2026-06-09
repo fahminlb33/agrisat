@@ -1,13 +1,13 @@
-import { useMemo, useState } from "react";
-import { useStore } from "zustand";
-import { Info } from "lucide-react";
 import type {
+	ComparisonDelta,
+	ComparisonResult,
+	InsightSeverity,
 	TrendDirection,
 	ZoneInsight,
-	InsightSeverity,
-	ComparisonResult,
-	ComparisonDelta,
 } from "#/types/api";
+import { Info } from "lucide-react";
+import { useMemo } from "react";
+import { useStore } from "zustand";
 
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
@@ -21,7 +21,6 @@ import {
 } from "#/components/ui/dialog";
 import { ScrollArea } from "#/components/ui/scroll-area";
 import { Separator } from "#/components/ui/separator";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "#/components/ui/tabs";
 
 // -----------------------------------------------------------
 // Types

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bot } from "lucide-react";
+import { useRouterState } from "@tanstack/react-router";
 import { Sidebar } from "#/components/sidebar/Sidebar";
 import { AIAssistantPanel } from "#/components/ai/AIAssistantPanel";
 import ThemeToggle from "#/components/ThemeToggle";
@@ -30,6 +31,15 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const { forceSidebarCollapsed, aiPanelAsOverlay } =
     useResponsiveLayout(aiPanelOpen);
+
+  // Routes that should render without the app chrome (sidebar, top bar, AI panel)
+  const routerState = useRouterState();
+  const currentPath = routerState.location.pathname;
+  const isMinimalRoute = currentPath === "/new";
+
+  if (isMinimalRoute) {
+    return <>{children}</>;
+  }
 
   // Effective collapsed state: user preference OR responsive override
   const effectiveCollapsed = sidebarCollapsed || forceSidebarCollapsed;
