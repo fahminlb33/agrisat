@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Bot } from "lucide-react";
-import { useRouterState } from "@tanstack/react-router";
 import { Sidebar } from "#/components/sidebar/Sidebar";
 import { AIAssistantPanel } from "#/components/ai/AIAssistantPanel";
 import ThemeToggle from "#/components/ThemeToggle";
@@ -13,33 +12,13 @@ export interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-/**
- * Three-column application layout: Sidebar (left) | Main Content (center) | AI Panel (right).
- *
- * - Sidebar collapsed state is managed via `useSidebarState` (localStorage-persisted).
- * - Responsive breakpoints override user preference:
- *   - Viewport < 1024px: sidebar forced to collapsed (icon-only)
- *   - Viewport < 1100px with AI panel open: sidebar forced to collapsed
- *   - Viewport < 768px: AI panel renders as full-screen overlay
- * - AI panel is toggled via a button in the top bar area.
- * - Main content retains a minimum width of 480px when both panels are active.
- * - Panel open/close transitions use 200ms CSS transitions with zero layout shift.
- */
+
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, toggleSidebarCollapse] = useSidebarState();
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   const { forceSidebarCollapsed, aiPanelAsOverlay } =
     useResponsiveLayout(aiPanelOpen);
-
-  // Routes that should render without the app chrome (sidebar, top bar, AI panel)
-  const routerState = useRouterState();
-  const currentPath = routerState.location.pathname;
-  const isMinimalRoute = currentPath === "/new";
-
-  if (isMinimalRoute) {
-    return <>{children}</>;
-  }
 
   // Effective collapsed state: user preference OR responsive override
   const effectiveCollapsed = sidebarCollapsed || forceSidebarCollapsed;

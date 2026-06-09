@@ -515,7 +515,7 @@ function MinimalMapContent({
 	const activeVarKey = activeVariableId ? VARIABLE_KEY_MAP[activeVariableId] ?? "ndvi" : "ndvi";
 
 	return (
-		<div className="relative h-screen w-full overflow-hidden">
+		<div className="fixed inset-0 z-50 h-screen w-full overflow-hidden bg-background text-foreground">
 			{/* Full-screen map */}
 			<div className="absolute inset-0">
 				<MapComponent
@@ -725,7 +725,7 @@ function MinimalMapContent({
 
 			{/* AI Assistant Panel overlay */}
 			{aiPanelOpen && (
-				<div className="absolute inset-y-0 right-0 z-30 w-full max-w-sm animate-in slide-in-from-right-8 duration-300">
+				<div className="absolute bottom-16 left-4 z-30 h-[70vh] w-[380px] overflow-hidden rounded-xl border border-border shadow-xl animate-in slide-in-from-bottom-8 duration-300 [&>aside]:h-full [&>aside]:w-full [&>aside]:border-l-0">
 					<AIAssistantPanel open={aiPanelOpen} onClose={() => setAiPanelOpen(false)} />
 				</div>
 			)}
