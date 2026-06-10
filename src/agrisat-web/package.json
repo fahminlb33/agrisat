@@ -29,6 +29,7 @@
 		"@tanstack/react-router-ssr-query": "latest",
 		"@tanstack/react-start": "latest",
 		"@tanstack/router-plugin": "^1.132.0",
+		"@turf/boolean-point-in-polygon": "^7.3.5",
 		"ai": "^6.0.183",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
@@ -52,6 +53,7 @@
 		"rehype-katex": "^7.0.1",
 		"remark-gfm": "^4.0.1",
 		"remark-math": "^6.0.0",
+		"satellite.js": "^7.0.1",
 		"shadcn": "^4.7.0",
 		"sonner": "^2.0.7",
 		"tailwind-merge": "^3.6.0",
@@ -81,12 +83,5 @@
 		"vite": "^8.0.0",
 		"vitest": "^4.1.5"
 	},
-	"packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499",
-	"pnpm": {
-		"onlyBuiltDependencies": [
-			"esbuild",
-			"lightningcss",
-			"protobufjs"
-		]
-	}
+	"packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499"
 }

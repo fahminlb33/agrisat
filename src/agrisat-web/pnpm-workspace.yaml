@@ -2,3 +2,9 @@ allowBuilds:
   esbuild: true
   msw: true
   protobufjs: true
+
+onlyBuiltDependencies: 
+  esbuild: true
+  lightningcss: true
+  protobufjs: true
+		

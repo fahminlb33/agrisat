@@ -6,6 +6,7 @@ import viteReact, { reactCompilerPreset } from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import babel from "@rolldown/plugin-babel";
 import { nitro } from "nitro/vite";
+import tailwindcss from "@tailwindcss/vite";
 
 const config = defineConfig({
 	resolve: { tsconfigPaths: true },
