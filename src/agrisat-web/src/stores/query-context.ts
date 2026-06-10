@@ -83,7 +83,7 @@ export function createQueryContextStore(zoneLevelRegistry: ZoneLevelRegistry) {
 			set({
 				levelId,
 				zoneId: null,
-				activeVariableId: null,
+				// Don't reset activeVariableId — the variable selection is independent of level
 			});
 		},
 
