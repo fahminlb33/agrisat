@@ -30,6 +30,10 @@ export interface AIAssistantPanelProps {
   open: boolean;
   /** Callback to close the panel */
   onClose: () => void;
+  /** Controlled expanded state — if provided the parent owns expand/collapse */
+  expanded?: boolean;
+  /** Called when the user toggles expand. Required when `expanded` is provided. */
+  onExpandedChange?: (expanded: boolean) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -70,9 +74,24 @@ const MODE_SUGGESTIONS: Record<ChatMode, string[]> = {
  * Uses ai-elements components (Conversation, Suggestion) for the chat UI
  * and the custom `useAgentChat` hook for ADK communication.
  */
-export function AIAssistantPanel({ open, onClose }: AIAssistantPanelProps) {
+export function AIAssistantPanel({
+  open,
+  onClose,
+  expanded: expandedProp,
+  onExpandedChange,
+}: AIAssistantPanelProps) {
   const [activeMode, setActiveMode] = useState<ChatMode>("explain");
-  const [expanded, setExpanded] = useState(false);
+  // Support both controlled (parent owns expanded) and uncontrolled modes
+  const [expandedInternal, setExpandedInternal] = useState(false);
+  const isControlled = expandedProp !== undefined;
+  const expanded = isControlled ? expandedProp : expandedInternal;
+  const setExpanded = (value: boolean) => {
+    if (isControlled) {
+      onExpandedChange?.(value);
+    } else {
+      setExpandedInternal(value);
+    }
+  };
   const inputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
 
@@ -113,17 +132,13 @@ export function AIAssistantPanel({ open, onClose }: AIAssistantPanelProps) {
   return (
     <aside
       className={cn(
-        "shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-200",
-        open
-          ? expanded
-            ? "w-[820px] opacity-100"
-            : "w-[380px] opacity-100"
-          : "w-0 opacity-0 border-l-0",
+        "shrink-0 overflow-hidden border-l border-border bg-card",
+        open ? "w-full h-full opacity-100" : "w-0 opacity-0 border-l-0",
       )}
       aria-label="AI assistant panel"
     >
       {open && (
-        <div className={cn("flex h-full flex-col", expanded ? "w-[820px]" : "w-[380px]")}>
+        <div className="flex h-full flex-col w-full">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <h2 className="text-sm font-semibold">AI Agro Assistant</h2>
@@ -131,9 +146,9 @@ export function AIAssistantPanel({ open, onClose }: AIAssistantPanelProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setExpanded((prev) => !prev)}
+                onClick={() => setExpanded(!expanded)}
                 aria-label={expanded ? "Collapse panel" : "Expand panel"}
-                className="h-7 w-7"
+                className="hidden sm:flex h-7 w-7"
                 title={expanded ? "Collapse panel" : "Expand panel"}
               >
                 {expanded ? (

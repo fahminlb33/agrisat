@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { getEnvironmentalTimeSeries } from "#/services/api";
 import type { EnvironmentalTimePoint } from "#/types/api";
 
@@ -28,6 +28,7 @@ export const environmentalKeys = {
  *
  * - Validates response with Zod schema (Requirement 11.5)
  * - Stale time: 5 minutes for time series data (stale-while-revalidate)
+ * - placeholderData: keepPreviousData — shows old data while new zone loads
  * - Only enabled when at least one of zoneId or levelId is provided
  */
 export function useEnvironmentalData(params: {
@@ -49,6 +50,7 @@ export function useEnvironmentalData(params: {
 				endTs,
 			}),
 		enabled: enabled && (zoneId != null || levelId != null),
-		staleTime: 5 * 60 * 1000, // 5 minutes
+		staleTime: 5 * 60 * 1000,
+		placeholderData: keepPreviousData,
 	});
 }

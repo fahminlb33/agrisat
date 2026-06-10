@@ -1,388 +1,195 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useStore } from "zustand";
+import { useEffect, useRef, useState } from "react";
+import { Bot, Leaf } from "lucide-react";
 
-import ControlsPanel from "#/components/panels/ControlsPanel";
-import MapPanel from "#/components/panels/MapPanel";
-import TimelinePanel from "#/components/panels/TimelinePanel";
-import AnalysisPanel from "#/components/panels/AnalysisPanel";
-import { ErrorBoundary } from "#/components/ErrorBoundary";
 import {
 	createQueryContextStore,
 	type ZoneLevelRegistry,
 } from "#/stores/query-context";
 import { useLevels, useZones, useVariables } from "#/hooks/useLayers";
-import { useEnvironmentalData } from "#/hooks/useEnvironmentalData";
-import { useWeatherData } from "#/hooks/useWeatherData";
-import { useInsights } from "#/hooks/useInsights";
-import { useComparison } from "#/hooks/useComparison";
-import type { Zone as ApiZone, Variable as ApiVariable, Level } from "#/services/api";
-import type { ZoneLevel, Zone, Variable } from "#/components/panels/ControlsPanel";
-import type { EnvironmentalTimePoint } from "#/types/api";
+import ThemeToggle from "#/components/ThemeToggle";
+import { AIAssistantPanel } from "#/components/ai/AIAssistantPanel";
+import { Button } from "#/components/ui/button";
+import { cn } from "#/lib/utils";
 
-export const Route = createFileRoute("/")({ component: Dashboard });
+import {
+	ControlProvider,
+	useControls,
+	MapOverlay,
+	ZoneSearch,
+	ZoneHUD,
+	WeatherWidget,
+	BottomBar,
+} from "#/components/sections/fullscreen";
 
-// -----------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------
+export const Route = createFileRoute("/")({
+	component: MinimalMapView,
+});
 
-function mapLevels(apiLevels: Level[]): ZoneLevel[] {
-	return apiLevels.map((l) => ({ levelId: l.level_id, level: l.level }));
-}
+function MinimalMapView() {
+	const { data: rawLevels, isLoading: levelsLoading, isError: levelsError } = useLevels();
+	const { data: rawZones, isLoading: zonesLoading, isError: zonesError } = useZones();
+	const { data: rawVariables } = useVariables();
 
-function mapZones(apiZones: ApiZone[]): Zone[] {
-	return apiZones.map((z) => ({
-		zoneId: z.zone_id,
-		levelId: z.level_id,
-		level: z.level,
-		name: z.name,
-		city: z.city,
-		area: z.area,
-	}));
-}
-
-function mapVariables(apiVars: ApiVariable[]): Variable[] {
-	return apiVars.map((v) => ({
-		variableId: v.variable_id,
-		type: v.type as "static" | "dynamic",
-		category: v.category as Variable["category"],
-		key: v.key,
-		name: v.name,
-		description: v.description,
-	}));
-}
-
-const VARIABLE_KEY_MAP: Record<number, string> = {
-	2: "ndvi",
-	3: "gndvi",
-	4: "wdrvi",
-	5: "msavi",
-	6: "ndre",
-	7: "cire",
-	8: "ndmi",
-	9: "ndwi",
-};
-
-// -----------------------------------------------------------
-// Store-connected hook: subscribes to QueryContext for reactive data fetching
-// -----------------------------------------------------------
-
-function useStoreState(store: ReturnType<typeof createQueryContextStore>) {
-	const zoneId = useStore(store, (s) => s.zoneId);
-	const levelId = useStore(store, (s) => s.levelId);
-	const timeRange = useStore(store, (s) => s.timeRange);
-	const activeVariableId = useStore(store, (s) => s.activeVariableId);
-	const variableIds = useStore(store, (s) => s.variableIds);
-	const comparisonMode = useStore(store, (s) => s.comparisonMode);
-
-	return { zoneId, levelId, timeRange, activeVariableId, variableIds, comparisonMode };
-}
-
-// -----------------------------------------------------------
-// Dashboard Component
-// -----------------------------------------------------------
-
-function Dashboard() {
-	// -----------------------------------------------------------
-	// Load reference data via TanStack Query hooks
-	// -----------------------------------------------------------
-	const { data: rawLevels, isLoading: levelsLoading } = useLevels();
-	const { data: rawZones, isLoading: zonesLoading } = useZones();
-	const { data: rawVariables, isLoading: variablesLoading } = useVariables();
-
-	const levels = useMemo(() => mapLevels(rawLevels ?? []), [rawLevels]);
-	const zones = useMemo(() => mapZones(rawZones ?? []), [rawZones]);
-	const variables = useMemo(() => mapVariables(rawVariables ?? []), [rawVariables]);
-
-	// -----------------------------------------------------------
-	// Store initialization
-	// -----------------------------------------------------------
+	// Store setup — created once when data is ready
 	const storeRef = useRef<ReturnType<typeof createQueryContextStore> | null>(null);
 	const [storeReady, setStoreReady] = useState(false);
 
-	useEffect(() => {
-		if (!rawZones || rawZones.length === 0) return;
-		if (storeRef.current) return; // Already initialized
+	const fetchDone = !levelsLoading && !zonesLoading;
 
-		// Build zone-level registry for store validation
+	useEffect(() => {
+		if (!fetchDone) return;
+		if (storeRef.current) return;
+
 		const registry: ZoneLevelRegistry = new Map();
-		for (const z of rawZones) {
-			registry.set(z.zone_id, z.level_id);
+		if (rawZones) {
+			for (const z of rawZones) {
+				registry.set(z.zone_id, z.level_id);
+			}
 		}
 
 		const store = createQueryContextStore(registry);
 		storeRef.current = store;
 
-		// Default to "extent" level and first zone in that level
-		if (rawLevels && rawLevels.length > 0) {
+		if (rawLevels && rawLevels.length > 0 && rawZones && rawZones.length > 0) {
 			const extentLevel = rawLevels.find((l) => l.level === "extent");
 			const defaultLevel = extentLevel ?? rawLevels[0];
 			store.getState().setLevel(defaultLevel.level_id);
 
-			// Select the first zone for that level
 			const firstZone = rawZones.find((z) => z.level_id === defaultLevel.level_id);
 			if (firstZone) {
 				store.getState().setZone(firstZone.zone_id);
 			}
 		}
 
+		// Default to NDVI variable
+		if (rawVariables && rawVariables.length > 0) {
+			const ndvi = rawVariables.find((v) => v.key === "ndvi");
+			if (ndvi) {
+				store.getState().toggleVariable(ndvi.variable_id);
+				store.getState().setActiveVariable(ndvi.variable_id);
+			}
+		}
+
 		setStoreReady(true);
-	}, [rawZones, rawLevels]);
+	}, [fetchDone, rawZones, rawLevels, rawVariables]);
 
-	const store = storeRef.current;
-
-	// -----------------------------------------------------------
-	// Loading state
-	// -----------------------------------------------------------
-	const loading = levelsLoading || zonesLoading || variablesLoading;
-
-	if (loading || !storeReady || !store) {
+	if (!fetchDone || !storeReady || !storeRef.current) {
 		return (
-			<main className="flex h-[calc(100vh-64px)] items-center justify-center">
-				<div className="text-center">
-					<div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[var(--lagoon)] border-t-transparent mx-auto" />
-					<p className="text-sm text-[var(--sea-ink-soft)]">Loading AgriSat…</p>
-				</div>
-			</main>
+			<div className="flex h-screen w-full items-center justify-center bg-[var(--background)]">
+				<div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+			</div>
 		);
 	}
 
-	return <DashboardContent store={store} levels={levels} zones={zones} variables={variables} />;
+	return (
+		<ControlProvider queryStore={storeRef.current}>
+			<FullscreenLayout
+				levels={rawLevels ?? []}
+				zones={rawZones ?? []}
+				variables={rawVariables ?? []}
+				hasDataError={levelsError || zonesError}
+			/>
+		</ControlProvider>
+	);
 }
 
-// -----------------------------------------------------------
-// Inner component that has access to the store (avoids conditional hooks)
-// -----------------------------------------------------------
-
-function DashboardContent({
-	store,
+function FullscreenLayout({
 	levels,
 	zones,
 	variables,
+	hasDataError,
 }: {
-	store: ReturnType<typeof createQueryContextStore>;
-	levels: ZoneLevel[];
-	zones: Zone[];
-	variables: Variable[];
+	levels: import("#/services/api").Level[];
+	zones: import("#/services/api").Zone[];
+	variables: import("#/services/api").Variable[];
+	hasDataError?: boolean;
 }) {
-	const { zoneId, levelId, timeRange, activeVariableId, variableIds, comparisonMode } =
-		useStoreState(store);
+	// Only AI panel state at this level — nothing else
+	const aiPanelOpen = useControls((s) => s.aiPanelOpen);
+	const openAiPanel = useControls((s) => s.openAiPanel);
+	const closeAiPanel = useControls((s) => s.closeAiPanel);
 
-	// -----------------------------------------------------------
-	// Data fetching via TanStack Query hooks
-	// All hooks react to QueryContext changes synchronously via useStore
-	// ensuring all panels update within one render cycle (Req 1.2)
-	// -----------------------------------------------------------
-
-	const { data: envData = [], isLoading: envLoading } = useEnvironmentalData({
-		zoneId,
-		levelId,
-		startTs: timeRange.startTs,
-		endTs: timeRange.endTs,
-	});
-
-	const { data: weatherData = [] } = useWeatherData({
-		zoneId,
-		startTs: timeRange.startTs,
-		endTs: timeRange.endTs,
-	});
-
-	// Derive variable keys from variableIds for insights/comparison
-	const activeVariableKeys = useMemo(() => {
-		return variableIds
-			.map((id) => VARIABLE_KEY_MAP[id])
-			.filter((key): key is string => key != null);
-	}, [variableIds]);
-
-	// Insights: fetch zone analysis when a zone is selected
-	const { data: zoneAnalysis } = useInsights({
-		zoneId,
-		startTs: timeRange.startTs,
-		endTs: timeRange.endTs,
-		variableKeys: activeVariableKeys,
-	});
-
-	// -----------------------------------------------------------
-	// Comparison mode: end-to-end wiring (Req 8.1)
-	// When comparison is enabled with two zone targets, fetch comparison data
-	// -----------------------------------------------------------
-
-	const comparisonZoneA = comparisonMode?.type === "zone"
-		? comparisonMode.targetA.zoneId ?? null
-		: null;
-	const comparisonZoneB = comparisonMode?.type === "zone"
-		? comparisonMode.targetB.zoneId ?? null
-		: null;
-
-	const { data: comparisonResult } = useComparison({
-		zoneA: comparisonZoneA,
-		zoneB: comparisonZoneB,
-		startTs: timeRange.startTs,
-		endTs: timeRange.endTs,
-		variableKeys: activeVariableKeys,
-		enabled: comparisonMode?.type === "zone" && comparisonZoneA != null && comparisonZoneB != null,
-	});
-
-	// Determine comparison target names for display
-	const comparisonTargetAName = useMemo(() => {
-		if (comparisonZoneA == null) return "Target A";
-		const zone = zones.find((z) => z.zoneId === comparisonZoneA);
-		return zone?.name ?? `Zone ${comparisonZoneA}`;
-	}, [comparisonZoneA, zones]);
-
-	const comparisonTargetBName = useMemo(() => {
-		if (comparisonZoneB == null) return "Target B";
-		const zone = zones.find((z) => z.zoneId === comparisonZoneB);
-		return zone?.name ?? `Zone ${comparisonZoneB}`;
-	}, [comparisonZoneB, zones]);
-
-	// Determine if comparison data is missing
-	const comparisonMissingData = useMemo(() => {
-		if (!comparisonResult) return null;
-		const hasA = comparisonResult.metrics_a.length > 0;
-		const hasB = comparisonResult.metrics_b.length > 0;
-		if (!hasA && !hasB) return "both" as const;
-		if (!hasA) return "target_a" as const;
-		if (!hasB) return "target_b" as const;
-		return null;
-	}, [comparisonResult]);
-
-	// -----------------------------------------------------------
-	// Derived data for panels
-	// -----------------------------------------------------------
-
-	const zoneInfo = useMemo(() => {
-		if (!zoneId) return null;
-		const zone = zones.find((z) => z.zoneId === zoneId);
-		if (!zone) return null;
-		return {
-			zoneId: zone.zoneId,
-			zoneName: zone.name,
-			level: zone.level,
-			city: zone.city,
-		};
-	}, [zoneId, zones]);
-
-	const availableTimestamps = useMemo(() => {
-		return envData.map((d: EnvironmentalTimePoint) => new Date(d.timestamp));
-	}, [envData]);
-
-	const trendData = useMemo(() => {
-		if (!activeVariableId) return [];
-		const key = VARIABLE_KEY_MAP[activeVariableId] ?? "ndvi";
-		return envData.map((d: EnvironmentalTimePoint) => ({
-			ts: new Date(d.timestamp),
-			value: (d as unknown as Record<string, unknown>)[key] as number ?? 0,
-		}));
-	}, [envData, activeVariableId]);
-
-	const activeVariableKey = activeVariableId
-		? VARIABLE_KEY_MAP[activeVariableId] ?? null
-		: null;
-
-	// Data source attribution: derive from the most recent environmental data point
-	const dataSource = useMemo(() => {
-		if (envData.length === 0) return null;
-		const lastPoint = envData[envData.length - 1];
-		return {
-			satelliteName: "Sentinel-2",
-			lastObservationDate: lastPoint.timestamp,
-		};
-	}, [envData]);
-
-	// Variable descriptions map for info popovers
-	const variableDescriptions = useMemo(() => {
-		const map: Record<string, string> = {};
-		for (const v of variables) {
-			map[v.key] = v.description;
-		}
-		return map;
-	}, [variables]);
-
-	// -----------------------------------------------------------
-	// Selected date for raster layer (single date from timeline)
-	// Dates from environmental indices can be used for both raster and env
-	// -----------------------------------------------------------
-
-	const [selectedRasterDate, setSelectedRasterDate] = useState<Date | null>(null);
-
-	// Auto-select the latest available date when data loads
-	useEffect(() => {
-		if (availableTimestamps.length > 0 && selectedRasterDate === null) {
-			setSelectedRasterDate(availableTimestamps[availableTimestamps.length - 1]);
-		}
-	}, [availableTimestamps, selectedRasterDate]);
-
-	const handleDateSelect = useCallback((date: Date) => {
-		setSelectedRasterDate(date);
-	}, []);
-
-	// -----------------------------------------------------------
-	// Render: Four-panel layout
-	// -----------------------------------------------------------
+	// Lift expanded state so the wrapper width stays in sync with the panel
+	const [aiExpanded, setAiExpanded] = useState(false);
 
 	return (
-		<main className="flex h-[calc(100vh-54px)] flex-col overflow-hidden">
-			{/* Top section: Controls + Map + Analysis */}
-			<div className="flex flex-1 overflow-hidden">
-				{/* Left: Controls Panel */}
-				<div className="w-72 shrink-0 overflow-hidden">
-					<ErrorBoundary>
-						<ControlsPanel
-							levels={levels}
-							zones={zones}
-							variables={variables}
-							store={store}
-							isLayerLoading={envLoading}
-						/>
-					</ErrorBoundary>
-				</div>
+		<div className="fixed inset-0 z-50 h-screen w-full overflow-hidden bg-background text-foreground">
+			{/* Full-screen map — self-contained */}
+			<MapOverlay zones={zones} />
 
-				{/* Center: Map Panel */}
-				<div className="flex-1 overflow-hidden">
-					<ErrorBoundary>
-						<MapPanel
-							store={store}
-							environmentalData={envData as unknown as import("#/components/panels/MapPanel").MapPanelProps["environmentalData"]}
-						/>
-					</ErrorBoundary>
-				</div>
+			{/* Zone selector — self-contained */}
+			<ZoneSearch levels={levels} zones={zones} />
 
-				{/* Right: Analysis Panel */}
-				<div className="w-96 shrink-0 overflow-hidden">
-					<ErrorBoundary>
-						<AnalysisPanel
-							store={store}
-							environmentalData={envData as unknown as import("#/components/panels/AnalysisPanel").EnvironmentalTimePoint[]}
-							weatherData={weatherData as unknown as import("#/components/panels/AnalysisPanel").WeatherTimePoint[]}
-							zoneInfo={zoneInfo}
-							insights={zoneAnalysis?.insights}
-							comparisonResult={comparisonResult ?? undefined}
-							comparisonTargetAName={comparisonTargetAName}
-							comparisonTargetBName={comparisonTargetBName}
-							comparisonMissingData={comparisonMissingData}
-							dataSource={dataSource}
-							variableDescriptions={variableDescriptions}
-						/>
-					</ErrorBoundary>
+			{/* Logo + theme toggle — top left */}
+			<div className="absolute top-4 left-4 z-20 animate-in fade-in slide-in-from-left-4 duration-300">
+				<div className="flex items-center gap-2">
+					<a
+						href="/dashboard"
+						className="flex items-center gap-2 rounded-xl bg-background/95 px-3 py-2.5 shadow-lg backdrop-blur-md ring-1 ring-border/50 transition-all duration-200 hover:shadow-xl"
+					>
+						<Leaf className="h-5 w-5 text-emerald-500" />
+						<span className="hidden sm:inline text-sm font-semibold text-foreground">AgriSat</span>
+					</a>
+					<ThemeToggle variant="floating" />
 				</div>
 			</div>
 
-			{/* Bottom: Timeline Panel */}
-			<div className="shrink-0">
-				<ErrorBoundary>
-					<TimelinePanel
-						store={store}
-						availableTimestamps={availableTimestamps}
-						trendData={trendData}
-						activeVariableKey={activeVariableKey}
-						environmentalData={envData as unknown as import("#/types/api").EnvironmentalTimePoint[]}
-						weatherData={weatherData as unknown as import("#/types/api").WeatherTimePoint[]}
-						onDateSelect={handleDateSelect}
-						selectedDate={selectedRasterDate}
+			{/* Weather widget — top right, self-contained */}
+			<div className="absolute top-4 right-4 z-20 animate-in fade-in slide-in-from-right-4 duration-300">
+				<WeatherWidget />
+			</div>
+
+			{/* Zone HUD — middle left, self-contained */}
+			<ZoneHUD zones={zones} levels={levels} variables={variables} />
+
+			{/* Bottom bar — self-contained */}
+			<BottomBar levels={levels} zones={zones} variables={variables} />
+
+			{/* AI Assistant button — bottom left, sits above the bottom bar */}
+			<div className="absolute bottom-[4.5rem] md:bottom-5 left-4 z-20 animate-in fade-in slide-in-from-left-4 duration-300">
+				<Button
+					variant="ghost"
+					onClick={openAiPanel}
+					aria-label="Open AI Assistant"
+					className="rounded-xl bg-background/95 px-3 py-2.5 h-auto shadow-lg backdrop-blur-md ring-1 ring-border/50 transition-all duration-200 hover:shadow-xl hover:bg-background/95 gap-2"
+				>
+					<Bot className="h-4 w-4 text-emerald-500" />
+					<span className="text-xs font-medium text-foreground">AI</span>
+				</Button>
+			</div>
+
+			{/* AI Assistant Panel overlay */}
+			{aiPanelOpen && (
+				<div
+					className={cn(
+						"absolute z-30 overflow-hidden rounded-xl bg-background/95 shadow-lg backdrop-blur-md ring-1 ring-border/50 animate-in slide-in-from-bottom-8 duration-300 transition-[width,height]",
+						"[&>aside]:h-full [&>aside]:w-full [&>aside]:border-l-0",
+						// Mobile: full screen overlay
+						"inset-0 rounded-none sm:inset-auto",
+						// Desktop: floating panel above bottom bar
+						aiExpanded
+							? "sm:bottom-[5.5rem] sm:left-4 sm:h-[70vh] sm:w-[820px] sm:rounded-xl"
+							: "sm:bottom-[5.5rem] sm:left-4 sm:h-[70vh] sm:w-[380px] sm:rounded-xl",
+					)}
+				>
+					<AIAssistantPanel
+						open={aiPanelOpen}
+						onClose={closeAiPanel}
+						expanded={aiExpanded}
+						onExpandedChange={setAiExpanded}
 					/>
-				</ErrorBoundary>
-			</div>
-		</main>
+				</div>
+			)}
+
+			{/* Data error notice */}
+			{hasDataError && (
+				<div className="absolute top-4 left-4 z-20 animate-in fade-in duration-300">
+					<div className="rounded-lg bg-amber-50/95 px-3 py-2 text-xs text-amber-700 shadow-md backdrop-blur-md dark:bg-amber-950/90 dark:text-amber-300">
+						Unable to load zone data
+					</div>
+				</div>
+			)}
+		</div>
 	);
 }
