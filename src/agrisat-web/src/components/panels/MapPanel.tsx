@@ -4,6 +4,8 @@ import MapLibreGL from "maplibre-gl";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
 import dayjs from "dayjs";
 
+import { getVariableKey } from "#/lib/variables";
+
 import { Card, CardContent } from "#/components/ui/card";
 import { Map as MapComponent, MapControls } from "#/components/ui/map";
 import { httpClient } from "#/services/api";
@@ -86,24 +88,8 @@ export function computeZoneAverages(
 	return result;
 }
 
-const VARIABLE_KEY_MAP: Record<number, string> = {
-	1: "ndvi",
-	2: "gndvi",
-	3: "wdrvi",
-	4: "msavi",
-	5: "ndre",
-	6: "cire",
-	7: "ndmi",
-	8: "ndwi",
-};
-
-export function getVariableKey(variableId: number): string {
-	return VARIABLE_KEY_MAP[variableId] ?? "ndvi";
-}
-
 // -----------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------
+// Constants
 
 /** Compute bounding box from a GeoJSON FeatureCollection */
 function computeBounds(geojson: FeatureCollection): MapLibreGL.LngLatBoundsLike | null {

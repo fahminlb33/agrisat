@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Sun, Moon, SunMoon } from "lucide-react";
 
 type ThemeMode = "light" | "dark" | "auto";
 
@@ -31,7 +32,7 @@ function applyThemeMode(mode: ThemeMode) {
 	document.documentElement.style.colorScheme = resolved;
 }
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ variant = "sidebar" }: { variant?: "sidebar" | "floating" }) {
 	const [mode, setMode] = useState<ThemeMode>("auto");
 
 	useEffect(() => {
@@ -67,15 +68,23 @@ export default function ThemeToggle() {
 			? "Theme mode: auto (system). Click to switch to light mode."
 			: `Theme mode: ${mode}. Click to switch mode.`;
 
+	const Icon = mode === "light" ? Sun : mode === "dark" ? Moon : SunMoon;
+	const modeLabel = mode === "light" ? "Light" : mode === "dark" ? "Dark" : "Auto";
+
 	return (
 		<button
 			type="button"
 			onClick={toggleMode}
 			aria-label={label}
 			title={label}
-			className="rounded-full border border-sidebar-border bg-sidebar-accent px-3 py-1.5 text-sm font-semibold text-sidebar-foreground transition hover:-translate-y-0.5"
+			className={
+				variant === "floating"
+					? "flex items-center gap-2 rounded-xl bg-background/95 px-3 py-2.5 text-sm font-medium text-foreground shadow-lg backdrop-blur-md ring-1 ring-border/50 transition-all duration-200 hover:shadow-xl"
+					: "flex items-center gap-2 rounded-2xl border border-sidebar-border bg-sidebar-accent px-3 py-1.5 text-sm font-semibold text-sidebar-foreground transition hover:-translate-y-0.5"
+			}
 		>
-			{mode === "auto" ? "Auto" : mode === "dark" ? "Dark" : "Light"}
+			<Icon className="h-4 w-4" />
+			{modeLabel}
 		</button>
 	);
 }
