@@ -17,6 +17,8 @@ dependencies = [
     "cdsapi>=0.7.7",
     "pystac-client>=0.9.0",
     "ecmwf-opendata>=0.3.26",
+    # Data Engineering
+    "prefect>=3.7.2",
     # Data Operations
     "numpy>=2.4.4",
     "pandas>=2.3.3",
