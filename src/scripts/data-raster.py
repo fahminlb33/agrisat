@@ -82,18 +82,18 @@ def single_process(raster_path: Path, color_ramp_path: str) -> RenderResult:
     }
 
 
-def load_data(db: sqlite3.Connection, var_path: Path):
+def load_data(db: sqlite3.Connection, var_path: Path, replace: bool):
     cursor = db.cursor()
 
     # load existing data to not process the same file again
     cursor.execute("SELECT file_name FROM zonal_raster")
-    resultset = cursor.fetchall()
-    loaded_files = [x[0] for x in resultset]
+    resultSet = cursor.fetchall()
+    loaded_files = [] if replace else [x[0] for x in resultSet]
 
     # load variable mapping
     cursor.execute("SELECT id, key FROM variables")
-    resultset = cursor.fetchall()
-    variable_id_map = {k[1]: k[0] for k in resultset}
+    resultSet = cursor.fetchall()
+    variable_id_map = {k[1]: k[0] for k in resultSet}
 
     # run params
     var_name = var_path.name
@@ -157,7 +157,7 @@ def main(args):
     print("Processing...")
     for path in (pbar := tqdm(var_paths)):
         pbar.set_description_str(path.name)
-        load_data(con, path)
+        load_data(con, path, args["replace"])
 
     con.close()
 
@@ -165,6 +165,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--jobs", type=int, default=4)
+    parser.add_argument("--replace", action="store_true")
     parser.add_argument(
         "--db",
         type=str,
