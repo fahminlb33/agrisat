@@ -41,8 +41,8 @@ def extract_raster_data(path: str, color_ramp_path: str) -> bytes:
         "gdal", "raster", "pipeline",
         # read input raster
         "read", path, "!",
-        # reproject to Web Mercator (3857)
-        "reproject", "--dst-crs=EPSG:3857", "!",
+        # reproject to WGS84 (4326)
+        "reproject", "--dst-crs=EPSG:4326", "!",
         # render color map
         "color-map", "--band", "1", "--color-map", color_ramp_path, "--add-alpha", "!",
         # write to stdout

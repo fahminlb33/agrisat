@@ -60,7 +60,7 @@ def seed_zones(db: sqlite3.Connection, vector_path: Path):
 
     # insert zone level
     level = vector_path.stem[6:]
-    geom_json = gpd.read_file(vector_path).to_crs(epsg=3857).to_json()
+    geom_json = gpd.read_file(vector_path).to_crs(epsg=4326).to_json()
 
     statement = cursor.execute(
         """
