@@ -132,10 +132,13 @@ def load_data(db: sqlite3.Connection, var_path: Path):
         """
         INSERT INTO zonal_raster (variable_id, timestamp, file_name, raster_data)
         VALUES (?, ?, ?, ?)
-        ON CONFLICT (variable_id, timestamp) DO NOTHING
+        ON CONFLICT (variable_id, timestamp) DO UPDATE SET
+            file_name = excluded.file_name,
+            raster_data = excluded.raster_data
         """,
         data,
     )
+    
     db.commit()
 
 

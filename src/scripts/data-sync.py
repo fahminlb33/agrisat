@@ -22,13 +22,25 @@ def get_sql(is_environment: bool) -> str:
         return """
         INSERT INTO zonal_statistics (zone_id, timestamp, ndvi, gndvi, wdrvi, msavi, ndre, cire, ndmi, ndwi)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT (zone_id, timestamp) DO NOTHING
+        ON CONFLICT (zone_id, timestamp) DO UPDATE SET
+            ndvi = excluded.ndvi,
+            gndvi = excluded.gndvi,
+            wdrvi = excluded.wdrvi,
+            msavi = excluded.msavi,
+            ndre = excluded.ndre,
+            cire = excluded.cire,
+            ndmi = excluded.ndmi,
+            ndwi = excluded.ndwi
         """
 
     return """
     INSERT INTO zonal_weather (zone_id, timestamp, temperature, precipitation, cloud_cover, is_raining)
     VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT (zone_id, timestamp) DO NOTHING
+    ON CONFLICT (zone_id, timestamp) DO UPDATE SET
+        temperature = excluded.temperature,
+        precipitation = excluded.precipitation,
+        cloud_cover = excluded.cloud_cover,
+        is_raining = excluded.is_raining
     """
 
 

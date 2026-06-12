@@ -66,7 +66,8 @@ def seed_zones(db: sqlite3.Connection, vector_path: Path):
         """
         INSERT INTO zone_level (level, geometry_json)
         VALUES (?, ?)
-        ON CONFLICT (level) DO NOTHING
+        ON CONFLICT (level) DO UPDATE SET
+            geometry_json = excluded.geometry_json
         RETURNING id
         """,
         (level, geom_json),
@@ -90,7 +91,11 @@ def seed_zones(db: sqlite3.Connection, vector_path: Path):
         """
         INSERT INTO zones (level_id, hash, name, city, area)
         VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT (hash) DO NOTHING
+        ON CONFLICT (hash) DO UPDATE SET
+            hash = excluded.hash,
+            name = excluded.name,
+            city = excluded.city,
+            area = excluded.area
         """,
         rows,
     )
