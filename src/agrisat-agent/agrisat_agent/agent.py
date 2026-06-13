@@ -1,7 +1,8 @@
 import os
 
 from google.adk.agents import LlmAgent
-from google.adk.models import Gemini
+from google.adk.models import Gemini, LiteLlm
+
 
 from .tools import (
     get_current_date,
@@ -84,7 +85,13 @@ Match your response length to the complexity and intent of the user's question:
 
 
 def get_model():
+    use_ollama = os.environ.get("OLLAMA_ENABLE", "False")
     model_name = os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it")
+
+    if use_ollama == "True":
+        ollama_host = os.environ.get("OLLAMA_HOST", "False")
+        return LiteLlm(model=f"ollama_chat/{model_name}", ollama_host=ollama_host)
+    
     return Gemini(model=model_name)
 
 
