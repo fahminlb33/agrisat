@@ -16,7 +16,9 @@ describe("ErrorState", () => {
 
 			expect(screen.getByText("No satellite image available")).toBeTruthy();
 			expect(
-				screen.getByText(/No satellite imagery is available for the selected date/),
+				screen.getByText(
+					/No satellite imagery is available for the selected date/,
+				),
 			).toBeTruthy();
 		});
 	});
@@ -26,9 +28,7 @@ describe("ErrorState", () => {
 			render(<ErrorState variant="no-data" />);
 
 			expect(screen.getByText("No data available")).toBeTruthy();
-			expect(
-				screen.getByText(/Try expanding the time range/),
-			).toBeTruthy();
+			expect(screen.getByText(/Try expanding the time range/)).toBeTruthy();
 		});
 	});
 
@@ -67,9 +67,7 @@ describe("ErrorState", () => {
 		it("should show stale data indicator when isStale is true", () => {
 			render(<ErrorState variant="network-error" isStale onRetry={() => {}} />);
 
-			expect(
-				screen.getByText(/Displaying cached data/),
-			).toBeTruthy();
+			expect(screen.getByText(/Displaying cached data/)).toBeTruthy();
 		});
 
 		it("should not show stale data indicator when isStale is false", () => {

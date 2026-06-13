@@ -27,7 +27,11 @@ import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
 import { Separator } from "#/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { ChartContainer, type ChartConfig } from "#/components/ui/chart";
 
 const chartConfig = {
@@ -77,10 +81,14 @@ function StatTile({
 	bgClass: string;
 }) {
 	return (
-		<div className={cn("flex items-center gap-2 rounded-lg px-2.5 py-2", bgClass)}>
+		<div
+			className={cn("flex items-center gap-2 rounded-lg px-2.5 py-2", bgClass)}
+		>
 			<Icon className={cn("h-4 w-4 shrink-0", colorClass)} />
 			<div className="min-w-0">
-				<div className="truncate text-sm font-semibold text-foreground">{value}</div>
+				<div className="truncate text-sm font-semibold text-foreground">
+					{value}
+				</div>
 				<div className="text-[9px] text-muted-foreground">{label}</div>
 			</div>
 		</div>
@@ -161,7 +169,9 @@ function ChartRow({
 }) {
 	return (
 		<div className={className}>
-			<p className="mb-0.5 text-[10px] font-medium text-muted-foreground">{label}</p>
+			<p className="mb-0.5 text-[10px] font-medium text-muted-foreground">
+				{label}
+			</p>
 			<ChartContainer
 				config={chartConfig}
 				className="w-full"
@@ -227,7 +237,10 @@ export const WeatherWidget = memo(function WeatherWidget() {
 			const el = chartAreaRef.current;
 			if (!el || chartData.length <= 1) return 0;
 			const rect = el.getBoundingClientRect();
-			const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+			const ratio = Math.max(
+				0,
+				Math.min(1, (clientX - rect.left) / rect.width),
+			);
 			return Math.round(ratio * (chartData.length - 1));
 		},
 		[chartData.length],
@@ -274,7 +287,8 @@ export const WeatherWidget = memo(function WeatherWidget() {
 		return match ? { ndvi: match.ndvi, ndmi: match.ndmi } : null;
 	}, [envData, chartData, localIndex]);
 
-	const latestWeather = weatherData.length > 0 ? weatherData[weatherData.length - 1] : null;
+	const latestWeather =
+		weatherData.length > 0 ? weatherData[weatherData.length - 1] : null;
 
 	const scrubPercent =
 		chartData.length > 1 ? (localIndex / (chartData.length - 1)) * 100 : 50;
@@ -313,16 +327,25 @@ export const WeatherWidget = memo(function WeatherWidget() {
 									<span className="text-xs text-muted-foreground">C</span>
 								</div>
 
-								<Separator orientation="vertical" className="hidden sm:block h-4" />
+								<Separator
+									orientation="vertical"
+									className="hidden sm:block h-4"
+								/>
 
 								<div className="hidden sm:flex items-center gap-1">
 									<Droplets className="h-3.5 w-3.5 text-blue-400" />
 									<span className="text-xs text-muted-foreground">
-										{(chartData[chartData.length - 1]?.precipitation ?? 0).toFixed(2)}mm
+										{(
+											chartData[chartData.length - 1]?.precipitation ?? 0
+										).toFixed(2)}
+										mm
 									</span>
 								</div>
 
-								<Separator orientation="vertical" className="hidden sm:block h-4" />
+								<Separator
+									orientation="vertical"
+									className="hidden sm:block h-4"
+								/>
 
 								<div className="hidden sm:flex items-center gap-1">
 									<Cloud className="h-3.5 w-3.5 text-muted-foreground" />
@@ -400,11 +423,22 @@ export const WeatherWidget = memo(function WeatherWidget() {
 
 					{/* Temperature */}
 					<ChartRow label="Temperature" height={55}>
-						<AreaChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+						<AreaChart
+							data={chartData}
+							margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+						>
 							<defs>
 								<linearGradient id="wTempGrad" x1="0" y1="0" x2="0" y2="1">
-									<stop offset="0%" stopColor="var(--color-temperature)" stopOpacity={0.3} />
-									<stop offset="100%" stopColor="var(--color-temperature)" stopOpacity={0} />
+									<stop
+										offset="0%"
+										stopColor="var(--color-temperature)"
+										stopOpacity={0.3}
+									/>
+									<stop
+										offset="100%"
+										stopColor="var(--color-temperature)"
+										stopOpacity={0}
+									/>
 								</linearGradient>
 							</defs>
 							<YAxis hide domain={["auto", "auto"]} />
@@ -422,7 +456,10 @@ export const WeatherWidget = memo(function WeatherWidget() {
 
 					{/* Precipitation */}
 					<ChartRow label="Precipitation" height={40} className="mt-2">
-						<BarChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+						<BarChart
+							data={chartData}
+							margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+						>
 							<YAxis hide domain={[0, "auto"]} />
 							<Bar
 								dataKey="precipitation"
@@ -436,7 +473,10 @@ export const WeatherWidget = memo(function WeatherWidget() {
 
 					{/* Cloud Cover */}
 					<ChartRow label="Cloud Cover" height={35} className="mt-2">
-						<LineChart data={chartData} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+						<LineChart
+							data={chartData}
+							margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+						>
 							<YAxis hide domain={[0, 100]} />
 							<Line
 								type="monotone"

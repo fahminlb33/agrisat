@@ -33,7 +33,10 @@ export function useLevels() {
  * - Stale time: Infinity (zone definitions rarely change)
  * - Requirement 10.4: stale-while-revalidate caching (polygons: indefinite)
  */
-export function useZones(params?: { levelId?: number | null; enabled?: boolean }) {
+export function useZones(params?: {
+	levelId?: number | null;
+	enabled?: boolean;
+}) {
 	const { levelId, enabled = true } = params ?? {};
 
 	return useQuery<Zone[]>({

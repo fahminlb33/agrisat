@@ -20,20 +20,20 @@ export type InsightSeverity = "info" | "warning" | "critical";
 // -----------------------------------------------------------
 
 export interface EnvironmentalTimePoint {
-  timestamp: string;
-  zone_id: number;
-  zone_name: string;
-  zone_city: string;
-  level_id: number;
-  level: string;
-  ndvi: number;
-  gndvi: number;
-  wdrvi: number;
-  msavi: number;
-  ndre: number;
-  cire: number;
-  ndmi: number;
-  ndwi: number;
+	timestamp: string;
+	zone_id: number;
+	zone_name: string;
+	zone_city: string;
+	level_id: number;
+	level: string;
+	ndvi: number;
+	gndvi: number;
+	wdrvi: number;
+	msavi: number;
+	ndre: number;
+	cire: number;
+	ndmi: number;
+	ndwi: number;
 }
 
 // -----------------------------------------------------------
@@ -41,16 +41,16 @@ export interface EnvironmentalTimePoint {
 // -----------------------------------------------------------
 
 export interface WeatherTimePoint {
-  timestamp: string;
-  zone_id: number;
-  zone_name: string;
-  zone_city: string;
-  level_id: number;
-  level: string;
-  temperature: number;
-  precipitation: number;
-  cloud_cover_pct: number;
-  is_raining: boolean;
+	timestamp: string;
+	zone_id: number;
+	zone_name: string;
+	zone_city: string;
+	level_id: number;
+	level: string;
+	temperature: number;
+	precipitation: number;
+	cloud_cover_pct: number;
+	is_raining: boolean;
 }
 
 // -----------------------------------------------------------
@@ -58,29 +58,29 @@ export interface WeatherTimePoint {
 // -----------------------------------------------------------
 
 export interface VariableMetricResult {
-  variable_key: string;
-  current: number;
-  average: number;
-  min_val: number;
-  max_val: number;
-  trend: TrendDirection;
-  trend_magnitude: number;
+	variable_key: string;
+	current: number;
+	average: number;
+	min_val: number;
+	max_val: number;
+	trend: TrendDirection;
+	trend_magnitude: number;
 }
 
 export interface ZoneInsight {
-  type: InsightType;
-  severity: InsightSeverity;
-  title: string;
-  description: string;
-  variable_key: string | null;
-  zone_id: number | null;
+	type: InsightType;
+	severity: InsightSeverity;
+	title: string;
+	description: string;
+	variable_key: string | null;
+	zone_id: number | null;
 }
 
 export interface ZoneAnalysis {
-  zone_id: number;
-  zone_name: string;
-  metrics: VariableMetricResult[];
-  insights: ZoneInsight[];
+	zone_id: number;
+	zone_name: string;
+	metrics: VariableMetricResult[];
+	insights: ZoneInsight[];
 }
 
 // -----------------------------------------------------------
@@ -88,18 +88,18 @@ export interface ZoneAnalysis {
 // -----------------------------------------------------------
 
 export interface InsightResult {
-  zone_id: number;
-  zone_name: string;
-  variable_key: string;
-  current_value: number;
-  average_value: number;
-  min_value: number;
-  max_value: number;
-  trend: TrendDirection;
-  trend_magnitude: number;
-  anomaly_detected: boolean;
-  anomaly_zscore: number | null;
-  insight_message: string;
+	zone_id: number;
+	zone_name: string;
+	variable_key: string;
+	current_value: number;
+	average_value: number;
+	min_value: number;
+	max_value: number;
+	trend: TrendDirection;
+	trend_magnitude: number;
+	anomaly_detected: boolean;
+	anomaly_zscore: number | null;
+	insight_message: string;
 }
 
 // -----------------------------------------------------------
@@ -107,19 +107,19 @@ export interface InsightResult {
 // -----------------------------------------------------------
 
 export interface ComparisonDelta {
-  variable_key: string;
-  value_a: number;
-  value_b: number;
-  absolute_diff: number;
-  relative_diff_pct: number;
-  interpretation: string;
+	variable_key: string;
+	value_a: number;
+	value_b: number;
+	absolute_diff: number;
+	relative_diff_pct: number;
+	interpretation: string;
 }
 
 export interface ComparisonResult {
-  type: string;
-  target_a: Record<string, unknown>;
-  target_b: Record<string, unknown>;
-  metrics_a: VariableMetricResult[];
-  metrics_b: VariableMetricResult[];
-  deltas: ComparisonDelta[];
+	type: string;
+	target_a: Record<string, unknown>;
+	target_b: Record<string, unknown>;
+	metrics_a: VariableMetricResult[];
+	metrics_b: VariableMetricResult[];
+	deltas: ComparisonDelta[];
 }

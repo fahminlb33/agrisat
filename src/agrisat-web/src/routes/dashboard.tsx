@@ -16,8 +16,16 @@ import { useEnvironmentalData } from "#/hooks/useEnvironmentalData";
 import { useWeatherData } from "#/hooks/useWeatherData";
 import { useInsights } from "#/hooks/useInsights";
 import { useComparison } from "#/hooks/useComparison";
-import type { Zone as ApiZone, Variable as ApiVariable, Level } from "#/services/api";
-import type { ZoneLevel, Zone, Variable } from "#/components/panels/ControlsPanel";
+import type {
+	Zone as ApiZone,
+	Variable as ApiVariable,
+	Level,
+} from "#/services/api";
+import type {
+	ZoneLevel,
+	Zone,
+	Variable,
+} from "#/components/panels/ControlsPanel";
 import type { EnvironmentalTimePoint } from "#/types/api";
 
 export const Route = createFileRoute("/dashboard")({ component: Dashboard });
@@ -58,7 +66,14 @@ function useStoreState(store: ReturnType<typeof createQueryContextStore>) {
 	const variableIds = useStore(store, (s) => s.variableIds);
 	const comparisonMode = useStore(store, (s) => s.comparisonMode);
 
-	return { zoneId, levelId, timeRange, activeVariableId, variableIds, comparisonMode };
+	return {
+		zoneId,
+		levelId,
+		timeRange,
+		activeVariableId,
+		variableIds,
+		comparisonMode,
+	};
 }
 
 function Dashboard() {
@@ -68,9 +83,14 @@ function Dashboard() {
 
 	const levels = useMemo(() => mapLevels(rawLevels ?? []), [rawLevels]);
 	const zones = useMemo(() => mapZones(rawZones ?? []), [rawZones]);
-	const variables = useMemo(() => mapVariables(rawVariables ?? []), [rawVariables]);
+	const variables = useMemo(
+		() => mapVariables(rawVariables ?? []),
+		[rawVariables],
+	);
 
-	const storeRef = useRef<ReturnType<typeof createQueryContextStore> | null>(null);
+	const storeRef = useRef<ReturnType<typeof createQueryContextStore> | null>(
+		null,
+	);
 	const [storeReady, setStoreReady] = useState(false);
 
 	useEffect(() => {
@@ -93,7 +113,9 @@ function Dashboard() {
 			store.getState().setLevel(defaultLevel.level_id);
 
 			// Select the first zone for that level
-			const firstZone = rawZones.find((z) => z.level_id === defaultLevel.level_id);
+			const firstZone = rawZones.find(
+				(z) => z.level_id === defaultLevel.level_id,
+			);
 			if (firstZone) {
 				store.getState().setZone(firstZone.zone_id);
 			}
@@ -117,7 +139,14 @@ function Dashboard() {
 		);
 	}
 
-	return <DashboardContent store={store} levels={levels} zones={zones} variables={variables} />;
+	return (
+		<DashboardContent
+			store={store}
+			levels={levels}
+			zones={zones}
+			variables={variables}
+		/>
+	);
 }
 
 function DashboardContent({
@@ -131,8 +160,14 @@ function DashboardContent({
 	zones: Zone[];
 	variables: Variable[];
 }) {
-	const { zoneId, levelId, timeRange, activeVariableId, variableIds, comparisonMode } =
-		useStoreState(store);
+	const {
+		zoneId,
+		levelId,
+		timeRange,
+		activeVariableId,
+		variableIds,
+		comparisonMode,
+	} = useStoreState(store);
 
 	const { data: envData = [], isLoading: envLoading } = useEnvironmentalData({
 		zoneId,
@@ -162,12 +197,14 @@ function DashboardContent({
 		variableKeys: activeVariableKeys,
 	});
 
-	const comparisonZoneA = comparisonMode?.type === "zone"
-		? comparisonMode.targetA.zoneId ?? null
-		: null;
-	const comparisonZoneB = comparisonMode?.type === "zone"
-		? comparisonMode.targetB.zoneId ?? null
-		: null;
+	const comparisonZoneA =
+		comparisonMode?.type === "zone"
+			? (comparisonMode.targetA.zoneId ?? null)
+			: null;
+	const comparisonZoneB =
+		comparisonMode?.type === "zone"
+			? (comparisonMode.targetB.zoneId ?? null)
+			: null;
 
 	const { data: comparisonResult } = useComparison({
 		zoneA: comparisonZoneA,
@@ -175,7 +212,10 @@ function DashboardContent({
 		startTs: timeRange.startTs,
 		endTs: timeRange.endTs,
 		variableKeys: activeVariableKeys,
-		enabled: comparisonMode?.type === "zone" && comparisonZoneA != null && comparisonZoneB != null,
+		enabled:
+			comparisonMode?.type === "zone" &&
+			comparisonZoneA != null &&
+			comparisonZoneB != null,
 	});
 
 	// Determine comparison target names for display
@@ -223,12 +263,12 @@ function DashboardContent({
 		const key = VARIABLE_KEY_MAP[activeVariableId] ?? "ndvi";
 		return envData.map((d: EnvironmentalTimePoint) => ({
 			ts: new Date(d.timestamp),
-			value: (d as unknown as Record<string, unknown>)[key] as number ?? 0,
+			value: ((d as unknown as Record<string, unknown>)[key] as number) ?? 0,
 		}));
 	}, [envData, activeVariableId]);
 
 	const activeVariableKey = activeVariableId
-		? VARIABLE_KEY_MAP[activeVariableId] ?? null
+		? (VARIABLE_KEY_MAP[activeVariableId] ?? null)
 		: null;
 
 	// Data source attribution: derive from the most recent environmental data point
@@ -250,12 +290,16 @@ function DashboardContent({
 		return map;
 	}, [variables]);
 
-	const [selectedRasterDate, setSelectedRasterDate] = useState<Date | null>(null);
+	const [selectedRasterDate, setSelectedRasterDate] = useState<Date | null>(
+		null,
+	);
 
 	// Auto-select the latest available date when data loads
 	useEffect(() => {
 		if (availableTimestamps.length > 0 && selectedRasterDate === null) {
-			setSelectedRasterDate(availableTimestamps[availableTimestamps.length - 1]);
+			setSelectedRasterDate(
+				availableTimestamps[availableTimestamps.length - 1],
+			);
 		}
 	}, [availableTimestamps, selectedRasterDate]);
 
@@ -285,7 +329,9 @@ function DashboardContent({
 					<ErrorBoundary>
 						<MapPanel
 							store={store}
-							environmentalData={envData as unknown as import("#/components/panels/MapPanel").MapPanelProps["environmentalData"]}
+							environmentalData={
+								envData as unknown as import("#/components/panels/MapPanel").MapPanelProps["environmentalData"]
+							}
 						/>
 					</ErrorBoundary>
 				</div>
@@ -295,8 +341,12 @@ function DashboardContent({
 					<ErrorBoundary>
 						<AnalysisPanel
 							store={store}
-							environmentalData={envData as unknown as import("#/components/panels/AnalysisPanel").EnvironmentalTimePoint[]}
-							weatherData={weatherData as unknown as import("#/components/panels/AnalysisPanel").WeatherTimePoint[]}
+							environmentalData={
+								envData as unknown as import("#/components/panels/AnalysisPanel").EnvironmentalTimePoint[]
+							}
+							weatherData={
+								weatherData as unknown as import("#/components/panels/AnalysisPanel").WeatherTimePoint[]
+							}
 							zoneInfo={zoneInfo}
 							insights={zoneAnalysis?.insights}
 							comparisonResult={comparisonResult ?? undefined}
@@ -318,8 +368,12 @@ function DashboardContent({
 						availableTimestamps={availableTimestamps}
 						trendData={trendData}
 						activeVariableKey={activeVariableKey}
-						environmentalData={envData as unknown as import("#/types/api").EnvironmentalTimePoint[]}
-						weatherData={weatherData as unknown as import("#/types/api").WeatherTimePoint[]}
+						environmentalData={
+							envData as unknown as import("#/types/api").EnvironmentalTimePoint[]
+						}
+						weatherData={
+							weatherData as unknown as import("#/types/api").WeatherTimePoint[]
+						}
 						onDateSelect={handleDateSelect}
 						selectedDate={selectedRasterDate}
 					/>

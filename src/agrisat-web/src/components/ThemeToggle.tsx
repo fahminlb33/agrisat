@@ -32,7 +32,11 @@ function applyThemeMode(mode: ThemeMode) {
 	document.documentElement.style.colorScheme = resolved;
 }
 
-export default function ThemeToggle({ variant = "sidebar" }: { variant?: "sidebar" | "floating" }) {
+export default function ThemeToggle({
+	variant = "sidebar",
+}: {
+	variant?: "sidebar" | "floating";
+}) {
 	const [mode, setMode] = useState<ThemeMode>("auto");
 
 	useEffect(() => {
@@ -69,7 +73,8 @@ export default function ThemeToggle({ variant = "sidebar" }: { variant?: "sideba
 			: `Theme mode: ${mode}. Click to switch mode.`;
 
 	const Icon = mode === "light" ? Sun : mode === "dark" ? Moon : SunMoon;
-	const modeLabel = mode === "light" ? "Light" : mode === "dark" ? "Dark" : "Auto";
+	const modeLabel =
+		mode === "light" ? "Light" : mode === "dark" ? "Dark" : "Auto";
 
 	return (
 		<button

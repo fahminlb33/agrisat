@@ -2,7 +2,11 @@ import { memo, useEffect, useMemo, useRef } from "react";
 import { Cloud, Layers } from "lucide-react";
 import dayjs from "dayjs";
 
-import type { Zone as ApiZone, Level as ApiLevel, Variable } from "#/services/api";
+import type {
+	Zone as ApiZone,
+	Level as ApiLevel,
+	Variable,
+} from "#/services/api";
 import { useEnvironmentalData } from "#/hooks/useEnvironmentalData";
 import { useWeatherData } from "#/hooks/useWeatherData";
 import { LayerTimeline } from "./LayerTimeline";
@@ -10,7 +14,11 @@ import { useControls, useQueryContext } from "./ControlProvider";
 import { Button } from "#/components/ui/button";
 import { Badge } from "#/components/ui/badge";
 import { Separator } from "#/components/ui/separator";
-import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "#/components/ui/tooltip";
 
 import { getVariableKey } from "#/lib/variables";
 
@@ -58,7 +66,8 @@ export const BottomBar = memo(function BottomBar({
 		endTs: timeRange.endTs,
 	});
 
-	const latestWeather = weatherData.length > 0 ? weatherData[weatherData.length - 1] : null;
+	const latestWeather =
+		weatherData.length > 0 ? weatherData[weatherData.length - 1] : null;
 
 	// Available timestamps from env data — stabilized to avoid new array reference
 	// each render when the underlying dates haven't actually changed.
@@ -106,7 +115,9 @@ export const BottomBar = memo(function BottomBar({
 	}, [zoneId, zones]);
 
 	// Active variable key
-	const activeVarKey = activeVariableId ? getVariableKey(activeVariableId) : "ndvi";
+	const activeVarKey = activeVariableId
+		? getVariableKey(activeVariableId)
+		: "ndvi";
 
 	const handleSelectVariable = (varId: number) => {
 		toggleVariable(varId);
@@ -120,7 +131,6 @@ export const BottomBar = memo(function BottomBar({
 	return (
 		<div className="absolute bottom-5 left-1/2 z-20 w-full max-w-xl sm:max-w-3xl -translate-x-1/2 px-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
 			<div className="flex items-center gap-1 rounded-xl bg-background/95 px-2 py-1.5 shadow-lg backdrop-blur-md ring-1 ring-border/50 transition-all duration-200">
-
 				<Tooltip>
 					<TooltipTrigger asChild>
 						<Button
@@ -135,7 +145,8 @@ export const BottomBar = memo(function BottomBar({
 										variant="outline"
 										className="border-emerald-200 bg-emerald-50 text-emerald-700 capitalize dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
 									>
-										{levels.find((l) => l.level_id === currentZone.level_id)?.level ?? ""}
+										{levels.find((l) => l.level_id === currentZone.level_id)
+											?.level ?? ""}
 									</Badge>
 									<span className="hidden sm:inline text-xs font-medium text-foreground">
 										{currentZone.name}
@@ -144,7 +155,9 @@ export const BottomBar = memo(function BottomBar({
 							) : (
 								<>
 									<Layers className="h-3.5 w-3.5 text-muted-foreground" />
-									<span className="hidden sm:inline text-xs text-muted-foreground">Select zone</span>
+									<span className="hidden sm:inline text-xs text-muted-foreground">
+										Select zone
+									</span>
 								</>
 							)}
 						</Button>
@@ -167,10 +180,15 @@ export const BottomBar = memo(function BottomBar({
 						onToggleDatePicker={toggleDatePicker}
 					/>
 				) : (
-					<span className="flex-1 text-center text-xs text-muted-foreground">No layer data</span>
+					<span className="flex-1 text-center text-xs text-muted-foreground">
+						No layer data
+					</span>
 				)}
 
-				<Separator orientation="vertical" className="hidden sm:block mx-0.5 h-4" />
+				<Separator
+					orientation="vertical"
+					className="hidden sm:block mx-0.5 h-4"
+				/>
 
 				{latestWeather && (
 					<Tooltip>

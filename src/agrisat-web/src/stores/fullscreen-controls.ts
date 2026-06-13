@@ -54,7 +54,8 @@ export interface FullscreenControlsActions {
 	toggleHudSection: (section: keyof HudSections) => void;
 }
 
-export type FullscreenControlsStore = FullscreenControlsState & FullscreenControlsActions;
+export type FullscreenControlsStore = FullscreenControlsState &
+	FullscreenControlsActions;
 
 export function createFullscreenControlsStore() {
 	return createStore<FullscreenControlsStore>()((set) => ({
@@ -79,7 +80,8 @@ export function createFullscreenControlsStore() {
 		closeDatePicker: () => set({ datePickerOpen: false }),
 		toggleDatePicker: () => set((s) => ({ datePickerOpen: !s.datePickerOpen })),
 
-		toggleWeatherExpanded: () => set((s) => ({ weatherExpanded: !s.weatherExpanded })),
+		toggleWeatherExpanded: () =>
+			set((s) => ({ weatherExpanded: !s.weatherExpanded })),
 		setWeatherExpanded: (expanded) => set({ weatherExpanded: expanded }),
 
 		openAiPanel: () => set({ aiPanelOpen: true }),

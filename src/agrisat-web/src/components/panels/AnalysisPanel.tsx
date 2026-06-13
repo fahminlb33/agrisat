@@ -86,7 +86,9 @@ export interface DataSourceAttribution {
 }
 
 export interface AnalysisPanelProps {
-	store: ReturnType<typeof import("#/stores/query-context").createQueryContextStore>;
+	store: ReturnType<
+		typeof import("#/stores/query-context").createQueryContextStore
+	>;
 	environmentalData: EnvironmentalTimePoint[];
 	weatherData: WeatherTimePoint[];
 	zoneInfo: ZoneInfo | null;
@@ -227,36 +229,62 @@ const VARIABLE_LABELS: Record<string, string> = {
 function TrendIndicator({ trend }: { trend: TrendDirection }) {
 	if (trend === "increasing") {
 		return (
-			<Badge variant="outline" className="border-green-200 bg-green-50 text-green-700" aria-label="Trend: increasing">
+			<Badge
+				variant="outline"
+				className="border-green-200 bg-green-50 text-green-700"
+				aria-label="Trend: increasing"
+			>
 				↑ Increasing
 			</Badge>
 		);
 	}
 	if (trend === "decreasing") {
 		return (
-			<Badge variant="outline" className="border-red-200 bg-red-50 text-red-700" aria-label="Trend: decreasing">
+			<Badge
+				variant="outline"
+				className="border-red-200 bg-red-50 text-red-700"
+				aria-label="Trend: decreasing"
+			>
 				↓ Decreasing
 			</Badge>
 		);
 	}
 	return (
-		<Badge variant="outline" className="text-muted-foreground" aria-label="Trend: stable">
+		<Badge
+			variant="outline"
+			className="text-muted-foreground"
+			aria-label="Trend: stable"
+		>
 			→ Stable
 		</Badge>
 	);
 }
 
-function MetricCard({ metric, dataPointCount, description }: { metric: VariableMetric; dataPointCount: number; description?: string }) {
+function MetricCard({
+	metric,
+	dataPointCount,
+	description,
+}: {
+	metric: VariableMetric;
+	dataPointCount: number;
+	description?: string;
+}) {
 	return (
 		<Card size="sm">
 			<CardHeader className="pb-1">
 				<CardTitle className="flex items-center justify-between text-sm">
-					<span>{VARIABLE_LABELS[metric.variableKey] ?? metric.variableKey.toUpperCase()}</span>
+					<span>
+						{VARIABLE_LABELS[metric.variableKey] ??
+							metric.variableKey.toUpperCase()}
+					</span>
 					<div className="flex items-center gap-1.5">
 						{dataPointCount >= 2 ? (
 							<TrendIndicator trend={metric.trend} />
 						) : (
-							<span className="text-xs text-muted-foreground" aria-label="Trend unavailable">
+							<span
+								className="text-xs text-muted-foreground"
+								aria-label="Trend unavailable"
+							>
 								— No trend
 							</span>
 						)}
@@ -273,7 +301,10 @@ function MetricCard({ metric, dataPointCount, description }: { metric: VariableM
 								</DialogTrigger>
 								<DialogContent>
 									<DialogHeader>
-										<DialogTitle>{VARIABLE_LABELS[metric.variableKey] ?? metric.variableKey.toUpperCase()}</DialogTitle>
+										<DialogTitle>
+											{VARIABLE_LABELS[metric.variableKey] ??
+												metric.variableKey.toUpperCase()}
+										</DialogTitle>
 										<DialogDescription className="text-xs text-muted-foreground">
 											{metric.variableKey.toUpperCase()}
 										</DialogDescription>
@@ -316,7 +347,10 @@ function MetricCard({ metric, dataPointCount, description }: { metric: VariableM
 				</div>
 				{dataPointCount >= 2 && (
 					<div className="mt-2 flex items-center gap-2 text-[10px] text-muted-foreground">
-						<span>Δ {metric.trendMagnitude >= 0 ? "+" : ""}{metric.trendMagnitude.toFixed(5)}/obs</span>
+						<span>
+							Δ {metric.trendMagnitude >= 0 ? "+" : ""}
+							{metric.trendMagnitude.toFixed(5)}/obs
+						</span>
 						<span>·</span>
 						<span>{dataPointCount} data points</span>
 					</div>
@@ -326,7 +360,15 @@ function MetricCard({ metric, dataPointCount, description }: { metric: VariableM
 	);
 }
 
-function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSummary; weatherData: WeatherTimePoint[]; zoneName?: string }) {
+function WeatherCard({
+	summary,
+	weatherData,
+	zoneName,
+}: {
+	summary: WeatherSummary;
+	weatherData: WeatherTimePoint[];
+	zoneName?: string;
+}) {
 	if (
 		summary.currentTemperature === null &&
 		summary.avgTemperature === null &&
@@ -362,7 +404,8 @@ function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSumma
 								const hour = new Date(point.timestamp).getHours();
 
 								let icon = "☀️";
-								if (point.is_raining && point.precipitation > 0.001) icon = "🌧️";
+								if (point.is_raining && point.precipitation > 0.001)
+									icon = "🌧️";
 								else if (point.is_raining) icon = "🌦️";
 								else if (point.cloud_cover_pct > 80) icon = "☁️";
 								else if (point.cloud_cover_pct > 40) icon = "⛅";
@@ -394,7 +437,11 @@ function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSumma
 						<div>
 							<span className="block text-muted-foreground">Temperature</span>
 							<span className="font-medium text-foreground">
-								{(summary.currentTemperature > 100 ? summary.currentTemperature - 273.15 : summary.currentTemperature).toFixed(1)} °C
+								{(summary.currentTemperature > 100
+									? summary.currentTemperature - 273.15
+									: summary.currentTemperature
+								).toFixed(1)}{" "}
+								°C
 							</span>
 						</div>
 					)}
@@ -402,7 +449,11 @@ function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSumma
 						<div>
 							<span className="block text-muted-foreground">Avg Temp</span>
 							<span className="font-medium text-foreground">
-								{(summary.avgTemperature > 100 ? summary.avgTemperature - 273.15 : summary.avgTemperature).toFixed(1)} °C
+								{(summary.avgTemperature > 100
+									? summary.avgTemperature - 273.15
+									: summary.avgTemperature
+								).toFixed(1)}{" "}
+								°C
 							</span>
 						</div>
 					)}
@@ -438,7 +489,10 @@ const SEVERITY_ORDER: Record<InsightSeverity, number> = {
 	info: 2,
 };
 
-const SEVERITY_BADGE_VARIANT: Record<InsightSeverity, { className: string; icon: string }> = {
+const SEVERITY_BADGE_VARIANT: Record<
+	InsightSeverity,
+	{ className: string; icon: string }
+> = {
 	critical: {
 		className: "border-red-200 bg-red-50 text-red-800",
 		icon: "🔴",
@@ -456,7 +510,11 @@ const SEVERITY_BADGE_VARIANT: Record<InsightSeverity, { className: string; icon:
 function SeverityBadge({ severity }: { severity: InsightSeverity }) {
 	const style = SEVERITY_BADGE_VARIANT[severity];
 	return (
-		<Badge variant="outline" className={style.className} aria-label={`Severity: ${severity}`}>
+		<Badge
+			variant="outline"
+			className={style.className}
+			aria-label={`Severity: ${severity}`}
+		>
 			<span aria-hidden="true">{style.icon}</span>
 			{severity}
 		</Badge>
@@ -473,9 +531,7 @@ function InsightCard({ insight }: { insight: ZoneInsight }) {
 					</h4>
 					<SeverityBadge severity={insight.severity} />
 				</div>
-				<p className="text-xs text-muted-foreground">
-					{insight.description}
-				</p>
+				<p className="text-xs text-muted-foreground">{insight.description}</p>
 			</CardContent>
 		</Card>
 	);
@@ -483,7 +539,10 @@ function InsightCard({ insight }: { insight: ZoneInsight }) {
 
 function InsightsSection({ insights }: { insights: ZoneInsight[] }) {
 	const sorted = useMemo(
-		() => [...insights].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]),
+		() =>
+			[...insights].sort(
+				(a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity],
+			),
 		[insights],
 	);
 
@@ -499,7 +558,10 @@ function InsightsSection({ insights }: { insights: ZoneInsight[] }) {
 			</h3>
 			<div className="flex flex-col gap-2">
 				{sorted.map((insight, idx) => (
-					<InsightCard key={`${insight.type}-${insight.variable_key ?? ""}-${idx}`} insight={insight} />
+					<InsightCard
+						key={`${insight.type}-${insight.variable_key ?? ""}-${idx}`}
+						insight={insight}
+					/>
 				))}
 			</div>
 		</section>
@@ -510,12 +572,17 @@ function InsightsSection({ insights }: { insights: ZoneInsight[] }) {
 // Comparison sub-components
 // -----------------------------------------------------------
 
-function ComparisonDeltaRow({ delta, targetAName, targetBName }: {
+function ComparisonDeltaRow({
+	delta,
+	targetAName,
+	targetBName,
+}: {
 	delta: ComparisonDelta;
 	targetAName: string;
 	targetBName: string;
 }) {
-	const label = VARIABLE_LABELS[delta.variable_key] ?? delta.variable_key.toUpperCase();
+	const label =
+		VARIABLE_LABELS[delta.variable_key] ?? delta.variable_key.toUpperCase();
 
 	return (
 		<Card size="sm">
@@ -625,7 +692,11 @@ function ComparisonView({
 // Data source attribution
 // -----------------------------------------------------------
 
-function DataSourceFooter({ dataSource }: { dataSource: DataSourceAttribution }) {
+function DataSourceFooter({
+	dataSource,
+}: {
+	dataSource: DataSourceAttribution;
+}) {
 	return (
 		<footer className="mt-auto border-t border-border pt-3">
 			<p className="text-[10px] text-muted-foreground">
@@ -664,7 +735,16 @@ export default function AnalysisPanel({
 	const metrics = useMemo(() => {
 		if (environmentalData.length === 0) return [];
 
-		const ENV_KEYS = ["ndvi", "gndvi", "wdrvi", "msavi", "ndre", "cire", "ndmi", "ndwi"];
+		const ENV_KEYS = [
+			"ndvi",
+			"gndvi",
+			"wdrvi",
+			"msavi",
+			"ndre",
+			"cire",
+			"ndmi",
+			"ndwi",
+		];
 
 		const results: VariableMetric[] = [];
 		for (const key of ENV_KEYS) {
@@ -719,9 +799,12 @@ export default function AnalysisPanel({
 					</div>
 				)}
 				<div className="flex flex-1 items-center justify-center">
-					<p className="text-center text-sm text-muted-foreground" role="status">
-						No data available for the selected zone and time range.
-						Try expanding the time range.
+					<p
+						className="text-center text-sm text-muted-foreground"
+						role="status"
+					>
+						No data available for the selected zone and time range. Try
+						expanding the time range.
 					</p>
 				</div>
 			</aside>
@@ -768,7 +851,11 @@ export default function AnalysisPanel({
 							>
 								Weather
 							</h3>
-							<WeatherCard summary={weatherSummary} weatherData={weatherData} zoneName={zoneInfo?.zoneName} />
+							<WeatherCard
+								summary={weatherSummary}
+								weatherData={weatherData}
+								zoneName={zoneInfo?.zoneName}
+							/>
 						</section>
 					)}
 
@@ -821,7 +908,8 @@ export default function AnalysisPanel({
 							<Card size="sm" className="border-amber-200 bg-amber-50">
 								<CardContent className="pt-3">
 									<p className="text-xs text-amber-800" role="status">
-										Comparison cannot be completed due to missing data for one or both targets.
+										Comparison cannot be completed due to missing data for one
+										or both targets.
 									</p>
 								</CardContent>
 							</Card>

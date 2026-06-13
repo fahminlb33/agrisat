@@ -10,17 +10,17 @@ import { LayoutDashboard } from "lucide-react";
 import type { NavConfig } from "#/types/sidebar";
 
 export const navigationConfig: NavConfig = {
-  sections: [
-    {
-      id: "main",
-      items: [
-        {
-          id: "overview",
-          label: "Overview",
-          icon: LayoutDashboard,
-          path: "/",
-        },
-      ],
-    },
-  ],
+	sections: [
+		{
+			id: "main",
+			items: [
+				{
+					id: "overview",
+					label: "Overview",
+					icon: LayoutDashboard,
+					path: "/",
+				},
+			],
+		},
+	],
 };

@@ -26,17 +26,73 @@ const TEST_LEVELS: ZoneLevel[] = [
 ];
 
 const TEST_ZONES: Zone[] = [
-	{ zoneId: 1, levelId: 1, level: "Farm", name: "North Field", city: "Springfield", area: 50 },
-	{ zoneId: 2, levelId: 1, level: "Farm", name: "South Field", city: "Springfield", area: 30 },
-	{ zoneId: 3, levelId: 2, level: "Region", name: "East Block", city: "Shelbyville", area: 100 },
+	{
+		zoneId: 1,
+		levelId: 1,
+		level: "Farm",
+		name: "North Field",
+		city: "Springfield",
+		area: 50,
+	},
+	{
+		zoneId: 2,
+		levelId: 1,
+		level: "Farm",
+		name: "South Field",
+		city: "Springfield",
+		area: 30,
+	},
+	{
+		zoneId: 3,
+		levelId: 2,
+		level: "Region",
+		name: "East Block",
+		city: "Shelbyville",
+		area: 100,
+	},
 ];
 
 const TEST_VARIABLES: Variable[] = [
-	{ variableId: 1, type: "dynamic", category: "vegetation", key: "ndvi", name: "NDVI", description: "Normalized Difference Vegetation Index" },
-	{ variableId: 2, type: "dynamic", category: "vegetation", key: "gndvi", name: "GNDVI", description: "Green NDVI" },
-	{ variableId: 3, type: "dynamic", category: "chlorophyll", key: "cire", name: "CIre", description: "Chlorophyll Index Red Edge" },
-	{ variableId: 4, type: "dynamic", category: "water_stress", key: "ndmi", name: "NDMI", description: "Normalized Difference Moisture Index" },
-	{ variableId: 5, type: "static", category: "topography", key: "dem", name: "DEM", description: "Digital Elevation Model" },
+	{
+		variableId: 1,
+		type: "dynamic",
+		category: "vegetation",
+		key: "ndvi",
+		name: "NDVI",
+		description: "Normalized Difference Vegetation Index",
+	},
+	{
+		variableId: 2,
+		type: "dynamic",
+		category: "vegetation",
+		key: "gndvi",
+		name: "GNDVI",
+		description: "Green NDVI",
+	},
+	{
+		variableId: 3,
+		type: "dynamic",
+		category: "chlorophyll",
+		key: "cire",
+		name: "CIre",
+		description: "Chlorophyll Index Red Edge",
+	},
+	{
+		variableId: 4,
+		type: "dynamic",
+		category: "water_stress",
+		key: "ndmi",
+		name: "NDMI",
+		description: "Normalized Difference Moisture Index",
+	},
+	{
+		variableId: 5,
+		type: "static",
+		category: "topography",
+		key: "dem",
+		name: "DEM",
+		description: "Digital Elevation Model",
+	},
 ];
 
 function createTestStore(): StoreApi<QueryContextStore> {
@@ -135,7 +191,9 @@ describe("ControlsPanel", () => {
 			expect(store.getState().variableIds).toEqual([1]);
 
 			// The NDVI checkbox should be disabled
-			const ndviCheckbox = screen.getByLabelText("Toggle NDVI") as HTMLInputElement;
+			const ndviCheckbox = screen.getByLabelText(
+				"Toggle NDVI",
+			) as HTMLInputElement;
 			expect(ndviCheckbox.disabled).toBe(true);
 		});
 
@@ -171,7 +229,9 @@ describe("ControlsPanel", () => {
 			renderPanel();
 
 			// CIre (variableId: 3) is not toggled on
-			const cireButton = screen.getByLabelText("Set CIre as active variable") as HTMLButtonElement;
+			const cireButton = screen.getByLabelText(
+				"Set CIre as active variable",
+			) as HTMLButtonElement;
 			expect(cireButton.disabled).toBe(true);
 		});
 	});
@@ -249,7 +309,11 @@ describe("ControlsPanel", () => {
 
 			// Radix Select renders a trigger button with data-disabled when disabled
 			const zoneTrigger = screen.getByLabelText("Select zone");
-			expect(zoneTrigger.hasAttribute("data-disabled") || zoneTrigger.getAttribute("aria-disabled") === "true" || (zoneTrigger as HTMLButtonElement).disabled).toBe(true);
+			expect(
+				zoneTrigger.hasAttribute("data-disabled") ||
+					zoneTrigger.getAttribute("aria-disabled") === "true" ||
+					(zoneTrigger as HTMLButtonElement).disabled,
+			).toBe(true);
 		});
 	});
 });

@@ -3,10 +3,21 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import MapLibreGL from "maplibre-gl";
 import type { FeatureCollection, Geometry } from "geojson";
 import dayjs from "dayjs";
-import { Home, Crosshair, RectangleHorizontal, Minus, Plus, Compass } from "lucide-react";
+import {
+	Home,
+	Crosshair,
+	RectangleHorizontal,
+	Minus,
+	Plus,
+	Compass,
+} from "lucide-react";
 
 import { Map as MapComponent } from "#/components/ui/map";
-import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { httpClient } from "#/services/api";
 import type { Zone as ApiZone } from "#/services/api";
 import { useControls, useQueryContext } from "./ControlProvider";
@@ -32,7 +43,10 @@ async function fetchPolygons(levelId: number): Promise<FeatureCollection> {
 		.json<FeatureCollection>();
 }
 
-async function fetchRasterBlob(variableId: number, ts: string): Promise<string | null> {
+async function fetchRasterBlob(
+	variableId: number,
+	ts: string,
+): Promise<string | null> {
 	const response = await httpClient.get("layers/rasters", {
 		searchParams: { variable_id: variableId, ts },
 		throwHttpErrors: false,
@@ -42,7 +56,9 @@ async function fetchRasterBlob(variableId: number, ts: string): Promise<string |
 	return URL.createObjectURL(blob);
 }
 
-function computeBounds(geojson: FeatureCollection): MapLibreGL.LngLatBoundsLike | null {
+function computeBounds(
+	geojson: FeatureCollection,
+): MapLibreGL.LngLatBoundsLike | null {
 	let minLng = Infinity;
 	let minLat = Infinity;
 	let maxLng = -Infinity;
@@ -63,9 +79,15 @@ function computeBounds(geojson: FeatureCollection): MapLibreGL.LngLatBoundsLike 
 		if (!geometry) return;
 		if (geometry.type === "Point") {
 			processCoords(geometry.coordinates);
-		} else if (geometry.type === "MultiPoint" || geometry.type === "LineString") {
+		} else if (
+			geometry.type === "MultiPoint" ||
+			geometry.type === "LineString"
+		) {
 			for (const coord of geometry.coordinates) processCoords(coord);
-		} else if (geometry.type === "MultiLineString" || geometry.type === "Polygon") {
+		} else if (
+			geometry.type === "MultiLineString" ||
+			geometry.type === "Polygon"
+		) {
 			for (const ring of geometry.coordinates) {
 				for (const coord of ring) processCoords(coord);
 			}
@@ -87,7 +109,10 @@ function computeBounds(geojson: FeatureCollection): MapLibreGL.LngLatBoundsLike 
 	if (minLng === Infinity || maxLng === -Infinity) return null;
 	if (minLng === maxLng && minLat === maxLat) return null;
 
-	return [[minLng, minLat], [maxLng, maxLat]];
+	return [
+		[minLng, minLat],
+		[maxLng, maxLat],
+	];
 }
 
 type ToolMode = "pan" | "box-zoom";
@@ -120,7 +145,8 @@ function ToolbarBtn({
 						"flex h-8 w-8 items-center justify-center transition-all duration-150",
 						"hover:bg-zinc-100 dark:hover:bg-zinc-800",
 						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset",
-						active && "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+						active &&
+							"bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
 						!active && "text-zinc-500 dark:text-zinc-400",
 					)}
 				>
@@ -138,7 +164,12 @@ function ToolbarDivider() {
 	return <div className="mx-1 h-px bg-zinc-200 dark:bg-zinc-700" />;
 }
 
-function MapToolbar({ mapRef, zoneBoundsRef, mode, onModeChange }: MapToolbarProps) {
+function MapToolbar({
+	mapRef,
+	zoneBoundsRef,
+	mode,
+	onModeChange,
+}: MapToolbarProps) {
 	const handleZoomIn = () => {
 		const map = mapRef.current;
 		if (!map) return;
@@ -203,7 +234,11 @@ function MapToolbar({ mapRef, zoneBoundsRef, mode, onModeChange }: MapToolbarPro
 			<ToolbarBtn
 				onClick={toggleBoxZoom}
 				active={mode === "box-zoom"}
-				title={mode === "box-zoom" ? "Exit box zoom (Esc)" : "Box zoom — drag a rectangle to zoom"}
+				title={
+					mode === "box-zoom"
+						? "Exit box zoom (Esc)"
+						: "Box zoom — drag a rectangle to zoom"
+				}
 			>
 				<RectangleHorizontal className="h-4 w-4" />
 			</ToolbarBtn>
@@ -392,7 +427,9 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 
 	const zoneBoundsRef = useRef<MapLibreGL.LngLatBoundsLike | null>(null);
 
-	const dateStr = selectedDate ? dayjs(selectedDate).format("YYYY-MM-DD") : null;
+	const dateStr = selectedDate
+		? dayjs(selectedDate).format("YYYY-MM-DD")
+		: null;
 
 	const { data: geojson } = useQuery({
 		queryKey: mapLayerKeys.polygons(levelId),
@@ -415,13 +452,25 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 	if (geojson) {
 		const bounds = computeBounds(geojson);
 		if (bounds) {
-			const [[west, south], [east, north]] = bounds as [[number, number], [number, number]];
+			const [[west, south], [east, north]] = bounds as [
+				[number, number],
+				[number, number],
+			];
 			const next: [number, number, number, number] = [west, south, east, north];
 			const cur = rasterBoundsRef.current;
-			if (!cur || cur[0] !== next[0] || cur[1] !== next[1] || cur[2] !== next[2] || cur[3] !== next[3]) {
+			if (
+				!cur ||
+				cur[0] !== next[0] ||
+				cur[1] !== next[1] ||
+				cur[2] !== next[2] ||
+				cur[3] !== next[3]
+			) {
 				rasterBoundsRef.current = next;
 			}
-			zoneBoundsRef.current = [[west, south], [east, north]];
+			zoneBoundsRef.current = [
+				[west, south],
+				[east, north],
+			];
 		} else {
 			rasterBoundsRef.current = null;
 			zoneBoundsRef.current = null;
@@ -463,7 +512,12 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 			type: "fill",
 			source: "zones",
 			paint: {
-				"fill-color": ["case", ["==", ["get", "name"], activeName], "rgba(16, 185, 129, 0.25)", "rgba(16, 185, 129, 0.06)"] as unknown as MapLibreGL.ExpressionSpecification,
+				"fill-color": [
+					"case",
+					["==", ["get", "name"], activeName],
+					"rgba(16, 185, 129, 0.25)",
+					"rgba(16, 185, 129, 0.06)",
+				] as unknown as MapLibreGL.ExpressionSpecification,
 				"fill-opacity": 1,
 			},
 		});
@@ -472,8 +526,18 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 			type: "line",
 			source: "zones",
 			paint: {
-				"line-color": ["case", ["==", ["get", "name"], activeName], "rgba(16, 185, 129, 0.9)", "rgba(16, 185, 129, 0.3)"] as unknown as MapLibreGL.ExpressionSpecification,
-				"line-width": ["case", ["==", ["get", "name"], activeName], 2.5, 1] as unknown as MapLibreGL.ExpressionSpecification,
+				"line-color": [
+					"case",
+					["==", ["get", "name"], activeName],
+					"rgba(16, 185, 129, 0.9)",
+					"rgba(16, 185, 129, 0.3)",
+				] as unknown as MapLibreGL.ExpressionSpecification,
+				"line-width": [
+					"case",
+					["==", ["get", "name"], activeName],
+					2.5,
+					1,
+				] as unknown as MapLibreGL.ExpressionSpecification,
 			},
 		});
 		layersAddedRef.current = true;
@@ -486,12 +550,17 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 				if (typeof name === "string" && name) {
 					const zone = zonesRef.current.find((z) => z.name === name);
 					if (!zone) return;
-					if (zone.level_id !== levelIdRef.current) setLevelRef.current(zone.level_id);
+					if (zone.level_id !== levelIdRef.current)
+						setLevelRef.current(zone.level_id);
 					setZoneRef.current(zone.zone_id);
 				}
 			});
-			map.on("mouseenter", "zones-fill", () => { map.getCanvas().style.cursor = "pointer"; });
-			map.on("mouseleave", "zones-fill", () => { map.getCanvas().style.cursor = ""; });
+			map.on("mouseenter", "zones-fill", () => {
+				map.getCanvas().style.cursor = "pointer";
+			});
+			map.on("mouseleave", "zones-fill", () => {
+				map.getCanvas().style.cursor = "";
+			});
 			eventsRegisteredRef.current = true;
 		}
 	}, []);
@@ -518,52 +587,91 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 		map.addSource("raster-overlay", {
 			type: "image",
 			url: currentUrl,
-			coordinates: [[west, north], [east, north], [east, south], [west, south]],
+			coordinates: [
+				[west, north],
+				[east, north],
+				[east, south],
+				[west, south],
+			],
 		});
 		const beforeLayer = map.getLayer("zones-fill") ? "zones-fill" : undefined;
-		map.addLayer({ id: "raster-overlay", type: "raster", source: "raster-overlay", paint: { "raster-opacity": 0.7, "raster-fade-duration": 300 } }, beforeLayer);
+		map.addLayer(
+			{
+				id: "raster-overlay",
+				type: "raster",
+				source: "raster-overlay",
+				paint: { "raster-opacity": 0.7, "raster-fade-duration": 300 },
+			},
+			beforeLayer,
+		);
 		rasterLayerAddedRef.current = true;
 	}, []);
 
 	const updateHighlight = useCallback(() => {
 		const map = mapRef.current;
-		if (!map || !mapReadyRef.current || !layersAddedRef.current || !map.isStyleLoaded()) return;
+		if (
+			!map ||
+			!mapReadyRef.current ||
+			!layersAddedRef.current ||
+			!map.isStyleLoaded()
+		)
+			return;
 		const activeName = zoneNameRef.current ?? "";
 		try {
 			if (map.getLayer("zones-fill")) {
-				map.setPaintProperty("zones-fill", "fill-color", ["case", ["==", ["get", "name"], activeName], "rgba(16, 185, 129, 0.25)", "rgba(16, 185, 129, 0.06)"]);
+				map.setPaintProperty("zones-fill", "fill-color", [
+					"case",
+					["==", ["get", "name"], activeName],
+					"rgba(16, 185, 129, 0.25)",
+					"rgba(16, 185, 129, 0.06)",
+				]);
 			}
 			if (map.getLayer("zones-line")) {
-				map.setPaintProperty("zones-line", "line-color", ["case", ["==", ["get", "name"], activeName], "rgba(16, 185, 129, 0.9)", "rgba(16, 185, 129, 0.3)"]);
-				map.setPaintProperty("zones-line", "line-width", ["case", ["==", ["get", "name"], activeName], 2.5, 1]);
+				map.setPaintProperty("zones-line", "line-color", [
+					"case",
+					["==", ["get", "name"], activeName],
+					"rgba(16, 185, 129, 0.9)",
+					"rgba(16, 185, 129, 0.3)",
+				]);
+				map.setPaintProperty("zones-line", "line-width", [
+					"case",
+					["==", ["get", "name"], activeName],
+					2.5,
+					1,
+				]);
 			}
-		} catch { /* not ready */ }
+		} catch {
+			/* not ready */
+		}
 	}, []);
 
-	const handleMapRef = useCallback((map: MapLibreGL.Map | null) => {
-		if (!map) return;
-		mapRef.current = map;
-		const mapInstance = map;
+	const handleMapRef = useCallback(
+		(map: MapLibreGL.Map | null) => {
+			if (!map) return;
+			mapRef.current = map;
+			const mapInstance = map;
 
-		mapInstance.on("style.load", () => {
-			layersAddedRef.current = false;
-			rasterLayerAddedRef.current = false;
-			displayedRasterUrlRef.current = null;
-			syncZoneLayers();
-			applyRasterLayer();
-		});
-
-		function checkStyleReady() {
-			if (mapInstance.isStyleLoaded()) {
-				mapReadyRef.current = true;
+			mapInstance.on("style.load", () => {
+				layersAddedRef.current = false;
+				rasterLayerAddedRef.current = false;
+				displayedRasterUrlRef.current = null;
 				syncZoneLayers();
 				applyRasterLayer();
-			} else {
-				setTimeout(checkStyleReady, 150);
+			});
+
+			function checkStyleReady() {
+				if (mapInstance.isStyleLoaded()) {
+					mapReadyRef.current = true;
+					syncZoneLayers();
+					applyRasterLayer();
+				} else {
+					setTimeout(checkStyleReady, 150);
+				}
 			}
-		}
-		checkStyleReady();
-	}, [syncZoneLayers, applyRasterLayer]);
+			checkStyleReady();
+		},
+		[syncZoneLayers, applyRasterLayer],
+	);
 
 	useEffect(() => {
 		geojsonRef.current = geojson;
@@ -576,7 +684,11 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 		const bounds = computeBounds(geojson);
 		if (!bounds) return;
 		const timer = setTimeout(() => {
-			try { map.fitBounds(bounds, { padding: 60, duration: 800 }); } catch { /* ignore */ }
+			try {
+				map.fitBounds(bounds, { padding: 60, duration: 800 });
+			} catch {
+				/* ignore */
+			}
 		}, 200);
 		return () => clearTimeout(timer);
 	}, [geojson]);

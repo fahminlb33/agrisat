@@ -130,7 +130,7 @@ export function createQueryContextStore(zoneLevelRegistry: ZoneLevelRegistry) {
 				// If the removed variable was the active one, reset active to first remaining
 				const newActiveVariableId =
 					state.activeVariableId === variableId
-						? newVariableIds[0] ?? null
+						? (newVariableIds[0] ?? null)
 						: state.activeVariableId;
 
 				set({

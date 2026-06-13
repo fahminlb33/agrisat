@@ -17,34 +17,36 @@ const APP_NAME = "agrisat_agent";
 // ---------------------------------------------------------------------------
 
 export interface ADKSession {
-  id: string;
-  userId: string;
-  appName: string;
+	id: string;
+	userId: string;
+	appName: string;
 }
 
 /**
  * Creates a new ADK session for the given user.
  */
 export async function createSession(userId: string): Promise<ADKSession> {
-  const res = await fetch(
-    `${AGENT_HOST}/apps/${APP_NAME}/users/${userId}/sessions`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ state: {} }),
-    },
-  );
+	const res = await fetch(
+		`${AGENT_HOST}/apps/${APP_NAME}/users/${userId}/sessions`,
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ state: {} }),
+		},
+	);
 
-  if (!res.ok) {
-    throw new Error(`Failed to create session: ${res.status} ${res.statusText}`);
-  }
+	if (!res.ok) {
+		throw new Error(
+			`Failed to create session: ${res.status} ${res.statusText}`,
+		);
+	}
 
-  const data = await res.json();
-  return {
-    id: data.id,
-    userId,
-    appName: APP_NAME,
-  };
+	const data = await res.json();
+	return {
+		id: data.id,
+		userId,
+		appName: APP_NAME,
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -52,29 +54,29 @@ export async function createSession(userId: string): Promise<ADKSession> {
 // ---------------------------------------------------------------------------
 
 export interface RunAgentSSEParams {
-  appName?: string;
-  userId: string;
-  sessionId: string;
-  message: string;
+	appName?: string;
+	userId: string;
+	sessionId: string;
+	message: string;
 }
 
 export interface ADKEvent {
-  /** Raw event content from ADK */
-  content: {
-    parts?: Array<{
-      text?: string;
-      inline_data?: { mime_type: string; data: string };
-      function_call?: { name: string; args: Record<string, unknown> };
-      function_response?: { name: string; response: unknown };
-    }>;
-    role?: string;
-  };
-  /** Whether this is a partial streaming chunk */
-  partial?: boolean;
-  /** Turn complete flag */
-  turnComplete?: boolean;
-  /** Actions from the agent */
-  actions?: Record<string, unknown>;
+	/** Raw event content from ADK */
+	content: {
+		parts?: Array<{
+			text?: string;
+			inline_data?: { mime_type: string; data: string };
+			function_call?: { name: string; args: Record<string, unknown> };
+			function_response?: { name: string; response: unknown };
+		}>;
+		role?: string;
+	};
+	/** Whether this is a partial streaming chunk */
+	partial?: boolean;
+	/** Turn complete flag */
+	turnComplete?: boolean;
+	/** Actions from the agent */
+	actions?: Record<string, unknown>;
 }
 
 /**
@@ -82,76 +84,76 @@ export interface ADKEvent {
  * Uses the /run_sse endpoint for streaming responses.
  */
 export async function* runAgentSSE(
-  params: RunAgentSSEParams,
+	params: RunAgentSSEParams,
 ): AsyncGenerator<ADKEvent> {
-  const { userId, sessionId, message, appName = APP_NAME } = params;
+	const { userId, sessionId, message, appName = APP_NAME } = params;
 
-  const res = await fetch(`${AGENT_HOST}/run_sse`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      app_name: appName,
-      user_id: userId,
-      session_id: sessionId,
-      new_message: {
-        role: "user",
-        parts: [{ text: message }],
-      },
-      streaming: true,
-    }),
-  });
+	const res = await fetch(`${AGENT_HOST}/run_sse`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			app_name: appName,
+			user_id: userId,
+			session_id: sessionId,
+			new_message: {
+				role: "user",
+				parts: [{ text: message }],
+			},
+			streaming: true,
+		}),
+	});
 
-  if (!res.ok) {
-    throw new Error(`Agent request failed: ${res.status} ${res.statusText}`);
-  }
+	if (!res.ok) {
+		throw new Error(`Agent request failed: ${res.status} ${res.statusText}`);
+	}
 
-  const reader = res.body?.getReader();
-  if (!reader) {
-    throw new Error("No response body");
-  }
+	const reader = res.body?.getReader();
+	if (!reader) {
+		throw new Error("No response body");
+	}
 
-  const decoder = new TextDecoder();
-  let buffer = "";
+	const decoder = new TextDecoder();
+	let buffer = "";
 
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+	try {
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
 
-      buffer += decoder.decode(value, { stream: true });
+			buffer += decoder.decode(value, { stream: true });
 
-      // Parse SSE events from buffer
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
+			// Parse SSE events from buffer
+			const lines = buffer.split("\n");
+			buffer = lines.pop() ?? "";
 
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") return;
+			for (const line of lines) {
+				if (line.startsWith("data: ")) {
+					const data = line.slice(6).trim();
+					if (data === "[DONE]") return;
 
-          try {
-            const event = JSON.parse(data) as ADKEvent;
-            yield event;
-          } catch {
-            // Skip malformed JSON lines
-          }
-        }
-      }
-    }
+					try {
+						const event = JSON.parse(data) as ADKEvent;
+						yield event;
+					} catch {
+						// Skip malformed JSON lines
+					}
+				}
+			}
+		}
 
-    // Process any remaining buffer
-    if (buffer.startsWith("data: ")) {
-      const data = buffer.slice(6).trim();
-      if (data && data !== "[DONE]") {
-        try {
-          const event = JSON.parse(data) as ADKEvent;
-          yield event;
-        } catch {
-          // Skip malformed JSON
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
+		// Process any remaining buffer
+		if (buffer.startsWith("data: ")) {
+			const data = buffer.slice(6).trim();
+			if (data && data !== "[DONE]") {
+				try {
+					const event = JSON.parse(data) as ADKEvent;
+					yield event;
+				} catch {
+					// Skip malformed JSON
+				}
+			}
+		}
+	} finally {
+		reader.releaseLock();
+	}
 }

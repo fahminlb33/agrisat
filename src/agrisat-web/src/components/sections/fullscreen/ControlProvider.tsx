@@ -23,7 +23,10 @@ interface ControlProviderProps {
 	children: ReactNode;
 }
 
-export function ControlProvider({ queryStore, children }: ControlProviderProps) {
+export function ControlProvider({
+	queryStore,
+	children,
+}: ControlProviderProps) {
 	const storeRef = useRef<ControlsStoreApi | null>(null);
 	if (!storeRef.current) {
 		storeRef.current = createFullscreenControlsStore();
@@ -38,7 +41,9 @@ export function ControlProvider({ queryStore, children }: ControlProviderProps) 
 	);
 }
 
-export function useControls<T>(selector: (state: FullscreenControlsStore) => T): T {
+export function useControls<T>(
+	selector: (state: FullscreenControlsStore) => T,
+): T {
 	const store = useContext(ControlsContext);
 	if (!store) {
 		throw new Error("useControls must be used within a ControlProvider");
@@ -46,7 +51,9 @@ export function useControls<T>(selector: (state: FullscreenControlsStore) => T):
 	return useZustandStore(store, selector);
 }
 
-export function useQueryContext<T>(selector: (state: QueryContextStore) => T): T {
+export function useQueryContext<T>(
+	selector: (state: QueryContextStore) => T,
+): T {
 	const store = useContext(QueryStoreContext);
 	if (!store) {
 		throw new Error("useQueryContext must be used within a ControlProvider");

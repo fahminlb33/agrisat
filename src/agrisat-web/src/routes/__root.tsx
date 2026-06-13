@@ -30,7 +30,9 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 		<div className="flex h-screen w-full flex-col items-center justify-center gap-2 bg-[var(--background)] text-[var(--foreground)]">
 			<h1 className="text-2xl font-semibold">404</h1>
 			<p className="text-sm text-zinc-500">Page not found</p>
-			<a href="/" className="mt-2 text-sm text-emerald-600 hover:underline">Go home</a>
+			<a href="/" className="mt-2 text-sm text-emerald-600 hover:underline">
+				Go home
+			</a>
 		</div>
 	),
 	component: RootComponent,

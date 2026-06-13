@@ -29,7 +29,10 @@ interface ErrorBoundaryState {
  * Satisfies Requirements 10.6: display an error state without rendering
  * a blank or broken panel.
  */
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+	ErrorBoundaryProps,
+	ErrorBoundaryState
+> {
 	constructor(props: ErrorBoundaryProps) {
 		super(props);
 		this.state = { hasError: false, error: null };

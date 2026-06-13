@@ -41,7 +41,10 @@ Object.defineProperty(window, "matchMedia", {
 
 vi.mock("#/components/ui/map", () => {
 	const React = require("react");
-	const MockMap = React.forwardRef(function MockMap({ children }: any, _ref: any) {
+	const MockMap = React.forwardRef(function MockMap(
+		{ children }: any,
+		_ref: any,
+	) {
 		return <div data-testid="mock-map">{children}</div>;
 	});
 	function MockMapControls() {
@@ -96,7 +99,15 @@ const TEST_GEOJSON = {
 			properties: { zone_id: 1, name: "North Field" },
 			geometry: {
 				type: "Polygon",
-				coordinates: [[[107.5, -6.8], [107.6, -6.8], [107.6, -6.9], [107.5, -6.9], [107.5, -6.8]]],
+				coordinates: [
+					[
+						[107.5, -6.8],
+						[107.6, -6.8],
+						[107.6, -6.9],
+						[107.5, -6.9],
+						[107.5, -6.8],
+					],
+				],
 			},
 		},
 		{
@@ -104,7 +115,15 @@ const TEST_GEOJSON = {
 			properties: { zone_id: 2, name: "South Field" },
 			geometry: {
 				type: "Polygon",
-				coordinates: [[[107.6, -6.9], [107.7, -6.9], [107.7, -7.0], [107.6, -7.0], [107.6, -6.9]]],
+				coordinates: [
+					[
+						[107.6, -6.9],
+						[107.7, -6.9],
+						[107.7, -7.0],
+						[107.6, -7.0],
+						[107.6, -6.9],
+					],
+				],
 			},
 		},
 	],
@@ -132,7 +151,9 @@ function renderPanel(overrides?: Partial<MapPanelProps>) {
 beforeEach(() => {
 	vi.clearAllMocks();
 	mockJsonFn.mockResolvedValue(TEST_GEOJSON);
-	mockBlobFn.mockResolvedValue(new Blob(["fake-image"], { type: "image/webp" }));
+	mockBlobFn.mockResolvedValue(
+		new Blob(["fake-image"], { type: "image/webp" }),
+	);
 });
 
 afterEach(() => {
@@ -209,7 +230,9 @@ describe("MapPanel", () => {
 
 			await waitFor(() => {
 				expect(
-					screen.getByText("No satellite image available for the selected date"),
+					screen.getByText(
+						"No satellite image available for the selected date",
+					),
 				).toBeTruthy();
 			});
 		});
@@ -221,7 +244,9 @@ describe("MapPanel", () => {
 			renderPanel({ store });
 
 			expect(
-				screen.queryByText("No satellite image available for the selected date"),
+				screen.queryByText(
+					"No satellite image available for the selected date",
+				),
 			).toBeNull();
 		});
 	});
@@ -301,9 +326,7 @@ describe("MapPanel", () => {
 			renderPanel({ store });
 
 			await waitFor(() => {
-				expect(
-					screen.getByText("Failed to load zone polygons."),
-				).toBeTruthy();
+				expect(screen.getByText("Failed to load zone polygons.")).toBeTruthy();
 			});
 		});
 	});
@@ -337,9 +360,54 @@ describe("MapPanel utilities", () => {
 	describe("computeZoneAverages", () => {
 		it("should compute averages per zone for a given variable", () => {
 			const data: EnvironmentalTimePoint[] = [
-				{ timestamp: "2024-01-01", zone_id: 1, zone_name: "A", zone_city: "X", level_id: 1, level: "field", ndvi: 0.6, gndvi: 0.5, wdrvi: 0.4, msavi: 0.3, ndre: 0.2, cire: 0.1, ndmi: 0.5, ndwi: 0.4 },
-				{ timestamp: "2024-01-02", zone_id: 1, zone_name: "A", zone_city: "X", level_id: 1, level: "field", ndvi: 0.8, gndvi: 0.5, wdrvi: 0.4, msavi: 0.3, ndre: 0.2, cire: 0.1, ndmi: 0.5, ndwi: 0.4 },
-				{ timestamp: "2024-01-01", zone_id: 2, zone_name: "B", zone_city: "Y", level_id: 1, level: "field", ndvi: 0.4, gndvi: 0.5, wdrvi: 0.4, msavi: 0.3, ndre: 0.2, cire: 0.1, ndmi: 0.5, ndwi: 0.4 },
+				{
+					timestamp: "2024-01-01",
+					zone_id: 1,
+					zone_name: "A",
+					zone_city: "X",
+					level_id: 1,
+					level: "field",
+					ndvi: 0.6,
+					gndvi: 0.5,
+					wdrvi: 0.4,
+					msavi: 0.3,
+					ndre: 0.2,
+					cire: 0.1,
+					ndmi: 0.5,
+					ndwi: 0.4,
+				},
+				{
+					timestamp: "2024-01-02",
+					zone_id: 1,
+					zone_name: "A",
+					zone_city: "X",
+					level_id: 1,
+					level: "field",
+					ndvi: 0.8,
+					gndvi: 0.5,
+					wdrvi: 0.4,
+					msavi: 0.3,
+					ndre: 0.2,
+					cire: 0.1,
+					ndmi: 0.5,
+					ndwi: 0.4,
+				},
+				{
+					timestamp: "2024-01-01",
+					zone_id: 2,
+					zone_name: "B",
+					zone_city: "Y",
+					level_id: 1,
+					level: "field",
+					ndvi: 0.4,
+					gndvi: 0.5,
+					wdrvi: 0.4,
+					msavi: 0.3,
+					ndre: 0.2,
+					cire: 0.1,
+					ndmi: 0.5,
+					ndwi: 0.4,
+				},
 			];
 
 			const result = computeZoneAverages(data, "ndvi");
@@ -353,7 +421,22 @@ describe("MapPanel utilities", () => {
 
 		it("should return empty array for invalid variable key", () => {
 			const data: EnvironmentalTimePoint[] = [
-				{ timestamp: "2024-01-01", zone_id: 1, zone_name: "A", zone_city: "X", level_id: 1, level: "field", ndvi: 0.6, gndvi: 0.5, wdrvi: 0.4, msavi: 0.3, ndre: 0.2, cire: 0.1, ndmi: 0.5, ndwi: 0.4 },
+				{
+					timestamp: "2024-01-01",
+					zone_id: 1,
+					zone_name: "A",
+					zone_city: "X",
+					level_id: 1,
+					level: "field",
+					ndvi: 0.6,
+					gndvi: 0.5,
+					wdrvi: 0.4,
+					msavi: 0.3,
+					ndre: 0.2,
+					cire: 0.1,
+					ndmi: 0.5,
+					ndwi: 0.4,
+				},
 			];
 
 			const result = computeZoneAverages(data, "nonexistent");

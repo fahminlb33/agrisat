@@ -3,24 +3,24 @@ import { useState, useCallback } from "react";
 const STORAGE_KEY = "sidebar-collapsed";
 
 function readCollapsedState(): boolean {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "true") return true;
-    if (stored === "false") return false;
-    // Key missing or invalid value — default to collapsed
-    return true;
-  } catch {
-    // localStorage unavailable — default to collapsed
-    return true;
-  }
+	try {
+		const stored = localStorage.getItem(STORAGE_KEY);
+		if (stored === "true") return true;
+		if (stored === "false") return false;
+		// Key missing or invalid value — default to collapsed
+		return true;
+	} catch {
+		// localStorage unavailable — default to collapsed
+		return true;
+	}
 }
 
 function persistCollapsedState(collapsed: boolean): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, String(collapsed));
-  } catch {
-    // localStorage unavailable — continue without persistence
-  }
+	try {
+		localStorage.setItem(STORAGE_KEY, String(collapsed));
+	} catch {
+		// localStorage unavailable — continue without persistence
+	}
 }
 
 /**
@@ -33,15 +33,15 @@ function persistCollapsedState(collapsed: boolean): void {
  * @returns A tuple of [collapsed, toggleCollapse]
  */
 export function useSidebarState(): [boolean, () => void] {
-  const [collapsed, setCollapsed] = useState<boolean>(readCollapsedState);
+	const [collapsed, setCollapsed] = useState<boolean>(readCollapsedState);
 
-  const toggleCollapse = useCallback(() => {
-    setCollapsed((prev) => {
-      const next = !prev;
-      persistCollapsedState(next);
-      return next;
-    });
-  }, []);
+	const toggleCollapse = useCallback(() => {
+		setCollapsed((prev) => {
+			const next = !prev;
+			persistCollapsedState(next);
+			return next;
+		});
+	}, []);
 
-  return [collapsed, toggleCollapse];
+	return [collapsed, toggleCollapse];
 }

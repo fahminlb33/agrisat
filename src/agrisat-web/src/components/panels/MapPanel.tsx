@@ -21,7 +21,9 @@ export interface ZoneAverage {
 }
 
 export interface MapPanelProps {
-	store: ReturnType<typeof import("#/stores/query-context").createQueryContextStore>;
+	store: ReturnType<
+		typeof import("#/stores/query-context").createQueryContextStore
+	>;
 	/** Per-zone averages for the active variable, used for heatmap coloring */
 	zoneAverages?: ZoneAverage[];
 	/** Environmental data for computing zone averages if not provided externally */
@@ -92,7 +94,9 @@ export function computeZoneAverages(
 // Constants
 
 /** Compute bounding box from a GeoJSON FeatureCollection */
-function computeBounds(geojson: FeatureCollection): MapLibreGL.LngLatBoundsLike | null {
+function computeBounds(
+	geojson: FeatureCollection,
+): MapLibreGL.LngLatBoundsLike | null {
 	let minLng = Infinity;
 	let minLat = Infinity;
 	let maxLng = -Infinity;
@@ -114,9 +118,15 @@ function computeBounds(geojson: FeatureCollection): MapLibreGL.LngLatBoundsLike 
 		if (!geometry) return;
 		if (geometry.type === "Point") {
 			processCoords(geometry.coordinates);
-		} else if (geometry.type === "MultiPoint" || geometry.type === "LineString") {
+		} else if (
+			geometry.type === "MultiPoint" ||
+			geometry.type === "LineString"
+		) {
 			for (const coord of geometry.coordinates) processCoords(coord);
-		} else if (geometry.type === "MultiLineString" || geometry.type === "Polygon") {
+		} else if (
+			geometry.type === "MultiLineString" ||
+			geometry.type === "Polygon"
+		) {
 			for (const ring of geometry.coordinates) {
 				for (const coord of ring) processCoords(coord);
 			}
@@ -136,19 +146,33 @@ function computeBounds(geojson: FeatureCollection): MapLibreGL.LngLatBoundsLike 
 	}
 
 	// Validate we found valid bounds
-	if (minLng === Infinity || minLat === Infinity || maxLng === -Infinity || maxLat === -Infinity) return null;
+	if (
+		minLng === Infinity ||
+		minLat === Infinity ||
+		maxLng === -Infinity ||
+		maxLat === -Infinity
+	)
+		return null;
 	if (minLng > maxLng || minLat > maxLat) return null;
 	// Final sanity check
 	if (minLat < -90 || maxLat > 90 || minLng < -180 || maxLng > 180) return null;
 	// Avoid degenerate (zero-area) bounds
 	if (minLng === maxLng && minLat === maxLat) return null;
 
-	return [[minLng, minLat], [maxLng, maxLat]];
+	return [
+		[minLng, minLat],
+		[maxLng, maxLat],
+	];
 }
 
 /** Compute bounding box for a single feature */
-function computeFeatureBounds(feature: Feature): MapLibreGL.LngLatBoundsLike | null {
-	const fc: FeatureCollection = { type: "FeatureCollection", features: [feature] };
+function computeFeatureBounds(
+	feature: Feature,
+): MapLibreGL.LngLatBoundsLike | null {
+	const fc: FeatureCollection = {
+		type: "FeatureCollection",
+		features: [feature],
+	};
 	return computeBounds(fc);
 }
 
@@ -156,7 +180,9 @@ function computeFeatureBounds(feature: Feature): MapLibreGL.LngLatBoundsLike | n
  * Create a mask GeoJSON: a world-covering polygon with a hole cut out
  * for the boundary features. This hides everything outside the boundary.
  */
-function createMaskGeojson(boundary: FeatureCollection): FeatureCollection | null {
+function createMaskGeojson(
+	boundary: FeatureCollection,
+): FeatureCollection | null {
 	// Extract the first polygon ring from the boundary
 	const feature = boundary.features[0];
 	if (!feature?.geometry) return null;
@@ -204,7 +230,11 @@ function createMaskGeojson(boundary: FeatureCollection): FeatureCollection | nul
 // Component
 // -----------------------------------------------------------
 
-export default function MapPanel({ store, zoneAverages, environmentalData }: MapPanelProps) {
+export default function MapPanel({
+	store,
+	zoneAverages,
+	environmentalData,
+}: MapPanelProps) {
 	const levelId = useStore(store, (s) => s.levelId);
 	const zoneId = useStore(store, (s) => s.zoneId);
 	const activeVariableId = useStore(store, (s) => s.activeVariableId);
@@ -214,11 +244,15 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 	const mapRef = useRef<MapLibreGL.Map | null>(null);
 	const popupRef = useRef<MapLibreGL.Popup | null>(null);
 	const [geojson, setGeojson] = useState<FeatureCollection | null>(null);
-	const [bogorBoundary, setBogorBoundary] = useState<FeatureCollection | null>(null);
+	const [bogorBoundary, setBogorBoundary] = useState<FeatureCollection | null>(
+		null,
+	);
 	const [loadError, setLoadError] = useState<string | null>(null);
 	const [rasterUnavailable, setRasterUnavailable] = useState(false);
 	const [rasterImageUrl, setRasterImageUrl] = useState<string | null>(null);
-	const [rasterBounds, setRasterBounds] = useState<[number, number, number, number] | null>(null);
+	const [rasterBounds, setRasterBounds] = useState<
+		[number, number, number, number] | null
+	>(null);
 	const [mapReady, setMapReady] = useState(false);
 	const [hoveredZoneId, setHoveredZoneId] = useState<number | null>(null);
 
@@ -251,7 +285,9 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		}
 
 		fetchBogorBoundary();
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	// -----------------------------------------------------------
@@ -285,7 +321,9 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		}
 
 		fetchPolygons();
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	}, [levelId]);
 
 	// -----------------------------------------------------------
@@ -300,7 +338,10 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		if (!bounds) return;
 
 		// Validate bounds before calling fitBounds
-		const [[swLng, swLat], [neLng, neLat]] = bounds as [[number, number], [number, number]];
+		const [[swLng, swLat], [neLng, neLat]] = bounds as [
+			[number, number],
+			[number, number],
+		];
 		if (swLat < -90 || swLat > 90 || neLat < -90 || neLat > 90) return;
 		if (swLng < -180 || swLng > 180 || neLng < -180 || neLng > 180) return;
 
@@ -351,7 +392,10 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		if (!featureBounds) return;
 
 		// Validate bounds
-		const [[swLng, swLat], [neLng, neLat]] = featureBounds as [[number, number], [number, number]];
+		const [[swLng, swLat], [neLng, neLat]] = featureBounds as [
+			[number, number],
+			[number, number],
+		];
 		if (swLat < -90 || swLat > 90 || neLat < -90 || neLat > 90) return;
 		if (swLng < -180 || swLng > 180 || neLng < -180 || neLng > 180) return;
 
@@ -423,7 +467,9 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		}
 
 		fetchRaster();
-		return () => { cancelled = true; };
+		return () => {
+			cancelled = true;
+		};
 	}, [activeVariableId, timeRange]);
 
 	// -----------------------------------------------------------
@@ -443,7 +489,10 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 			return;
 		}
 
-		const [[west, south], [east, north]] = bounds as [[number, number], [number, number]];
+		const [[west, south], [east, north]] = bounds as [
+			[number, number],
+			[number, number],
+		];
 		setRasterBounds([west, south, east, north]);
 	}, [bogorBoundary, geojson]);
 
@@ -498,16 +547,21 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 
 		// --- Bogor boundary layer (always behind zone layers) ---
 		if (bogorLayerAddedRef.current) {
-			if (map.getLayer(BOGOR_BOUNDARY_LINE_LAYER_ID)) map.removeLayer(BOGOR_BOUNDARY_LINE_LAYER_ID);
-			if (map.getLayer(BOGOR_BOUNDARY_FILL_LAYER_ID)) map.removeLayer(BOGOR_BOUNDARY_FILL_LAYER_ID);
-			if (map.getSource(BOGOR_BOUNDARY_SOURCE_ID)) map.removeSource(BOGOR_BOUNDARY_SOURCE_ID);
+			if (map.getLayer(BOGOR_BOUNDARY_LINE_LAYER_ID))
+				map.removeLayer(BOGOR_BOUNDARY_LINE_LAYER_ID);
+			if (map.getLayer(BOGOR_BOUNDARY_FILL_LAYER_ID))
+				map.removeLayer(BOGOR_BOUNDARY_FILL_LAYER_ID);
+			if (map.getSource(BOGOR_BOUNDARY_SOURCE_ID))
+				map.removeSource(BOGOR_BOUNDARY_SOURCE_ID);
 			bogorLayerAddedRef.current = false;
 		}
 
 		// --- Mask layer (hides everything outside boundary) ---
 		if (maskLayerAddedRef.current) {
-			if (map.getLayer(BOGOR_MASK_LAYER_ID)) map.removeLayer(BOGOR_MASK_LAYER_ID);
-			if (map.getSource(BOGOR_MASK_SOURCE_ID)) map.removeSource(BOGOR_MASK_SOURCE_ID);
+			if (map.getLayer(BOGOR_MASK_LAYER_ID))
+				map.removeLayer(BOGOR_MASK_LAYER_ID);
+			if (map.getSource(BOGOR_MASK_SOURCE_ID))
+				map.removeSource(BOGOR_MASK_SOURCE_ID);
 			maskLayerAddedRef.current = false;
 		}
 
@@ -572,8 +626,10 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		// --- Zone layers ---
 		// Remove existing layers/source
 		if (layersAddedRef.current) {
-			if (map.getLayer(ZONE_HOVER_LAYER_ID)) map.removeLayer(ZONE_HOVER_LAYER_ID);
-			if (map.getLayer(ZONE_HEATMAP_FILL_LAYER_ID)) map.removeLayer(ZONE_HEATMAP_FILL_LAYER_ID);
+			if (map.getLayer(ZONE_HOVER_LAYER_ID))
+				map.removeLayer(ZONE_HOVER_LAYER_ID);
+			if (map.getLayer(ZONE_HEATMAP_FILL_LAYER_ID))
+				map.removeLayer(ZONE_HEATMAP_FILL_LAYER_ID);
 			if (map.getLayer(ZONE_FILL_LAYER_ID)) map.removeLayer(ZONE_FILL_LAYER_ID);
 			if (map.getLayer(ZONE_LINE_LAYER_ID)) map.removeLayer(ZONE_LINE_LAYER_ID);
 			if (map.getSource(ZONES_SOURCE_ID)) map.removeSource(ZONES_SOURCE_ID);
@@ -600,7 +656,8 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 				type: "fill",
 				source: ZONES_SOURCE_ID,
 				paint: {
-					"fill-color": matchExpr as unknown as MapLibreGL.ExpressionSpecification,
+					"fill-color":
+						matchExpr as unknown as MapLibreGL.ExpressionSpecification,
 					"fill-opacity": 0.8,
 				},
 			});
@@ -618,14 +675,15 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 					"rgba(79, 184, 178, 0.45)",
 					"rgba(79, 184, 178, 0.15)",
 				] as unknown as MapLibreGL.ExpressionSpecification,
-				"fill-opacity": heatmapColorMap.size > 0
-					? ([
-						"case",
-						["==", ["get", "zone_id"], zoneId ?? -1],
-						1,
-						0,
-					] as unknown as MapLibreGL.ExpressionSpecification)
-					: 1,
+				"fill-opacity":
+					heatmapColorMap.size > 0
+						? ([
+								"case",
+								["==", ["get", "zone_id"], zoneId ?? -1],
+								1,
+								0,
+							] as unknown as MapLibreGL.ExpressionSpecification)
+						: 1,
 			},
 		});
 
@@ -671,10 +729,10 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 				type: "image",
 				url: rasterImageUrl,
 				coordinates: [
-					[west, north],   // top-left
-					[east, north],   // top-right
-					[east, south],   // bottom-right
-					[west, south],   // bottom-left
+					[west, north], // top-left
+					[east, north], // top-right
+					[east, south], // bottom-right
+					[west, south], // bottom-left
 				],
 			});
 
@@ -698,52 +756,62 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 
 			rasterLayerAddedRef.current = true;
 		}
-	}, [geojson, heatmapColorMap, zoneId, mapReady, bogorBoundary, levelId, rasterImageUrl, rasterBounds]);
+	}, [
+		geojson,
+		heatmapColorMap,
+		zoneId,
+		mapReady,
+		bogorBoundary,
+		levelId,
+		rasterImageUrl,
+		rasterBounds,
+	]);
 
 	// -----------------------------------------------------------
 	// Map event handlers setup
 	// -----------------------------------------------------------
-	const handleMapRef = useCallback((map: MapLibreGL.Map | null) => {
-		if (!map) return;
-		mapRef.current = map;
+	const handleMapRef = useCallback(
+		(map: MapLibreGL.Map | null) => {
+			if (!map) return;
+			mapRef.current = map;
 
-		// Create a popup for click-based popover
-		popupRef.current = new MapLibreGL.Popup({
-			closeButton: true,
-			closeOnClick: false,
-			className: "zone-popup",
-			maxWidth: "280px",
-			anchor: "bottom",
-		});
+			// Create a popup for click-based popover
+			popupRef.current = new MapLibreGL.Popup({
+				closeButton: true,
+				closeOnClick: false,
+				className: "zone-popup",
+				maxWidth: "280px",
+				anchor: "bottom",
+			});
 
-		// Poll until style is loaded — the Map component has an internal 100ms delay
-		// after styledata before it considers the style ready
-		const mapInstance = map;
-		function checkStyleReady() {
-			if (mapInstance.isStyleLoaded()) {
-				setMapReady(true);
-			} else {
-				setTimeout(checkStyleReady, 150);
+			// Poll until style is loaded — the Map component has an internal 100ms delay
+			// after styledata before it considers the style ready
+			const mapInstance = map;
+			function checkStyleReady() {
+				if (mapInstance.isStyleLoaded()) {
+					setMapReady(true);
+				} else {
+					setTimeout(checkStyleReady, 150);
+				}
 			}
-		}
-		checkStyleReady();
+			checkStyleReady();
 
-		// Zone click handler — show popover card and select zone
-		map.on("click", ZONE_FILL_LAYER_ID, (e) => {
-			const feature = e.features?.[0];
-			if (!feature?.properties) return;
+			// Zone click handler — show popover card and select zone
+			map.on("click", ZONE_FILL_LAYER_ID, (e) => {
+				const feature = e.features?.[0];
+				if (!feature?.properties) return;
 
-			const featureZoneId = Number(feature.properties.zone_id);
-			setZone(featureZoneId);
+				const featureZoneId = Number(feature.properties.zone_id);
+				setZone(featureZoneId);
 
-			// Build popover card content
-			const name = feature.properties.name ?? "Unknown";
-			const city = feature.properties.city ?? "";
-			const area = feature.properties.area
-				? `${(Number(feature.properties.area) / 1_000_000).toFixed(1)} km²`
-				: "";
+				// Build popover card content
+				const name = feature.properties.name ?? "Unknown";
+				const city = feature.properties.city ?? "";
+				const area = feature.properties.area
+					? `${(Number(feature.properties.area) / 1_000_000).toFixed(1)} km²`
+					: "";
 
-			const html = `
+				const html = `
 				<div style="font-family: system-ui, sans-serif; padding: 8px 4px; background: #fff; border-radius: 8px;">
 					<div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #1a1a1a;">${name}</div>
 					${city ? `<div style="font-size: 12px; color: #555; margin-bottom: 2px;">📍 ${city}</div>` : ""}
@@ -751,44 +819,43 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 				</div>
 			`;
 
-			popupRef.current
-				?.setLngLat(e.lngLat)
-				.setHTML(html)
-				.addTo(map);
-		});
-
-		// Click outside zone clears selection and closes popup
-		map.on("click", (e) => {
-			const features = map.queryRenderedFeatures(e.point, {
-				layers: [ZONE_FILL_LAYER_ID, ZONE_HEATMAP_FILL_LAYER_ID].filter(
-					(id) => map.getLayer(id) != null,
-				),
+				popupRef.current?.setLngLat(e.lngLat).setHTML(html).addTo(map);
 			});
-			if (!features || features.length === 0) {
-				setZone(null);
-				popupRef.current?.remove();
-			}
-		});
 
-		// Hover: only change cursor and highlight (no popup)
-		map.on("mousemove", ZONE_FILL_LAYER_ID, (e) => {
-			const feature = e.features?.[0];
-			if (!feature?.properties) return;
+			// Click outside zone clears selection and closes popup
+			map.on("click", (e) => {
+				const features = map.queryRenderedFeatures(e.point, {
+					layers: [ZONE_FILL_LAYER_ID, ZONE_HEATMAP_FILL_LAYER_ID].filter(
+						(id) => map.getLayer(id) != null,
+					),
+				});
+				if (!features || features.length === 0) {
+					setZone(null);
+					popupRef.current?.remove();
+				}
+			});
 
-			const featureZoneId = Number(feature.properties.zone_id);
-			if (featureZoneId !== prevHoveredRef.current) {
-				prevHoveredRef.current = featureZoneId;
-				setHoveredZoneId(featureZoneId);
-			}
-			map.getCanvas().style.cursor = "pointer";
-		});
+			// Hover: only change cursor and highlight (no popup)
+			map.on("mousemove", ZONE_FILL_LAYER_ID, (e) => {
+				const feature = e.features?.[0];
+				if (!feature?.properties) return;
 
-		map.on("mouseleave", ZONE_FILL_LAYER_ID, () => {
-			map.getCanvas().style.cursor = "";
-			setHoveredZoneId(null);
-			prevHoveredRef.current = null;
-		});
-	}, [setZone]);
+				const featureZoneId = Number(feature.properties.zone_id);
+				if (featureZoneId !== prevHoveredRef.current) {
+					prevHoveredRef.current = featureZoneId;
+					setHoveredZoneId(featureZoneId);
+				}
+				map.getCanvas().style.cursor = "pointer";
+			});
+
+			map.on("mouseleave", ZONE_FILL_LAYER_ID, () => {
+				map.getCanvas().style.cursor = "";
+				setHoveredZoneId(null);
+				prevHoveredRef.current = null;
+			});
+		},
+		[setZone],
+	);
 
 	// Update layers when data changes
 	useEffect(() => {
@@ -849,7 +916,10 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 			{/* Empty state: no level selected */}
 			{levelId === null && (
 				<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-					<Card size="sm" className="pointer-events-auto bg-card/90 backdrop-blur-sm">
+					<Card
+						size="sm"
+						className="pointer-events-auto bg-card/90 backdrop-blur-sm"
+					>
 						<CardContent className="pt-3">
 							<p className="text-sm text-muted-foreground">
 								Select a level to view zones on the map
@@ -862,11 +932,12 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 			{/* Error state */}
 			{loadError && (
 				<div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-					<Card size="sm" className="pointer-events-auto border-destructive/50 bg-card/90 backdrop-blur-sm">
+					<Card
+						size="sm"
+						className="pointer-events-auto border-destructive/50 bg-card/90 backdrop-blur-sm"
+					>
 						<CardContent className="pt-3">
-							<p className="text-sm text-destructive">
-								{loadError}
-							</p>
+							<p className="text-sm text-destructive">{loadError}</p>
 						</CardContent>
 					</Card>
 				</div>
@@ -891,4 +962,3 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 		</div>
 	);
 }
-

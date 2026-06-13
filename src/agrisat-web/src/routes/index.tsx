@@ -27,12 +27,22 @@ export const Route = createFileRoute("/")({
 });
 
 function MinimalMapView() {
-	const { data: rawLevels, isLoading: levelsLoading, isError: levelsError } = useLevels();
-	const { data: rawZones, isLoading: zonesLoading, isError: zonesError } = useZones();
+	const {
+		data: rawLevels,
+		isLoading: levelsLoading,
+		isError: levelsError,
+	} = useLevels();
+	const {
+		data: rawZones,
+		isLoading: zonesLoading,
+		isError: zonesError,
+	} = useZones();
 	const { data: rawVariables } = useVariables();
 
 	// Store setup — created once when data is ready
-	const storeRef = useRef<ReturnType<typeof createQueryContextStore> | null>(null);
+	const storeRef = useRef<ReturnType<typeof createQueryContextStore> | null>(
+		null,
+	);
 	const [storeReady, setStoreReady] = useState(false);
 
 	const fetchDone = !levelsLoading && !zonesLoading;
@@ -56,7 +66,9 @@ function MinimalMapView() {
 			const defaultLevel = extentLevel ?? rawLevels[0];
 			store.getState().setLevel(defaultLevel.level_id);
 
-			const firstZone = rawZones.find((z) => z.level_id === defaultLevel.level_id);
+			const firstZone = rawZones.find(
+				(z) => z.level_id === defaultLevel.level_id,
+			);
 			if (firstZone) {
 				store.getState().setZone(firstZone.zone_id);
 			}
@@ -129,7 +141,9 @@ function FullscreenLayout({
 						className="flex items-center gap-2 rounded-xl bg-background/95 px-3 py-2.5 shadow-lg backdrop-blur-md ring-1 ring-border/50 transition-all duration-200 hover:shadow-xl"
 					>
 						<Leaf className="h-5 w-5 text-emerald-500" />
-						<span className="hidden sm:inline text-sm font-semibold text-foreground">AgriSat</span>
+						<span className="hidden sm:inline text-sm font-semibold text-foreground">
+							AgriSat
+						</span>
 					</a>
 					<ThemeToggle variant="floating" />
 				</div>

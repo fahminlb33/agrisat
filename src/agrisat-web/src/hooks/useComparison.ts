@@ -43,7 +43,13 @@ export function useComparison(params: {
 	const { zoneA, zoneB, startTs, endTs, variableKeys, enabled = true } = params;
 
 	return useQuery<ComparisonResult>({
-		queryKey: comparisonKeys.zones({ zoneA, zoneB, startTs, endTs, variableKeys }),
+		queryKey: comparisonKeys.zones({
+			zoneA,
+			zoneB,
+			startTs,
+			endTs,
+			variableKeys,
+		}),
 		queryFn: () =>
 			compareZones({
 				zoneA: zoneA!,

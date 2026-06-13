@@ -6,7 +6,9 @@ import { useQueryErrorState } from "./useQueryErrorState";
 import type { UseQueryResult } from "@tanstack/react-query";
 
 // Helper to create a mock query result
-function mockQuery<T>(overrides: Partial<UseQueryResult<T, Error>>): UseQueryResult<T, Error> {
+function mockQuery<T>(
+	overrides: Partial<UseQueryResult<T, Error>>,
+): UseQueryResult<T, Error> {
 	return {
 		data: undefined,
 		error: null,

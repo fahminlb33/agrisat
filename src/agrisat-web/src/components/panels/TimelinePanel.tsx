@@ -29,7 +29,9 @@ import type { EnvironmentalTimePoint, WeatherTimePoint } from "#/types/api";
 // -----------------------------------------------------------
 
 export interface TimelinePanelProps {
-	store: ReturnType<typeof import("#/stores/query-context").createQueryContextStore>;
+	store: ReturnType<
+		typeof import("#/stores/query-context").createQueryContextStore
+	>;
 	/** Available timestamps for the selected zone/level, sorted ascending */
 	availableTimestamps: Date[];
 	/** Time series data for the active variable (used for trend preview) */
@@ -52,7 +54,11 @@ export interface TimelinePanelProps {
 
 type TimeRangePreset = "7d" | "30d" | "90d" | "all";
 
-const TIME_RANGE_PRESETS: { key: TimeRangePreset; label: string; days: number | null }[] = [
+const TIME_RANGE_PRESETS: {
+	key: TimeRangePreset;
+	label: string;
+	days: number | null;
+}[] = [
 	{ key: "7d", label: "7d", days: 7 },
 	{ key: "30d", label: "30d", days: 30 },
 	{ key: "90d", label: "90d", days: 90 },
@@ -100,7 +106,8 @@ export default function TimelinePanel({
 	const timeRange = useStore(store, (s) => s.timeRange);
 	const setTimeRange = useStore(store, (s) => s.setTimeRange);
 
-	const [timeRangePreset, setTimeRangePreset] = useState<TimeRangePreset>("90d");
+	const [timeRangePreset, setTimeRangePreset] =
+		useState<TimeRangePreset>("90d");
 	const [chartView, setChartView] = useState<ChartView>("env");
 	const [isExpanded, setIsExpanded] = useState(false);
 
@@ -189,7 +196,8 @@ export default function TimelinePanel({
 		if (!selectedDate || sortedTimestamps.length === 0) return null;
 		const target = dayjs(selectedDate).startOf("day").valueOf();
 		for (let i = 0; i < sortedTimestamps.length; i++) {
-			if (dayjs(sortedTimestamps[i]).startOf("day").valueOf() === target) return i;
+			if (dayjs(sortedTimestamps[i]).startOf("day").valueOf() === target)
+				return i;
 		}
 		return null;
 	}, [selectedDate, sortedTimestamps]);
@@ -222,10 +230,16 @@ export default function TimelinePanel({
 			const config = TIME_RANGE_PRESETS.find((p) => p.key === preset);
 			if (config?.days) {
 				const endTs = dayjs().startOf("day").toDate();
-				const startTs = dayjs().subtract(config.days, "day").startOf("day").toDate();
+				const startTs = dayjs()
+					.subtract(config.days, "day")
+					.startOf("day")
+					.toDate();
 				setTimeRange(startTs, endTs);
 			} else if (preset === "all" && sortedTimestamps.length >= 2) {
-				setTimeRange(sortedTimestamps[0], sortedTimestamps[sortedTimestamps.length - 1]);
+				setTimeRange(
+					sortedTimestamps[0],
+					sortedTimestamps[sortedTimestamps.length - 1],
+				);
 			}
 		},
 		[setTimeRange, sortedTimestamps],
@@ -244,7 +258,10 @@ export default function TimelinePanel({
 		(direction: -1 | 1) => {
 			if (!selectedDate || sortedTimestamps.length === 0) return;
 			const currentIdx = selectedDateIdx ?? 0;
-			const newIdx = Math.max(0, Math.min(sortedTimestamps.length - 1, currentIdx + direction));
+			const newIdx = Math.max(
+				0,
+				Math.min(sortedTimestamps.length - 1, currentIdx + direction),
+			);
 			if (onDateSelect) {
 				onDateSelect(sortedTimestamps[newIdx]);
 			}
@@ -306,14 +323,19 @@ export default function TimelinePanel({
 							</Button>
 							<span className="flex items-center gap-1 px-1 text-[10px] font-medium text-foreground">
 								<Calendar className="h-3 w-3 text-muted-foreground" />
-								{selectedDate ? dayjs(selectedDate).format("MMM D, YYYY") : "Select date"}
+								{selectedDate
+									? dayjs(selectedDate).format("MMM D, YYYY")
+									: "Select date"}
 							</span>
 							<Button
 								variant="ghost"
 								size="icon"
 								className="h-5 w-5"
 								onClick={() => handleStepDate(1)}
-								disabled={selectedDateIdx === sortedTimestamps.length - 1 || selectedDateIdx === null}
+								disabled={
+									selectedDateIdx === sortedTimestamps.length - 1 ||
+									selectedDateIdx === null
+								}
 								aria-label="Next date"
 							>
 								<ChevronRight className="h-3 w-3" />
@@ -327,17 +349,31 @@ export default function TimelinePanel({
 						<ToggleGroup
 							type="single"
 							value={chartView}
-							onValueChange={(v) => { if (v) setChartView(v as ChartView); }}
+							onValueChange={(v) => {
+								if (v) setChartView(v as ChartView);
+							}}
 							variant="outline"
 							size="sm"
 						>
-							<ToggleGroupItem value="env" className="h-6 px-2 text-[10px]" aria-label="Environmental chart">
+							<ToggleGroupItem
+								value="env"
+								className="h-6 px-2 text-[10px]"
+								aria-label="Environmental chart"
+							>
 								Env
 							</ToggleGroupItem>
-							<ToggleGroupItem value="weather" className="h-6 px-2 text-[10px]" aria-label="Weather chart">
+							<ToggleGroupItem
+								value="weather"
+								className="h-6 px-2 text-[10px]"
+								aria-label="Weather chart"
+							>
 								Weather
 							</ToggleGroupItem>
-							<ToggleGroupItem value="combined" className="h-6 px-2 text-[10px]" aria-label="Combined chart">
+							<ToggleGroupItem
+								value="combined"
+								className="h-6 px-2 text-[10px]"
+								aria-label="Combined chart"
+							>
 								Both
 							</ToggleGroupItem>
 						</ToggleGroup>
@@ -364,7 +400,8 @@ export default function TimelinePanel({
 						))}
 					</ToggleGroup>
 					<span className="text-[11px] font-medium text-foreground">
-						{dayjs(timeRange.startTs).format("MMM D")} — {dayjs(timeRange.endTs).format("MMM D, YYYY")}
+						{dayjs(timeRange.startTs).format("MMM D")} —{" "}
+						{dayjs(timeRange.endTs).format("MMM D, YYYY")}
 					</span>
 					{/* Expand/collapse charts */}
 					<Button
@@ -440,7 +477,11 @@ export default function TimelinePanel({
 					{/* Date labels */}
 					<div className="mt-0.5 flex justify-between text-[9px] text-muted-foreground">
 						<span>{dayjs(sortedTimestamps[0]).format("MMM D, YYYY")}</span>
-						<span>{dayjs(sortedTimestamps[sortedTimestamps.length - 1]).format("MMM D, YYYY")}</span>
+						<span>
+							{dayjs(sortedTimestamps[sortedTimestamps.length - 1]).format(
+								"MMM D, YYYY",
+							)}
+						</span>
 					</div>
 				</div>
 			)}
@@ -468,179 +509,240 @@ export default function TimelinePanel({
 					<StatBadge label="Max" value={trendStats.max.toFixed(3)} />
 					<div className="ml-auto flex items-center gap-1">
 						<span className="text-muted-foreground">Δ</span>
-						<span className={trendStats.change >= 0 ? "text-emerald-600" : "text-red-500"}>
-							{trendStats.change >= 0 ? "+" : ""}{trendStats.change.toFixed(3)}
-							{" "}({trendStats.changePct >= 0 ? "+" : ""}{trendStats.changePct.toFixed(1)}%)
+						<span
+							className={
+								trendStats.change >= 0 ? "text-emerald-600" : "text-red-500"
+							}
+						>
+							{trendStats.change >= 0 ? "+" : ""}
+							{trendStats.change.toFixed(3)} (
+							{trendStats.changePct >= 0 ? "+" : ""}
+							{trendStats.changePct.toFixed(1)}%)
 						</span>
 					</div>
 				</div>
 			)}
 
 			{/* Charts section (expandable) */}
-			{isExpanded && (environmentalData.length > 0 || weatherData.length > 0) && (
-				<div className="border-t border-border px-4 py-3">
-					<div className={cn(
-						"grid gap-3",
-						chartView === "combined" ? "grid-cols-2" : "grid-cols-1",
-					)}>
-						{/* Environmental Chart */}
-						{(chartView === "env" || chartView === "combined") && envChartData.length > 0 && (
-							<div>
-								<h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-									Environmental Indices
-								</h4>
-								<ResponsiveContainer width="100%" height={chartView === "combined" ? 120 : 150}>
-									<AreaChart data={envChartData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-										<CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-										<XAxis
-											dataKey="date"
-											tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-											tickLine={false}
-											axisLine={false}
-											interval="preserveStartEnd"
-										/>
-										<YAxis
-											tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-											tickLine={false}
-											axisLine={false}
-											domain={["auto", "auto"]}
-										/>
-										<Tooltip
-											contentStyle={{
-												fontSize: 11,
-												backgroundColor: "hsl(var(--card))",
-												border: "1px solid hsl(var(--border))",
-												borderRadius: 6,
-											}}
-											labelStyle={{ fontSize: 10, fontWeight: 600 }}
-										/>
-										{/* Show active variable as filled area, others as lines */}
-										{activeVariableKey && (
-											<Area
-												type="monotone"
-												dataKey={activeVariableKey}
-												stroke={ENV_VARIABLE_COLORS[activeVariableKey] ?? "hsl(var(--primary))"}
-												fill={ENV_VARIABLE_COLORS[activeVariableKey] ?? "hsl(var(--primary))"}
-												fillOpacity={0.15}
-												strokeWidth={2}
-												name={VARIABLE_LABELS[activeVariableKey] ?? activeVariableKey.toUpperCase()}
-												dot={false}
-												activeDot={{ r: 3 }}
-											/>
-										)}
-										{/* Selected date reference line */}
-										{selectedDate && (
-											<ReferenceLine
-												x={dayjs(selectedDate).format("MMM D")}
-												stroke="hsl(var(--primary))"
-												strokeDasharray="4 4"
-												strokeWidth={1.5}
-											/>
-										)}
-									</AreaChart>
-								</ResponsiveContainer>
-							</div>
-						)}
-
-						{/* Weather Chart */}
-						{(chartView === "weather" || chartView === "combined") && weatherChartData.length > 0 && (
-							<div>
-								<h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-									Weather
-								</h4>
-								<ResponsiveContainer width="100%" height={chartView === "combined" ? 120 : 150}>
-									<LineChart data={weatherChartData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
-										<CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-										<XAxis
-											dataKey="dateShort"
-											tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-											tickLine={false}
-											axisLine={false}
-											interval="preserveStartEnd"
-										/>
-										<YAxis
-											yAxisId="temp"
-											tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-											tickLine={false}
-											axisLine={false}
-											domain={["auto", "auto"]}
-										/>
-										<YAxis
-											yAxisId="precip"
-											orientation="right"
-											tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-											tickLine={false}
-											axisLine={false}
-											domain={[0, "auto"]}
-											hide
-										/>
-										<Tooltip
-											contentStyle={{
-												fontSize: 11,
-												backgroundColor: "hsl(var(--card))",
-												border: "1px solid hsl(var(--border))",
-												borderRadius: 6,
-											}}
-											labelStyle={{ fontSize: 10, fontWeight: 600 }}
-											formatter={(value, name) => {
-												const v = Number(value);
-												if (name === "Temperature") return [`${v.toFixed(1)}°C`, name];
-												if (name === "Precipitation") return [`${v.toFixed(4)} kg/m²`, name];
-												if (name === "Cloud Cover") return [`${v.toFixed(1)}%`, name];
-												return [String(v), String(name)];
-											}}
-										/>
-										<Line
-											yAxisId="temp"
-											type="monotone"
-											dataKey="temperature"
-											stroke="hsl(25, 95%, 53%)"
-											strokeWidth={2}
-											name="Temperature"
-											dot={false}
-											activeDot={{ r: 3 }}
-										/>
-										<Line
-											yAxisId="precip"
-											type="monotone"
-											dataKey="precipitation"
-											stroke="hsl(210, 80%, 55%)"
-											strokeWidth={1.5}
-											name="Precipitation"
-											dot={false}
-											strokeDasharray="3 3"
-										/>
-										{/* Selected date reference line */}
-										{selectedDate && (
-											<ReferenceLine
-												x={dayjs(selectedDate).format("MMM D")}
-												stroke="hsl(var(--primary))"
-												strokeDasharray="4 4"
-												strokeWidth={1.5}
-												yAxisId="temp"
-											/>
-										)}
-									</LineChart>
-								</ResponsiveContainer>
-								{/* Precipitation bar chart below */}
-								{weatherChartData.some((d) => d.precipitation > 0) && (
-									<ResponsiveContainer width="100%" height={40}>
-										<BarChart data={weatherChartData} margin={{ top: 2, right: 8, bottom: 0, left: -20 }}>
-											<Bar
-												dataKey="precipitation"
-												fill="hsl(210, 80%, 55%)"
-												opacity={0.6}
-												radius={[2, 2, 0, 0]}
-											/>
-											<XAxis dataKey="dateShort" hide />
-										</BarChart>
-									</ResponsiveContainer>
+			{isExpanded &&
+				(environmentalData.length > 0 || weatherData.length > 0) && (
+					<div className="border-t border-border px-4 py-3">
+						<div
+							className={cn(
+								"grid gap-3",
+								chartView === "combined" ? "grid-cols-2" : "grid-cols-1",
+							)}
+						>
+							{/* Environmental Chart */}
+							{(chartView === "env" || chartView === "combined") &&
+								envChartData.length > 0 && (
+									<div>
+										<h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+											Environmental Indices
+										</h4>
+										<ResponsiveContainer
+											width="100%"
+											height={chartView === "combined" ? 120 : 150}
+										>
+											<AreaChart
+												data={envChartData}
+												margin={{ top: 4, right: 8, bottom: 0, left: -20 }}
+											>
+												<CartesianGrid
+													strokeDasharray="3 3"
+													stroke="hsl(var(--border))"
+													opacity={0.5}
+												/>
+												<XAxis
+													dataKey="date"
+													tick={{
+														fontSize: 9,
+														fill: "hsl(var(--muted-foreground))",
+													}}
+													tickLine={false}
+													axisLine={false}
+													interval="preserveStartEnd"
+												/>
+												<YAxis
+													tick={{
+														fontSize: 9,
+														fill: "hsl(var(--muted-foreground))",
+													}}
+													tickLine={false}
+													axisLine={false}
+													domain={["auto", "auto"]}
+												/>
+												<Tooltip
+													contentStyle={{
+														fontSize: 11,
+														backgroundColor: "hsl(var(--card))",
+														border: "1px solid hsl(var(--border))",
+														borderRadius: 6,
+													}}
+													labelStyle={{ fontSize: 10, fontWeight: 600 }}
+												/>
+												{/* Show active variable as filled area, others as lines */}
+												{activeVariableKey && (
+													<Area
+														type="monotone"
+														dataKey={activeVariableKey}
+														stroke={
+															ENV_VARIABLE_COLORS[activeVariableKey] ??
+															"hsl(var(--primary))"
+														}
+														fill={
+															ENV_VARIABLE_COLORS[activeVariableKey] ??
+															"hsl(var(--primary))"
+														}
+														fillOpacity={0.15}
+														strokeWidth={2}
+														name={
+															VARIABLE_LABELS[activeVariableKey] ??
+															activeVariableKey.toUpperCase()
+														}
+														dot={false}
+														activeDot={{ r: 3 }}
+													/>
+												)}
+												{/* Selected date reference line */}
+												{selectedDate && (
+													<ReferenceLine
+														x={dayjs(selectedDate).format("MMM D")}
+														stroke="hsl(var(--primary))"
+														strokeDasharray="4 4"
+														strokeWidth={1.5}
+													/>
+												)}
+											</AreaChart>
+										</ResponsiveContainer>
+									</div>
 								)}
-							</div>
-						)}
+
+							{/* Weather Chart */}
+							{(chartView === "weather" || chartView === "combined") &&
+								weatherChartData.length > 0 && (
+									<div>
+										<h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+											Weather
+										</h4>
+										<ResponsiveContainer
+											width="100%"
+											height={chartView === "combined" ? 120 : 150}
+										>
+											<LineChart
+												data={weatherChartData}
+												margin={{ top: 4, right: 8, bottom: 0, left: -20 }}
+											>
+												<CartesianGrid
+													strokeDasharray="3 3"
+													stroke="hsl(var(--border))"
+													opacity={0.5}
+												/>
+												<XAxis
+													dataKey="dateShort"
+													tick={{
+														fontSize: 9,
+														fill: "hsl(var(--muted-foreground))",
+													}}
+													tickLine={false}
+													axisLine={false}
+													interval="preserveStartEnd"
+												/>
+												<YAxis
+													yAxisId="temp"
+													tick={{
+														fontSize: 9,
+														fill: "hsl(var(--muted-foreground))",
+													}}
+													tickLine={false}
+													axisLine={false}
+													domain={["auto", "auto"]}
+												/>
+												<YAxis
+													yAxisId="precip"
+													orientation="right"
+													tick={{
+														fontSize: 9,
+														fill: "hsl(var(--muted-foreground))",
+													}}
+													tickLine={false}
+													axisLine={false}
+													domain={[0, "auto"]}
+													hide
+												/>
+												<Tooltip
+													contentStyle={{
+														fontSize: 11,
+														backgroundColor: "hsl(var(--card))",
+														border: "1px solid hsl(var(--border))",
+														borderRadius: 6,
+													}}
+													labelStyle={{ fontSize: 10, fontWeight: 600 }}
+													formatter={(value, name) => {
+														const v = Number(value);
+														if (name === "Temperature")
+															return [`${v.toFixed(1)}°C`, name];
+														if (name === "Precipitation")
+															return [`${v.toFixed(4)} kg/m²`, name];
+														if (name === "Cloud Cover")
+															return [`${v.toFixed(1)}%`, name];
+														return [String(v), String(name)];
+													}}
+												/>
+												<Line
+													yAxisId="temp"
+													type="monotone"
+													dataKey="temperature"
+													stroke="hsl(25, 95%, 53%)"
+													strokeWidth={2}
+													name="Temperature"
+													dot={false}
+													activeDot={{ r: 3 }}
+												/>
+												<Line
+													yAxisId="precip"
+													type="monotone"
+													dataKey="precipitation"
+													stroke="hsl(210, 80%, 55%)"
+													strokeWidth={1.5}
+													name="Precipitation"
+													dot={false}
+													strokeDasharray="3 3"
+												/>
+												{/* Selected date reference line */}
+												{selectedDate && (
+													<ReferenceLine
+														x={dayjs(selectedDate).format("MMM D")}
+														stroke="hsl(var(--primary))"
+														strokeDasharray="4 4"
+														strokeWidth={1.5}
+														yAxisId="temp"
+													/>
+												)}
+											</LineChart>
+										</ResponsiveContainer>
+										{/* Precipitation bar chart below */}
+										{weatherChartData.some((d) => d.precipitation > 0) && (
+											<ResponsiveContainer width="100%" height={40}>
+												<BarChart
+													data={weatherChartData}
+													margin={{ top: 2, right: 8, bottom: 0, left: -20 }}
+												>
+													<Bar
+														dataKey="precipitation"
+														fill="hsl(210, 80%, 55%)"
+														opacity={0.6}
+														radius={[2, 2, 0, 0]}
+													/>
+													<XAxis dataKey="dateShort" hide />
+												</BarChart>
+											</ResponsiveContainer>
+										)}
+									</div>
+								)}
+						</div>
 					</div>
-				</div>
-			)}
+				)}
 		</section>
 	);
 }

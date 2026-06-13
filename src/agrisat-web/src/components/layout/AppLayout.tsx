@@ -9,80 +9,81 @@ import { cn } from "#/lib/utils";
 import { Button } from "#/components/ui/button";
 
 export interface AppLayoutProps {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }
 
-
 export function AppLayout({ children }: AppLayoutProps) {
-  const [sidebarCollapsed, toggleSidebarCollapse] = useSidebarState();
-  const [aiPanelOpen, setAiPanelOpen] = useState(false);
+	const [sidebarCollapsed, toggleSidebarCollapse] = useSidebarState();
+	const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
-  const { forceSidebarCollapsed, aiPanelAsOverlay } =
-    useResponsiveLayout(aiPanelOpen);
+	const { forceSidebarCollapsed, aiPanelAsOverlay } =
+		useResponsiveLayout(aiPanelOpen);
 
-  // Effective collapsed state: user preference OR responsive override
-  const effectiveCollapsed = sidebarCollapsed || forceSidebarCollapsed;
+	// Effective collapsed state: user preference OR responsive override
+	const effectiveCollapsed = sidebarCollapsed || forceSidebarCollapsed;
 
-  return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Left: Sidebar Navigation */}
-      <Sidebar
-        collapsed={effectiveCollapsed}
-        onToggleCollapse={toggleSidebarCollapse}
-      />
+	return (
+		<div className="flex h-screen overflow-hidden">
+			{/* Left: Sidebar Navigation */}
+			<Sidebar
+				collapsed={effectiveCollapsed}
+				onToggleCollapse={toggleSidebarCollapse}
+			/>
 
-      {/* Center + Right wrapper */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Top bar with theme toggle and AI toggle */}
-        <div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
-          <ThemeToggle />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setAiPanelOpen((prev) => !prev)}
-            aria-label={aiPanelOpen ? "Close AI assistant" : "Open AI assistant"}
-            className="gap-1.5 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            <Bot className="h-4 w-4" />
-            <span className="hidden sm:inline">AI Assistant</span>
-          </Button>
-        </div>
+			{/* Center + Right wrapper */}
+			<div className="flex flex-1 flex-col overflow-hidden">
+				{/* Top bar with theme toggle and AI toggle */}
+				<div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
+					<ThemeToggle />
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => setAiPanelOpen((prev) => !prev)}
+						aria-label={
+							aiPanelOpen ? "Close AI assistant" : "Open AI assistant"
+						}
+						className="gap-1.5 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+					>
+						<Bot className="h-4 w-4" />
+						<span className="hidden sm:inline">AI Assistant</span>
+					</Button>
+				</div>
 
-        {/* Content + AI Panel row */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Main Content */}
-          <main
-            className={cn(
-              "flex-1 overflow-auto transition-all duration-200",
-              "min-w-[480px]",
-            )}
-          >
-            {children}
-          </main>
+				{/* Content + AI Panel row */}
+				<div className="flex flex-1 overflow-hidden">
+					{/* Main Content */}
+					<main
+						className={cn(
+							"flex-1 overflow-auto transition-all duration-200",
+							"min-w-[480px]",
+						)}
+					>
+						{children}
+					</main>
 
-          {/* Right: AI Assistant Panel — inline mode (viewport >= 768px) */}
-          {!aiPanelAsOverlay && (
-            <AIAssistantPanel
-              open={aiPanelOpen}
-              onClose={() => setAiPanelOpen(false)}
-            />
-          )}
+					{/* Right: AI Assistant Panel — inline mode (viewport >= 768px) */}
+					{!aiPanelAsOverlay && (
+						<AIAssistantPanel
+							open={aiPanelOpen}
+							onClose={() => setAiPanelOpen(false)}
+						/>
+					)}
 
-          {/* Right: AI Assistant Panel — full-screen overlay mode (viewport < 768px) */}
-          {aiPanelAsOverlay && aiPanelOpen && (
-            <div
-              className="fixed inset-0 z-50 flex flex-col bg-card"
-              role="dialog"
-              aria-modal="true"
-            >
-              <AIAssistantPanel
-                open={true}
-                onClose={() => setAiPanelOpen(false)}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+					{/* Right: AI Assistant Panel — full-screen overlay mode (viewport < 768px) */}
+					{aiPanelAsOverlay && aiPanelOpen && (
+						<div
+							className="fixed inset-0 z-50 flex flex-col bg-card"
+							role="dialog"
+							aria-modal="true"
+						>
+							<AIAssistantPanel
+								open={true}
+								onClose={() => setAiPanelOpen(false)}
+							/>
+						</div>
+					)}
+				</div>
+			</div>
+		</div>
+	);
 }

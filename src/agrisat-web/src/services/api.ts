@@ -88,9 +88,7 @@ export async function listZones(params?: {
 	if (params?.levelId != null) {
 		searchParams.level_id = params.levelId;
 	}
-	const res = await httpClient
-		.get("layers/zones", { searchParams })
-		.json();
+	const res = await httpClient.get("layers/zones", { searchParams }).json();
 	return ListZonesSchema.parse(res);
 }
 
@@ -162,9 +160,7 @@ export async function getEnvironmentalTimeSeries(params: {
 	if (params.levelId != null) searchParams.level_id = params.levelId;
 	if (params.zoneId != null) searchParams.zone_id = params.zoneId;
 
-	const res = await httpClient
-		.get("environmental/", { searchParams })
-		.json();
+	const res = await httpClient.get("environmental/", { searchParams }).json();
 	return EnvironmentalTimeSeriesSchema.parse(res);
 }
 
@@ -185,9 +181,7 @@ export async function getWeatherTimeSeries(params: {
 	if (params.levelId != null) searchParams.level_id = params.levelId;
 	if (params.zoneId != null) searchParams.zone_id = params.zoneId;
 
-	const res = await httpClient
-		.get("weather/", { searchParams })
-		.json();
+	const res = await httpClient.get("weather/", { searchParams }).json();
 	return WeatherTimeSeriesSchema.parse(res);
 }
 
@@ -207,7 +201,8 @@ export async function getSatelliteRaster(params: {
 }): Promise<z.infer<typeof SatelliteRasterSchema>> {
 	const searchParams: Record<string, string | number> = {};
 	if (params.variableId != null) searchParams.variable_id = params.variableId;
-	if (params.ts != null) searchParams.ts = dayjs(params.ts).format("YYYY-MM-DD");
+	if (params.ts != null)
+		searchParams.ts = dayjs(params.ts).format("YYYY-MM-DD");
 
 	const res = await httpClient
 		.get(`satellite/raster/${params.zoneId}`, { searchParams })

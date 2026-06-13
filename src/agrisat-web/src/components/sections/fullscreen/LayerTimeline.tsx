@@ -1,15 +1,37 @@
 import { memo, useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Layers, Pause, Play, ChevronDown, Search } from "lucide-react";
+import {
+	ChevronLeft,
+	ChevronRight,
+	Layers,
+	Pause,
+	Play,
+	ChevronDown,
+	Search,
+} from "lucide-react";
 import dayjs from "dayjs";
 
 import type { Variable } from "#/services/api";
 import { Button } from "#/components/ui/button";
 import { Slider } from "#/components/ui/slider";
 import { Badge } from "#/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "#/components/ui/popover";
 import { ScrollArea } from "#/components/ui/scroll-area";
-import { Item, ItemMedia, ItemContent, ItemTitle, ItemDescription } from "#/components/ui/item";
-import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import {
+	Item,
+	ItemMedia,
+	ItemContent,
+	ItemTitle,
+	ItemDescription,
+} from "#/components/ui/item";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 
 interface LayerTimelineProps {
@@ -44,7 +66,9 @@ export const LayerTimeline = memo(function LayerTimeline({
 	const selectedIdx = useMemo(() => {
 		if (!selectedDate) return timestamps.length - 1;
 		const target = dayjs(selectedDate).format("YYYY-MM-DD");
-		const idx = timestamps.findIndex((t) => dayjs(t).format("YYYY-MM-DD") === target);
+		const idx = timestamps.findIndex(
+			(t) => dayjs(t).format("YYYY-MM-DD") === target,
+		);
 		return idx >= 0 ? idx : timestamps.length - 1;
 	}, [selectedDate, timestamps]);
 
@@ -79,8 +103,7 @@ export const LayerTimeline = memo(function LayerTimeline({
 		const q = layerSearch.toLowerCase();
 		return variables.filter(
 			(v) =>
-				v.name.toLowerCase().includes(q) ||
-				v.key.toLowerCase().includes(q),
+				v.name.toLowerCase().includes(q) || v.key.toLowerCase().includes(q),
 		);
 	}, [variables, layerSearch]);
 
@@ -88,7 +111,8 @@ export const LayerTimeline = memo(function LayerTimeline({
 		if (selectedIdx > 0) onSelectDate(timestamps[selectedIdx - 1]);
 	};
 	const handleNext = () => {
-		if (selectedIdx < timestamps.length - 1) onSelectDate(timestamps[selectedIdx + 1]);
+		if (selectedIdx < timestamps.length - 1)
+			onSelectDate(timestamps[selectedIdx + 1]);
 	};
 
 	// Select top result on Enter, close on Escape
@@ -132,7 +156,12 @@ export const LayerTimeline = memo(function LayerTimeline({
 						/>
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent side="top" align="start" sideOffset={8} className="w-56 p-0">
+				<PopoverContent
+					side="top"
+					align="start"
+					sideOffset={8}
+					className="w-56 p-0"
+				>
 					{/* Search */}
 					<div className="flex items-center gap-2 border-b border-border px-3 py-2">
 						<Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -234,7 +263,11 @@ export const LayerTimeline = memo(function LayerTimeline({
 								"text-emerald-600 hover:text-emerald-600 dark:text-emerald-400",
 						)}
 					>
-						{isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+						{isPlaying ? (
+							<Pause className="h-3 w-3" />
+						) : (
+							<Play className="h-3 w-3" />
+						)}
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent side="top">
@@ -249,7 +282,8 @@ export const LayerTimeline = memo(function LayerTimeline({
 				step={1}
 				value={[selectedIdx]}
 				onValueChange={([idx]) => {
-					if (idx >= 0 && idx < timestamps.length) onSelectDate(timestamps[idx]);
+					if (idx >= 0 && idx < timestamps.length)
+						onSelectDate(timestamps[idx]);
 				}}
 				className="min-w-[60px] flex-1 [&_[data-slot=slider-range]]:bg-emerald-500 [&_[data-slot=slider-thumb]]:border-emerald-500"
 			/>
@@ -288,7 +322,12 @@ export const LayerTimeline = memo(function LayerTimeline({
 						{selectedDate ? dayjs(selectedDate).format("D MMM YY") : "—"}
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent side="top" align="end" sideOffset={8} className="w-44 p-0">
+				<PopoverContent
+					side="top"
+					align="end"
+					sideOffset={8}
+					className="w-44 p-0"
+				>
 					<ScrollArea className="h-48">
 						<div className="p-1">
 							{timestamps.map((ts, idx) => (

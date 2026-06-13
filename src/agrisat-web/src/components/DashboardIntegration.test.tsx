@@ -46,28 +46,47 @@ function LevelSubscriber({ store }: { store: StoreApi<QueryContextStore> }) {
 	return <div data-testid="level-subscriber">level:{levelId ?? "null"}</div>;
 }
 
-function TimeRangeSubscriber({ store }: { store: StoreApi<QueryContextStore> }) {
+function TimeRangeSubscriber({
+	store,
+}: {
+	store: StoreApi<QueryContextStore>;
+}) {
 	const timeRange = useStore(store, (s) => s.timeRange);
 	return (
 		<div data-testid="timerange-subscriber">
-			range:{timeRange.startTs.toISOString().slice(0, 10)}-{timeRange.endTs.toISOString().slice(0, 10)}
+			range:{timeRange.startTs.toISOString().slice(0, 10)}-
+			{timeRange.endTs.toISOString().slice(0, 10)}
 		</div>
 	);
 }
 
-function ActiveVarSubscriber({ store }: { store: StoreApi<QueryContextStore> }) {
+function ActiveVarSubscriber({
+	store,
+}: {
+	store: StoreApi<QueryContextStore>;
+}) {
 	const activeVariableId = useStore(store, (s) => s.activeVariableId);
-	return <div data-testid="activevar-subscriber">activeVar:{activeVariableId ?? "null"}</div>;
+	return (
+		<div data-testid="activevar-subscriber">
+			activeVar:{activeVariableId ?? "null"}
+		</div>
+	);
 }
 
-function ComparisonSubscriber({ store }: { store: StoreApi<QueryContextStore> }) {
+function ComparisonSubscriber({
+	store,
+}: {
+	store: StoreApi<QueryContextStore>;
+}) {
 	const comparisonMode = useStore(store, (s) => s.comparisonMode);
 	if (!comparisonMode) {
 		return <div data-testid="comparison-subscriber">comparison:off</div>;
 	}
 	return (
 		<div data-testid="comparison-subscriber">
-			comparison:{comparisonMode.type}|A:{JSON.stringify(comparisonMode.targetA)}|B:{JSON.stringify(comparisonMode.targetB)}
+			comparison:{comparisonMode.type}|A:
+			{JSON.stringify(comparisonMode.targetA)}|B:
+			{JSON.stringify(comparisonMode.targetB)}
 		</div>
 	);
 }
@@ -99,7 +118,9 @@ describe("Dashboard Integration: QueryContext Broadcast (Req 1.1, 1.2)", () => {
 		render(<FourPanelLayout store={store} />);
 
 		// Initial state
-		expect(screen.getByTestId("level-subscriber").textContent).toBe("level:null");
+		expect(screen.getByTestId("level-subscriber").textContent).toBe(
+			"level:null",
+		);
 		expect(screen.getByTestId("zone-subscriber").textContent).toBe("zone:null");
 
 		// Update level via store action
@@ -151,13 +172,17 @@ describe("Dashboard Integration: QueryContext Broadcast (Req 1.1, 1.2)", () => {
 
 		render(<FourPanelLayout store={store} />);
 
-		expect(screen.getByTestId("activevar-subscriber").textContent).toBe("activeVar:1");
+		expect(screen.getByTestId("activevar-subscriber").textContent).toBe(
+			"activeVar:1",
+		);
 
 		act(() => {
 			store.getState().setActiveVariable(2);
 		});
 
-		expect(screen.getByTestId("activevar-subscriber").textContent).toBe("activeVar:2");
+		expect(screen.getByTestId("activevar-subscriber").textContent).toBe(
+			"activeVar:2",
+		);
 	});
 });
 
@@ -168,7 +193,9 @@ describe("Dashboard Integration: Comparison Mode Flow (Req 8.1)", () => {
 
 		render(<FourPanelLayout store={store} />);
 
-		expect(screen.getByTestId("comparison-subscriber").textContent).toBe("comparison:off");
+		expect(screen.getByTestId("comparison-subscriber").textContent).toBe(
+			"comparison:off",
+		);
 
 		act(() => {
 			store.getState().enableComparison({
@@ -201,7 +228,9 @@ describe("Dashboard Integration: Comparison Mode Flow (Req 8.1)", () => {
 			store.getState().disableComparison();
 		});
 
-		expect(screen.getByTestId("comparison-subscriber").textContent).toBe("comparison:off");
+		expect(screen.getByTestId("comparison-subscriber").textContent).toBe(
+			"comparison:off",
+		);
 	});
 
 	it("should support time comparison mode with two time range targets", () => {
@@ -211,8 +240,18 @@ describe("Dashboard Integration: Comparison Mode Flow (Req 8.1)", () => {
 		act(() => {
 			store.getState().enableComparison({
 				type: "time",
-				targetA: { timeRange: { startTs: new Date("2024-01-01"), endTs: new Date("2024-02-01") } },
-				targetB: { timeRange: { startTs: new Date("2024-03-01"), endTs: new Date("2024-04-01") } },
+				targetA: {
+					timeRange: {
+						startTs: new Date("2024-01-01"),
+						endTs: new Date("2024-02-01"),
+					},
+				},
+				targetB: {
+					timeRange: {
+						startTs: new Date("2024-03-01"),
+						endTs: new Date("2024-04-01"),
+					},
+				},
 			});
 		});
 
@@ -270,14 +309,20 @@ describe("Dashboard Integration: Store Validation Guards", () => {
 		const store = createTestStore();
 		render(<FourPanelLayout store={store} />);
 
-		const initialContent = screen.getByTestId("timerange-subscriber").textContent;
+		const initialContent = screen.getByTestId(
+			"timerange-subscriber",
+		).textContent;
 
 		act(() => {
-			store.getState().setTimeRange(new Date("2024-03-01"), new Date("2024-01-01"));
+			store
+				.getState()
+				.setTimeRange(new Date("2024-03-01"), new Date("2024-01-01"));
 		});
 
 		// Time range should not change
-		expect(screen.getByTestId("timerange-subscriber").textContent).toBe(initialContent);
+		expect(screen.getByTestId("timerange-subscriber").textContent).toBe(
+			initialContent,
+		);
 	});
 
 	it("should reject active variable not in variableIds (Req 1.4)", () => {
@@ -292,7 +337,9 @@ describe("Dashboard Integration: Store Validation Guards", () => {
 		});
 
 		// Active variable should remain 1
-		expect(screen.getByTestId("activevar-subscriber").textContent).toBe("activeVar:1");
+		expect(screen.getByTestId("activevar-subscriber").textContent).toBe(
+			"activeVar:1",
+		);
 	});
 
 	it("should reset zone and activeVariable when level changes (Req 1.6)", () => {
@@ -305,13 +352,17 @@ describe("Dashboard Integration: Store Validation Guards", () => {
 		render(<FourPanelLayout store={store} />);
 
 		expect(screen.getByTestId("zone-subscriber").textContent).toBe("zone:1");
-		expect(screen.getByTestId("activevar-subscriber").textContent).toBe("activeVar:1");
+		expect(screen.getByTestId("activevar-subscriber").textContent).toBe(
+			"activeVar:1",
+		);
 
 		act(() => {
 			store.getState().setLevel(2);
 		});
 
 		expect(screen.getByTestId("zone-subscriber").textContent).toBe("zone:null");
-		expect(screen.getByTestId("activevar-subscriber").textContent).toBe("activeVar:null");
+		expect(screen.getByTestId("activevar-subscriber").textContent).toBe(
+			"activeVar:null",
+		);
 	});
 });

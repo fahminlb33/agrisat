@@ -15,7 +15,9 @@ describe("StaleDataIndicator", () => {
 			render(<StaleDataIndicator visible />);
 
 			expect(
-				screen.getByText(/Displaying cached data — information may be outdated/),
+				screen.getByText(
+					/Displaying cached data — information may be outdated/,
+				),
 			).toBeTruthy();
 		});
 
@@ -43,18 +45,14 @@ describe("StaleDataIndicator", () => {
 				</StaleDataIndicator>,
 			);
 
-			expect(
-				screen.getByText(/Displaying cached data/),
-			).toBeTruthy();
+			expect(screen.getByText(/Displaying cached data/)).toBeTruthy();
 			expect(screen.getByText("Data content")).toBeTruthy();
 		});
 	});
 
 	describe("Custom message", () => {
 		it("should display a custom message when provided", () => {
-			render(
-				<StaleDataIndicator visible message="Data from 5 minutes ago" />,
-			);
+			render(<StaleDataIndicator visible message="Data from 5 minutes ago" />);
 
 			expect(screen.getByText("Data from 5 minutes ago")).toBeTruthy();
 		});

@@ -60,7 +60,9 @@ export interface ControlsPanelProps {
 	levels: ZoneLevel[];
 	zones: Zone[];
 	variables: Variable[];
-	store: ReturnType<typeof import("#/stores/query-context").createQueryContextStore>;
+	store: ReturnType<
+		typeof import("#/stores/query-context").createQueryContextStore
+	>;
 	/** Whether layer data is loading (polygon fetch in progress) */
 	isLayerLoading?: boolean;
 }
@@ -115,9 +117,7 @@ export default function ControlsPanel({
 		if (hasInitialized.current) return;
 		if (variables.length === 0) return;
 
-		const vegetationVars = variables.filter(
-			(v) => v.category === "vegetation",
-		);
+		const vegetationVars = variables.filter((v) => v.category === "vegetation");
 
 		if (vegetationVars.length > 0) {
 			for (const v of vegetationVars) {
@@ -230,7 +230,10 @@ export default function ControlsPanel({
 
 					{/* Zone Filter/Search */}
 					<div className="space-y-1.5">
-						<Label htmlFor="zone-search" className="text-xs uppercase tracking-wide text-muted-foreground">
+						<Label
+							htmlFor="zone-search"
+							className="text-xs uppercase tracking-wide text-muted-foreground"
+						>
 							Zone
 						</Label>
 						<Input
@@ -246,8 +249,16 @@ export default function ControlsPanel({
 							onValueChange={handleZoneChange}
 							disabled={levelId === null}
 						>
-							<SelectTrigger id="zone-select" className="w-full" aria-label="Select zone">
-								<SelectValue placeholder={levelId === null ? "Select a level first" : "All zones"} />
+							<SelectTrigger
+								id="zone-select"
+								className="w-full"
+								aria-label="Select zone"
+							>
+								<SelectValue
+									placeholder={
+										levelId === null ? "Select a level first" : "All zones"
+									}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{filteredZones.map((z) => (
@@ -269,7 +280,9 @@ export default function ControlsPanel({
 						{isLayerLoading && (
 							<div className="flex items-center gap-2 py-2">
 								<div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-								<span className="text-xs text-muted-foreground">Loading layer…</span>
+								<span className="text-xs text-muted-foreground">
+									Loading layer…
+								</span>
 							</div>
 						)}
 						<div className="flex flex-col gap-2">
@@ -286,20 +299,25 @@ export default function ControlsPanel({
 										</CardHeader>
 										<CardContent className="flex flex-col gap-1">
 											{items.map((variable) => {
-												const isActive = activeVariableId === variable.variableId;
+												const isActive =
+													activeVariableId === variable.variableId;
 
 												return (
 													<div
 														key={variable.variableId}
 														className={`flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors ${
-															isActive ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-muted/50"
+															isActive
+																? "bg-primary/10 ring-1 ring-primary/30"
+																: "hover:bg-muted/50"
 														}`}
 													>
 														<button
 															type="button"
 															onClick={() => {
 																// Ensure variable is toggled on and set as active
-																if (!variableIds.includes(variable.variableId)) {
+																if (
+																	!variableIds.includes(variable.variableId)
+																) {
 																	handleVariableToggle(variable.variableId);
 																}
 																handleVariableClick(variable.variableId);
@@ -330,7 +348,8 @@ export default function ControlsPanel({
 																<DialogHeader>
 																	<DialogTitle>{variable.name}</DialogTitle>
 																	<DialogDescription className="text-xs text-muted-foreground">
-																		{variable.key.toUpperCase()} · {CATEGORY_LABELS[variable.category]}
+																		{variable.key.toUpperCase()} ·{" "}
+																		{CATEGORY_LABELS[variable.category]}
 																	</DialogDescription>
 																</DialogHeader>
 																<p className="text-sm leading-relaxed text-foreground/90">

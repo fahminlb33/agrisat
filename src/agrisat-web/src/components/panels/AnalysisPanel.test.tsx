@@ -25,7 +25,9 @@ import type { ZoneInsight, ComparisonResult } from "#/types/api";
 // Test fixtures
 // -----------------------------------------------------------
 
-function makeEnvPoint(overrides: Partial<EnvironmentalTimePoint> = {}): EnvironmentalTimePoint {
+function makeEnvPoint(
+	overrides: Partial<EnvironmentalTimePoint> = {},
+): EnvironmentalTimePoint {
 	return {
 		timestamp: "2024-01-15",
 		zone_id: 1,
@@ -45,7 +47,9 @@ function makeEnvPoint(overrides: Partial<EnvironmentalTimePoint> = {}): Environm
 	};
 }
 
-function makeWeatherPoint(overrides: Partial<WeatherTimePoint> = {}): WeatherTimePoint {
+function makeWeatherPoint(
+	overrides: Partial<WeatherTimePoint> = {},
+): WeatherTimePoint {
 	return {
 		timestamp: "2024-01-15",
 		zone_id: 1,
@@ -232,9 +236,21 @@ describe("computeWeatherSummary", () => {
 
 	it("should compute correct weather summary", () => {
 		const data = [
-			makeWeatherPoint({ temperature: 20, precipitation: 5, cloud_cover_pct: 30 }),
-			makeWeatherPoint({ temperature: 25, precipitation: 10, cloud_cover_pct: 50 }),
-			makeWeatherPoint({ temperature: 30, precipitation: 0, cloud_cover_pct: 20 }),
+			makeWeatherPoint({
+				temperature: 20,
+				precipitation: 5,
+				cloud_cover_pct: 30,
+			}),
+			makeWeatherPoint({
+				temperature: 25,
+				precipitation: 10,
+				cloud_cover_pct: 50,
+			}),
+			makeWeatherPoint({
+				temperature: 30,
+				precipitation: 0,
+				cloud_cover_pct: 20,
+			}),
 		];
 		const result = computeWeatherSummary(data);
 
@@ -266,7 +282,9 @@ describe("AnalysisPanel", () => {
 			renderPanel({ environmentalData: [], weatherData: [] });
 
 			expect(
-				screen.getByText(/No data available for the selected zone and time range/),
+				screen.getByText(
+					/No data available for the selected zone and time range/,
+				),
 			).toBeTruthy();
 		});
 	});
@@ -305,8 +323,28 @@ describe("AnalysisPanel", () => {
 	describe("Requirement 5.3: Trend display", () => {
 		it("should display trend direction when 2+ data points exist", () => {
 			const envData = [
-				makeEnvPoint({ ndvi: 0.3, gndvi: 0.3, wdrvi: 0.3, msavi: 0.3, ndre: 0.3, cire: 0.3, ndmi: 0.3, ndwi: 0.3, timestamp: "2024-01-01" }),
-				makeEnvPoint({ ndvi: 0.8, gndvi: 0.8, wdrvi: 0.8, msavi: 0.8, ndre: 0.8, cire: 0.8, ndmi: 0.8, ndwi: 0.8, timestamp: "2024-01-15" }),
+				makeEnvPoint({
+					ndvi: 0.3,
+					gndvi: 0.3,
+					wdrvi: 0.3,
+					msavi: 0.3,
+					ndre: 0.3,
+					cire: 0.3,
+					ndmi: 0.3,
+					ndwi: 0.3,
+					timestamp: "2024-01-01",
+				}),
+				makeEnvPoint({
+					ndvi: 0.8,
+					gndvi: 0.8,
+					wdrvi: 0.8,
+					msavi: 0.8,
+					ndre: 0.8,
+					cire: 0.8,
+					ndmi: 0.8,
+					ndwi: 0.8,
+					timestamp: "2024-01-15",
+				}),
 			];
 			renderPanel({ environmentalData: envData });
 
@@ -322,7 +360,9 @@ describe("AnalysisPanel", () => {
 			renderPanel({ environmentalData: envData });
 
 			expect(
-				screen.getByText(/Only 1 data point available — trend cannot be computed/),
+				screen.getByText(
+					/Only 1 data point available — trend cannot be computed/,
+				),
 			).toBeTruthy();
 			// Should show "No trend" instead of trend direction
 			const noTrendLabels = screen.getAllByLabelText("Trend unavailable");
@@ -334,7 +374,11 @@ describe("AnalysisPanel", () => {
 		it("should display weather data with correct units", () => {
 			const envData = [makeEnvPoint()];
 			const weatherData = [
-				makeWeatherPoint({ temperature: 25.5, precipitation: 12.3, cloud_cover_pct: 45.0 }),
+				makeWeatherPoint({
+					temperature: 25.5,
+					precipitation: 12.3,
+					cloud_cover_pct: 45.0,
+				}),
 			];
 			renderPanel({ environmentalData: envData, weatherData });
 
@@ -430,10 +474,26 @@ describe("AnalysisPanel", () => {
 				target_a: { zone_id: 1 },
 				target_b: { zone_id: 2 },
 				metrics_a: [
-					{ variable_key: "ndvi", current: 0.7, average: 0.65, min_val: 0.5, max_val: 0.8, trend: "increasing", trend_magnitude: 0.002 },
+					{
+						variable_key: "ndvi",
+						current: 0.7,
+						average: 0.65,
+						min_val: 0.5,
+						max_val: 0.8,
+						trend: "increasing",
+						trend_magnitude: 0.002,
+					},
 				],
 				metrics_b: [
-					{ variable_key: "ndvi", current: 0.5, average: 0.45, min_val: 0.3, max_val: 0.6, trend: "stable", trend_magnitude: 0.0001 },
+					{
+						variable_key: "ndvi",
+						current: 0.5,
+						average: 0.45,
+						min_val: 0.3,
+						max_val: 0.6,
+						trend: "stable",
+						trend_magnitude: 0.0001,
+					},
 				],
 				deltas: [
 					{
@@ -448,7 +508,10 @@ describe("AnalysisPanel", () => {
 			};
 
 			// Need to enable comparison mode in the store
-			const registry: ZoneLevelRegistry = new Map([[1, 1], [2, 1]]);
+			const registry: ZoneLevelRegistry = new Map([
+				[1, 1],
+				[2, 1],
+			]);
 			const store = createQueryContextStore(registry);
 			store.getState().setLevel(1);
 			store.getState().setZone(1);
@@ -468,15 +531,21 @@ describe("AnalysisPanel", () => {
 			});
 
 			// Should show comparison heading
-			expect(screen.getByText("Comparison: North Field vs South Field")).toBeTruthy();
+			expect(
+				screen.getByText("Comparison: North Field vs South Field"),
+			).toBeTruthy();
 			// Should show target names in comparison delta rows
-			expect(screen.getAllByText("North Field").length).toBeGreaterThanOrEqual(2); // zone header + comparison
+			expect(screen.getAllByText("North Field").length).toBeGreaterThanOrEqual(
+				2,
+			); // zone header + comparison
 			expect(screen.getByText("South Field")).toBeTruthy();
 			// Should show absolute and relative differences
 			expect(screen.getByText("+0.2000")).toBeTruthy();
 			expect(screen.getByText("+44.4%")).toBeTruthy();
 			// Should show interpretation
-			expect(screen.getByText("North Field is 44.4% higher than South Field")).toBeTruthy();
+			expect(
+				screen.getByText("North Field is 44.4% higher than South Field"),
+			).toBeTruthy();
 		});
 	});
 
@@ -492,7 +561,10 @@ describe("AnalysisPanel", () => {
 				deltas: [],
 			};
 
-			const registry: ZoneLevelRegistry = new Map([[1, 1], [2, 1]]);
+			const registry: ZoneLevelRegistry = new Map([
+				[1, 1],
+				[2, 1],
+			]);
 			const store = createQueryContextStore(registry);
 			store.getState().setLevel(1);
 			store.getState().setZone(1);
@@ -513,7 +585,9 @@ describe("AnalysisPanel", () => {
 			});
 
 			expect(
-				screen.getByText(/No data available for "North Field". Comparison cannot be completed./),
+				screen.getByText(
+					/No data available for "North Field". Comparison cannot be completed./,
+				),
 			).toBeTruthy();
 		});
 
@@ -528,7 +602,10 @@ describe("AnalysisPanel", () => {
 				deltas: [],
 			};
 
-			const registry: ZoneLevelRegistry = new Map([[1, 1], [2, 1]]);
+			const registry: ZoneLevelRegistry = new Map([
+				[1, 1],
+				[2, 1],
+			]);
 			const store = createQueryContextStore(registry);
 			store.getState().setLevel(1);
 			store.getState().setZone(1);
@@ -549,7 +626,9 @@ describe("AnalysisPanel", () => {
 			});
 
 			expect(
-				screen.getByText(/No data available for both "North Field" and "South Field". Comparison cannot be completed./),
+				screen.getByText(
+					/No data available for both "North Field" and "South Field". Comparison cannot be completed./,
+				),
 			).toBeTruthy();
 		});
 	});

@@ -34,16 +34,28 @@ function createTestStore(): StoreApi<QueryContextStore> {
 }
 
 /** Generate timestamps with a given interval in days */
-function generateTimestamps(startDate: string, count: number, intervalDays: number): Date[] {
+function generateTimestamps(
+	startDate: string,
+	count: number,
+	intervalDays: number,
+): Date[] {
 	const timestamps: Date[] = [];
 	for (let i = 0; i < count; i++) {
-		timestamps.push(dayjs(startDate).add(i * intervalDays, "day").toDate());
+		timestamps.push(
+			dayjs(startDate)
+				.add(i * intervalDays, "day")
+				.toDate(),
+		);
 	}
 	return timestamps;
 }
 
 /** Generate trend data matching timestamps */
-function generateTrendData(timestamps: Date[], baseValue = 0.5, slope = 0.01): Array<{ ts: Date; value: number }> {
+function generateTrendData(
+	timestamps: Date[],
+	baseValue = 0.5,
+	slope = 0.01,
+): Array<{ ts: Date; value: number }> {
 	return timestamps.map((ts, i) => ({
 		ts,
 		value: baseValue + i * slope,
@@ -52,7 +64,8 @@ function generateTrendData(timestamps: Date[], baseValue = 0.5, slope = 0.01): A
 
 function renderPanel(overrides?: Partial<TimelinePanelProps>) {
 	const store = overrides?.store ?? createTestStore();
-	const timestamps = overrides?.availableTimestamps ?? generateTimestamps("2024-01-01", 10, 5);
+	const timestamps =
+		overrides?.availableTimestamps ?? generateTimestamps("2024-01-01", 10, 5);
 	const trendData = overrides?.trendData ?? generateTrendData(timestamps);
 
 	const props: TimelinePanelProps = {
@@ -88,10 +101,12 @@ describe("TimelinePanel", () => {
 			const timestamps = generateTimestamps("2024-01-01", 10, 5);
 			const store = createTestStore();
 			// Set initial time range to cover all timestamps
-			store.getState().setTimeRange(
-				dayjs("2024-01-01").toDate(),
-				dayjs("2024-02-15").toDate(),
-			);
+			store
+				.getState()
+				.setTimeRange(
+					dayjs("2024-01-01").toDate(),
+					dayjs("2024-02-15").toDate(),
+				);
 
 			renderPanel({ store, availableTimestamps: timestamps });
 
@@ -100,13 +115,17 @@ describe("TimelinePanel", () => {
 			expect(sliders.length).toBe(2);
 
 			// Test the store action directly since Radix slider interaction is complex in jsdom
-			store.getState().setTimeRange(
-				dayjs("2024-01-01").toDate(),
-				dayjs("2024-01-26").toDate(),
-			);
+			store
+				.getState()
+				.setTimeRange(
+					dayjs("2024-01-01").toDate(),
+					dayjs("2024-01-26").toDate(),
+				);
 
 			const state = store.getState();
-			expect(dayjs(state.timeRange.endTs).format("YYYY-MM-DD")).toBe("2024-01-26");
+			expect(dayjs(state.timeRange.endTs).format("YYYY-MM-DD")).toBe(
+				"2024-01-26",
+			);
 		});
 	});
 
@@ -171,7 +190,10 @@ describe("TimelinePanel", () => {
 				ndwi: 0.4,
 			}));
 
-			renderPanel({ availableTimestamps: timestamps, environmentalData: envData });
+			renderPanel({
+				availableTimestamps: timestamps,
+				environmentalData: envData,
+			});
 
 			expect(screen.getByLabelText("Environmental chart")).toBeTruthy();
 			expect(screen.getByLabelText("Weather chart")).toBeTruthy();
@@ -200,7 +222,11 @@ describe("TimelinePanel", () => {
 			const timestamps = generateTimestamps("2024-01-01", 5, 5);
 			const trendData = generateTrendData(timestamps);
 
-			renderPanel({ availableTimestamps: timestamps, trendData, activeVariableKey: "ndvi" });
+			renderPanel({
+				availableTimestamps: timestamps,
+				trendData,
+				activeVariableKey: "ndvi",
+			});
 
 			expect(screen.getByText("NDVI")).toBeTruthy();
 		});
