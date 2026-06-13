@@ -3,8 +3,7 @@ allowBuilds:
   msw: true
   protobufjs: true
 
-onlyBuiltDependencies: 
+onlyBuiltDependencies:
   esbuild: true
   lightningcss: true
   protobufjs: true
-		
