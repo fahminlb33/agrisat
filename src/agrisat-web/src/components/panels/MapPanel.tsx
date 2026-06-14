@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import MapLibreGL from "maplibre-gl";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
@@ -204,7 +204,7 @@ function createMaskGeojson(boundary: FeatureCollection): FeatureCollection | nul
 // Component
 // -----------------------------------------------------------
 
-export default function MapPanel({ store, zoneAverages, environmentalData }: MapPanelProps) {
+export default memo(function MapPanel({ store, zoneAverages, environmentalData }: MapPanelProps) {
 	const levelId = useStore(store, (s) => s.levelId);
 	const zoneId = useStore(store, (s) => s.zoneId);
 	const activeVariableId = useStore(store, (s) => s.activeVariableId);
@@ -890,5 +890,4 @@ export default function MapPanel({ store, zoneAverages, environmentalData }: Map
 			)}
 		</div>
 	);
-}
-
+});

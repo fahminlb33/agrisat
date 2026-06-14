@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     # AI
     "pillow>=12.2.0",
-    "google-adk>=1.33.0",
+    "google-adk[extensions]>=1.33.0",
     # API
     "pydantic-settings>=2.14.0",
     "fastapi[standard-no-fastapi-cloud-cli]>=0.136.1",

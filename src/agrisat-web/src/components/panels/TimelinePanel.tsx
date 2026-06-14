@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { useStore } from "zustand";
 import {
@@ -87,7 +87,7 @@ const VARIABLE_LABELS: Record<string, string> = {
 // Component
 // -----------------------------------------------------------
 
-export default function TimelinePanel({
+export default memo(function TimelinePanel({
 	store,
 	availableTimestamps,
 	trendData,
@@ -170,8 +170,7 @@ export default function TimelinePanel({
 	// Weather chart data
 	const weatherChartData = useMemo(() => {
 		return weatherData.map((d) => {
-			const tempRaw = d.temperature;
-			const tempC = tempRaw > 100 ? tempRaw - 273.15 : tempRaw;
+			const tempC = d.temperature;
 			return {
 				date: dayjs(d.timestamp).format("MMM D HH:mm"),
 				dateShort: dayjs(d.timestamp).format("MMM D"),
@@ -643,7 +642,7 @@ export default function TimelinePanel({
 			)}
 		</section>
 	);
-}
+});
 
 // -----------------------------------------------------------
 // Stat badge

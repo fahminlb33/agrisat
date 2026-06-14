@@ -137,10 +137,10 @@ export const ZoneGeoJsonSchema = z.object({
 });
 
 export async function getZoneGeoJson(params: {
-	zoneId: number;
+	levelId: number;
 }): Promise<z.infer<typeof ZoneGeoJsonSchema>> {
 	const res = await httpClient
-		.get(`layers/zones/${params.zoneId}/geojson`)
+		.get("layers/polygons", { searchParams: { level_id: params.levelId } })
 		.json();
 	return ZoneGeoJsonSchema.parse(res);
 }

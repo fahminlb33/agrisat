@@ -3,6 +3,7 @@ import { Bot } from "lucide-react";
 import { Sidebar } from "#/components/sidebar/Sidebar";
 import { AIAssistantPanel } from "#/components/ai/AIAssistantPanel";
 import ThemeToggle from "#/components/ThemeToggle";
+import { SettingsDialog } from "#/components/settings/SettingsDialog";
 import { useSidebarState } from "#/hooks/use-sidebar-state";
 import { useResponsiveLayout } from "#/hooks/use-responsive-layout";
 import { cn } from "#/lib/utils";
@@ -11,7 +12,6 @@ import { Button } from "#/components/ui/button";
 export interface AppLayoutProps {
   children: React.ReactNode;
 }
-
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, toggleSidebarCollapse] = useSidebarState();
@@ -36,6 +36,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         {/* Top bar with theme toggle and AI toggle */}
         <div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
           <ThemeToggle />
+          <SettingsDialog />
           <Button
             variant="ghost"
             size="sm"

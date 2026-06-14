@@ -6,7 +6,7 @@ import type {
 	ZoneInsight,
 } from "#/types/api";
 import { Info } from "lucide-react";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useStore } from "zustand";
 
 import { Badge } from "#/components/ui/badge";
@@ -357,8 +357,7 @@ function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSumma
 					<div className="mb-3 -mx-1 overflow-x-auto">
 						<div className="flex gap-0 min-w-max">
 							{timelinePoints.map((point, idx) => {
-								const tempRaw = point.temperature;
-								const tempC = tempRaw > 100 ? tempRaw - 273.15 : tempRaw;
+								const tempC = point.temperature;
 								const hour = new Date(point.timestamp).getHours();
 
 								let icon = "☀️";
@@ -394,7 +393,7 @@ function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSumma
 						<div>
 							<span className="block text-muted-foreground">Temperature</span>
 							<span className="font-medium text-foreground">
-								{(summary.currentTemperature > 100 ? summary.currentTemperature - 273.15 : summary.currentTemperature).toFixed(1)} °C
+								{summary.currentTemperature.toFixed(1)} °C
 							</span>
 						</div>
 					)}
@@ -402,7 +401,7 @@ function WeatherCard({ summary, weatherData, zoneName }: { summary: WeatherSumma
 						<div>
 							<span className="block text-muted-foreground">Avg Temp</span>
 							<span className="font-medium text-foreground">
-								{(summary.avgTemperature > 100 ? summary.avgTemperature - 273.15 : summary.avgTemperature).toFixed(1)} °C
+								{summary.avgTemperature.toFixed(1)} °C
 							</span>
 						</div>
 					)}
@@ -645,7 +644,7 @@ function DataSourceFooter({ dataSource }: { dataSource: DataSourceAttribution })
 // Main Component
 // -----------------------------------------------------------
 
-export default function AnalysisPanel({
+export default memo(function AnalysisPanel({
 	store,
 	environmentalData,
 	weatherData,
@@ -839,4 +838,4 @@ export default function AnalysisPanel({
 			</ScrollArea>
 		</aside>
 	);
-}
+});

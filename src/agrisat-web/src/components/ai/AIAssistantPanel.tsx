@@ -1,3 +1,8 @@
+// ISOLATION CONTRACT:
+// This component owns all chat state. Do not lift useAgentChat or pass chat state
+// to parent components. useAgentChat must remain inside AIAssistantPanel so that
+// SSE streaming state updates (messages, status, activity) cannot propagate
+// re-renders to AppLayout or any sibling subtree (e.g. MapPanel, DashboardContent).
 "use client";
 
 import { X, Trash2, Bot, User, PanelLeftOpen, PanelRightOpen } from "lucide-react";
@@ -108,10 +113,10 @@ export function AIAssistantPanel({
     submitMessage(trimmed);
   };
 
-  // Submit with optional mode prefix
+  // Submit with optional mode prefix — only sent to backend, not displayed in bubble
   const submitMessage = (text: string) => {
     const modePrefix = activeMode !== "explain" ? `[Mode: ${activeMode}] ` : "";
-    sendMessage(`${modePrefix}${text}`);
+    sendMessage(`${modePrefix}${text}`, text);
     setInputValue("");
     inputRef.current?.focus();
   };
@@ -216,6 +221,7 @@ export function AIAssistantPanel({
                     key={message.id}
                     role={message.role}
                     content={message.content}
+                    images={message.images}
                   />
                 ))
               )}
@@ -307,7 +313,7 @@ export function AIAssistantPanel({
 // Message Bubble
 // ---------------------------------------------------------------------------
 
-function MessageBubble({ role, content }: { role: "user" | "assistant"; content: string }) {
+function MessageBubble({ role, content, images }: { role: "user" | "assistant"; content: string; images?: Array<{ mimeType: string; data: string }> }) {
   if (role === "user") {
     return (
       <div className="flex items-start justify-end gap-2">
@@ -330,6 +336,18 @@ function MessageBubble({ role, content }: { role: "user" | "assistant"; content:
         <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
           {content}
         </Markdown>
+        {images && images.length > 0 && (
+          <div className="mt-2 flex flex-col gap-2">
+            {images.map((img, idx) => (
+              <img
+                key={idx}
+                src={`data:${img.mimeType};base64,${img.data}`}
+                alt={`Agent-generated image ${idx + 1}`}
+                className="rounded-md max-w-full h-auto"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

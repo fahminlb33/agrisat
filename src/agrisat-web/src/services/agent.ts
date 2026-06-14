@@ -2,15 +2,40 @@
  * ADK Agent Service Client
  *
  * Communicates with the Google ADK FastAPI agent service using its REST API.
- * The ADK exposes:
- * - POST /apps/{app_name}/users/{user_id}/sessions — create session
- * - POST /run_sse — run agent with SSE streaming
  *
- * The agent app name is "agrisat_agent" (matches the `name` field in agent.py).
+ * LLM configuration is sent per-request in the X-Llm-Config header
+ * (base64-encoded JSON). The agent builds a fresh model per request,
+ * so each user's settings are fully isolated — no shared server config.
  */
 
-const AGENT_HOST = import.meta.env.VITE_AGENT_HOST ?? "http://127.0.0.1:8080";
+import { useSettingsStore, buildLlmConfigHeader } from "#/stores/settings";
+
+function getAgentHost(): string {
+  return useSettingsStore.getState().llm.agentHost;
+}
+
+function getLlmConfigHeader(): string {
+  return buildLlmConfigHeader(useSettingsStore.getState().llm);
+}
+
 const APP_NAME = "agrisat_agent";
+
+// ---------------------------------------------------------------------------
+// Typed errors
+// ---------------------------------------------------------------------------
+
+export class TokenBudgetError extends Error {
+  constructor(
+    public readonly used: number,
+    public readonly budget: number,
+  ) {
+    super(
+      `Token budget of ${budget.toLocaleString()} exhausted (${used.toLocaleString()} used). ` +
+        "Add your own API key in Settings → LLM Connection.",
+    );
+    this.name = "TokenBudgetError";
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Session Management
@@ -27,10 +52,13 @@ export interface ADKSession {
  */
 export async function createSession(userId: string): Promise<ADKSession> {
   const res = await fetch(
-    `${AGENT_HOST}/apps/${APP_NAME}/users/${userId}/sessions`,
+    `${getAgentHost()}/apps/${APP_NAME}/users/${userId}/sessions`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Llm-Config": getLlmConfigHeader(),
+      },
       body: JSON.stringify({ state: {} }),
     },
   );
@@ -59,7 +87,6 @@ export interface RunAgentSSEParams {
 }
 
 export interface ADKEvent {
-  /** Raw event content from ADK */
   content: {
     parts?: Array<{
       text?: string;
@@ -69,26 +96,26 @@ export interface ADKEvent {
     }>;
     role?: string;
   };
-  /** Whether this is a partial streaming chunk */
   partial?: boolean;
-  /** Turn complete flag */
   turnComplete?: boolean;
-  /** Actions from the agent */
   actions?: Record<string, unknown>;
 }
 
 /**
  * Sends a message to the ADK agent and returns an async iterator of SSE events.
- * Uses the /run_sse endpoint for streaming responses.
+ * LLM config is embedded in X-Llm-Config — fully per-user, no server state.
  */
 export async function* runAgentSSE(
   params: RunAgentSSEParams,
 ): AsyncGenerator<ADKEvent> {
   const { userId, sessionId, message, appName = APP_NAME } = params;
 
-  const res = await fetch(`${AGENT_HOST}/run_sse`, {
+  const res = await fetch(`${getAgentHost()}/run_sse`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "X-Llm-Config": getLlmConfigHeader(),
+    },
     body: JSON.stringify({
       app_name: appName,
       user_id: userId,
@@ -102,6 +129,10 @@ export async function* runAgentSSE(
   });
 
   if (!res.ok) {
+    if (res.status === 429) {
+      const body = await res.json().catch(() => ({}));
+      throw new TokenBudgetError(body.used ?? 0, body.budget ?? 0);
+    }
     throw new Error(`Agent request failed: ${res.status} ${res.statusText}`);
   }
 
@@ -120,7 +151,6 @@ export async function* runAgentSSE(
 
       buffer += decoder.decode(value, { stream: true });
 
-      // Parse SSE events from buffer
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
 
@@ -154,4 +184,23 @@ export async function* runAgentSSE(
   } finally {
     reader.releaseLock();
   }
+}
+
+// ---------------------------------------------------------------------------
+// Token usage (read-only, from server)
+// ---------------------------------------------------------------------------
+
+export interface TokenUsage {
+  user_id: string;
+  used: number;
+  budget: number;
+}
+
+export async function fetchTokenUsage(userId: string): Promise<TokenUsage> {
+  const res = await fetch(
+    `${getAgentHost()}/config/usage/${encodeURIComponent(userId)}`,
+    { signal: AbortSignal.timeout(5000) },
+  );
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<TokenUsage>;
 }
