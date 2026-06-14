@@ -1,8 +1,11 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from google.adk.agents import LlmAgent
 from google.adk.models import Gemini, LiteLlm
-
 
 from .tools import (
     get_current_date,
@@ -15,6 +18,7 @@ from .tools import (
     get_environment_raster,
     get_environment_stats,
 )
+
 
 SYSTEM_PROMPT = """
 ## Role & Persona
@@ -85,13 +89,11 @@ Match your response length to the complexity and intent of the user's question:
 
 
 def get_model():
-    use_ollama = os.environ.get("OLLAMA_ENABLE", "False")
-    model_name = os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it")
+    if os.environ.get("OLLAMA_ENABLE", "False") != "False":
+        ollama_model = os.environ.get("OLLAMA_MODEL", "gemma4:12b")
+        return LiteLlm(model=f"ollama_chat/{ollama_model}", reasoning_effort="none")
 
-    if use_ollama == "True":
-        ollama_host = os.environ.get("OLLAMA_HOST", "False")
-        return LiteLlm(model=f"ollama_chat/{model_name}", ollama_host=ollama_host)
-    
+    model_name = os.environ.get("GEMINI_MODEL", "gemma-4-26b-a4b-it")
     return Gemini(model=model_name)
 
 
@@ -99,7 +101,7 @@ root_agent = LlmAgent(
     model=get_model(),
     name="agrisat_agent",
     description="A helpful assistant for answering precision agriculture questions.",
-    instruction="Answer user's agricultural questions by leveraging information from the provided tools.",
+    instruction=SYSTEM_PROMPT,
     tools=[
         get_current_date,
         list_levels,
