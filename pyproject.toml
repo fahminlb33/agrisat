@@ -6,8 +6,11 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     # AI
-    "pillow>=12.2.0",
     "google-adk>=1.33.0",
+    "litellm>=1.89.0",
+    "aiosqlite>=0.22.1",
+    "opentelemetry-sdk>=1.41.1",
+    "opentelemetry-exporter-otlp-proto-http>=1.41.1",
     # API
     "pydantic-settings>=2.14.0",
     "fastapi[standard-no-fastapi-cloud-cli]>=0.136.1",
@@ -22,6 +25,7 @@ dependencies = [
     # Data Operations
     "numpy>=2.4.4",
     "pandas>=2.3.3",
+    "pillow>=12.2.0",
     "geopandas>=1.1.3",
     "netcdf4>=1.7.4",
     "pyarrow>=23.0.1",
@@ -32,7 +36,6 @@ dependencies = [
     "httpx>=0.28.1",
     "ipykernel>=7.2.0",
     "python-dotenv>=1.2.2",
-    "aiosqlite>=0.22.1",
 ]
 
 [dependency-groups]
