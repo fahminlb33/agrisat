@@ -1,5 +1,5 @@
 # AI
-google-adk>=1.33.0
+google-adk[extensions]>=1.33.0
 
 # Utilities
 pillow>=12.2.0
