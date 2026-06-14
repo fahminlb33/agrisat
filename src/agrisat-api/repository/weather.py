@@ -57,12 +57,16 @@ def get_time_series(
     statement = cursor.execute(
         f"""
         SELECT
-            zw.*,
-            zw.cloud_cover * 100 AS cloud_cover_pct,
+            zw.timestamp,
+            zw.zone_id,
             z.name AS zone_name,
             z.city AS zone_city,
             zl.id AS level_id,
-            zl.level AS level
+            zl.level AS level,
+            CASE WHEN zw.temperature > 100 THEN zw.temperature - 273.15 ELSE zw.temperature END AS temperature,
+            zw.precipitation,
+            zw.cloud_cover * 100 AS cloud_cover_pct,
+            zw.is_raining
         FROM
             zonal_weather zw
         INNER JOIN
@@ -74,7 +78,7 @@ def get_time_series(
             AND date(timestamp) BETWEEN ? AND ?
         """,
         (
-            level_id or zone_id,
+            zone_id if zone_id is not None else level_id,
             start_ts.strftime("%Y-%m-%d"),
             end_ts.strftime("%Y-%m-%d"),
         ),

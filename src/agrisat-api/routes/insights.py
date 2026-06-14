@@ -168,9 +168,28 @@ async def api_compare_zones(
         db, query.zone_b, query.start_ts, query.end_ts, query.variable_keys
     )
 
-    # Compute deltas
+    # Compute deltas — use dict-based join so mismatched variable sets
+    # are handled explicitly rather than silently truncated by zip().
+    metrics_b_map = {m.variable_key: m for m in analysis_b.metrics}
     deltas: list[ComparisonDelta] = []
-    for metric_a, metric_b in zip(analysis_a.metrics, analysis_b.metrics):
+    for metric_a in analysis_a.metrics:
+        metric_b = metrics_b_map.get(metric_a.variable_key)
+        if metric_b is None:
+            # Variable missing from zone B — report as explicit indicator
+            deltas.append(
+                ComparisonDelta(
+                    variable_key=metric_a.variable_key,
+                    value_a=metric_a.average,
+                    value_b=0.0,
+                    absolute_diff=metric_a.average,
+                    relative_diff_pct=0.0,
+                    interpretation=(
+                        f"{metric_a.variable_key.upper()} data unavailable for "
+                        f"{analysis_b.zone_name} — comparison not possible"
+                    ),
+                )
+            )
+            continue
         abs_diff = metric_a.average - metric_b.average
 
         # Division-by-zero handling (Requirement 8.4)

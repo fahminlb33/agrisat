@@ -84,7 +84,7 @@ def get_time_series(
             AND date(timestamp) BETWEEN ? AND ?
         """,
         (
-            level_id or zone_id,
+            zone_id if zone_id is not None else level_id,
             start_ts.strftime("%Y-%m-%d"),
             end_ts.strftime("%Y-%m-%d"),
         ),

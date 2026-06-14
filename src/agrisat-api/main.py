@@ -1,5 +1,7 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 from .routes.layers import router as layers_router
 from .routes.weather import router as weather_router
@@ -15,13 +17,41 @@ app = FastAPI(
     version="1.0.0",
 )
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+class CORSEverythingMiddleware(BaseHTTPMiddleware):
+    """Custom CORS middleware that adds headers to ALL responses, including errors.
+
+    FastAPI's built-in CORSMiddleware can fail to add headers when unhandled
+    exceptions occur (e.g. 500s from dependency injection). This middleware
+    wraps the entire call and ensures CORS headers are always present.
+    """
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        # Handle preflight OPTIONS requests immediately
+        if request.method == "OPTIONS":
+            response = Response(status_code=204)
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = "*"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            return response
+
+        try:
+            response = await call_next(request)
+        except Exception:
+            response = JSONResponse(
+                status_code=500,
+                content={"detail": "Internal Server Error"},
+            )
+
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+
+
+app.add_middleware(CORSEverythingMiddleware)
 
 app.include_router(layers_router)
 app.include_router(weather_router)
