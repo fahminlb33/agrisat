@@ -5,9 +5,8 @@ description = "AgriSAT is a geospatial intelligence platform for precision agric
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    # AI
-    "google-adk>=1.33.0",
-    "litellm>=1.89.0",
+    # AI 
+    "google-adk[extensions]>=1.33.0",
     "aiosqlite>=0.22.1",
     "opentelemetry-sdk>=1.41.1",
     "opentelemetry-exporter-otlp-proto-http>=1.41.1",

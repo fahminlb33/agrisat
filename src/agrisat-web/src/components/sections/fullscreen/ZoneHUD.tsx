@@ -56,7 +56,7 @@ const ENV_LABELS: Record<EnvKey, { label: string; description: string }> = {
 };
 
 function toTempC(raw: number) {
-	return raw > 100 ? raw - 273.15 : raw;
+	return raw;
 }
 
 function ndviHealthLabel(v: number): { label: string; color: string } {

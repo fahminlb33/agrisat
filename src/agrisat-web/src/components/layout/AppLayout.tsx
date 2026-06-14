@@ -3,6 +3,7 @@ import { Bot } from "lucide-react";
 import { Sidebar } from "#/components/sidebar/Sidebar";
 import { AIAssistantPanel } from "#/components/ai/AIAssistantPanel";
 import ThemeToggle from "#/components/ThemeToggle";
+import { SettingsDialog } from "#/components/settings/SettingsDialog";
 import { useSidebarState } from "#/hooks/use-sidebar-state";
 import { useResponsiveLayout } from "#/hooks/use-responsive-layout";
 import { cn } from "#/lib/utils";
@@ -30,24 +31,23 @@ export function AppLayout({ children }: AppLayoutProps) {
 				onToggleCollapse={toggleSidebarCollapse}
 			/>
 
-			{/* Center + Right wrapper */}
-			<div className="flex flex-1 flex-col overflow-hidden">
-				{/* Top bar with theme toggle and AI toggle */}
-				<div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
-					<ThemeToggle />
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => setAiPanelOpen((prev) => !prev)}
-						aria-label={
-							aiPanelOpen ? "Close AI assistant" : "Open AI assistant"
-						}
-						className="gap-1.5 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-					>
-						<Bot className="h-4 w-4" />
-						<span className="hidden sm:inline">AI Assistant</span>
-					</Button>
-				</div>
+      {/* Center + Right wrapper */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Top bar with theme toggle and AI toggle */}
+        <div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
+          <ThemeToggle />
+          <SettingsDialog />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAiPanelOpen((prev) => !prev)}
+            aria-label={aiPanelOpen ? "Close AI assistant" : "Open AI assistant"}
+            className="gap-1.5 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Bot className="h-4 w-4" />
+            <span className="hidden sm:inline">AI Assistant</span>
+          </Button>
+        </div>
 
 				{/* Content + AI Panel row */}
 				<div className="flex flex-1 overflow-hidden">

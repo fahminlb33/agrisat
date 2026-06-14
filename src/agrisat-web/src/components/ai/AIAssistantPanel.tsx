@@ -1,3 +1,8 @@
+// ISOLATION CONTRACT:
+// This component owns all chat state. Do not lift useAgentChat or pass chat state
+// to parent components. useAgentChat must remain inside AIAssistantPanel so that
+// SSE streaming state updates (messages, status, activity) cannot propagate
+// re-renders to AppLayout or any sibling subtree (e.g. MapPanel, DashboardContent).
 "use client";
 
 import {
@@ -126,13 +131,13 @@ export function AIAssistantPanel({
 		submitMessage(trimmed);
 	};
 
-	// Submit with optional mode prefix
-	const submitMessage = (text: string) => {
-		const modePrefix = activeMode !== "explain" ? `[Mode: ${activeMode}] ` : "";
-		sendMessage(`${modePrefix}${text}`);
-		setInputValue("");
-		inputRef.current?.focus();
-	};
+  // Submit with optional mode prefix — only sent to backend, not displayed in bubble
+  const submitMessage = (text: string) => {
+    const modePrefix = activeMode !== "explain" ? `[Mode: ${activeMode}] ` : "";
+    sendMessage(`${modePrefix}${text}`, text);
+    setInputValue("");
+    inputRef.current?.focus();
+  };
 
 	// Handle suggestion click
 	const handleSuggestionClick = (suggestion: string) => {
@@ -219,24 +224,25 @@ export function AIAssistantPanel({
 						)}
 					</div>
 
-					{/* Messages area using ai-elements Conversation */}
-					<Conversation className="flex-1">
-						<ConversationContent className="gap-4 p-3">
-							{messages.length === 0 ? (
-								<ConversationEmptyState
-									icon={<Bot className="h-8 w-8" />}
-									title="AgriSat AI Assistant"
-									description="Ask about crop health, weather forecasts, or explore monitoring zones."
-								/>
-							) : (
-								messages.map((message) => (
-									<MessageBubble
-										key={message.id}
-										role={message.role}
-										content={message.content}
-									/>
-								))
-							)}
+          {/* Messages area using ai-elements Conversation */}
+          <Conversation className="flex-1">
+            <ConversationContent className="gap-4 p-3">
+              {messages.length === 0 ? (
+                <ConversationEmptyState
+                  icon={<Bot className="h-8 w-8" />}
+                  title="AgriSat AI Assistant"
+                  description="Ask about crop health, weather forecasts, or explore monitoring zones."
+                />
+              ) : (
+                messages.map((message) => (
+                  <MessageBubble
+                    key={message.id}
+                    role={message.role}
+                    content={message.content}
+                    images={message.images}
+                  />
+                ))
+              )}
 
 							{/* Streaming/thinking indicator */}
 							{isLoading &&
@@ -330,39 +336,42 @@ export function AIAssistantPanel({
 // Message Bubble
 // ---------------------------------------------------------------------------
 
-function MessageBubble({
-	role,
-	content,
-}: {
-	role: "user" | "assistant";
-	content: string;
-}) {
-	if (role === "user") {
-		return (
-			<div className="flex items-start justify-end gap-2">
-				<div className="max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground whitespace-pre-wrap">
-					{content}
-				</div>
-				<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-					<User className="h-3.5 w-3.5 text-primary" />
-				</div>
-			</div>
-		);
-	}
+function MessageBubble({ role, content, images }: { role: "user" | "assistant"; content: string; images?: Array<{ mimeType: string; data: string }> }) {
+  if (role === "user") {
+    return (
+      <div className="flex items-start justify-end gap-2">
+        <div className="max-w-[85%] rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground whitespace-pre-wrap">
+          {content}
+        </div>
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
+          <User className="h-3.5 w-3.5 text-primary" />
+        </div>
+      </div>
+    );
+  }
 
-	return (
-		<div className="flex items-start gap-2">
-			<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
-				<Bot className="h-3.5 w-3.5 text-muted-foreground" />
-			</div>
-			<div className="max-w-[85%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-pre:my-1 max-w-none">
-				<Markdown
-					remarkPlugins={[remarkGfm, remarkMath]}
-					rehypePlugins={[rehypeKatex]}
-				>
-					{content}
-				</Markdown>
-			</div>
-		</div>
-	);
+  return (
+    <div className="flex items-start gap-2">
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
+        <Bot className="h-3.5 w-3.5 text-muted-foreground" />
+      </div>
+      <div className="max-w-[85%] rounded-lg bg-muted px-3 py-2 text-sm text-foreground prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-pre:my-1 max-w-none">
+        <Markdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+          {content}
+        </Markdown>
+        {images && images.length > 0 && (
+          <div className="mt-2 flex flex-col gap-2">
+            {images.map((img, idx) => (
+              <img
+                key={idx}
+                src={`data:${img.mimeType};base64,${img.data}`}
+                alt={`Agent-generated image ${idx + 1}`}
+                className="rounded-md max-w-full h-auto"
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

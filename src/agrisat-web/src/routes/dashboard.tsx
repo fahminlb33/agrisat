@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 
 import ControlsPanel from "#/components/panels/ControlsPanel";
@@ -149,7 +149,7 @@ function Dashboard() {
 	);
 }
 
-function DashboardContent({
+const DashboardContent = memo(function DashboardContent({
 	store,
 	levels,
 	zones,
@@ -381,4 +381,4 @@ function DashboardContent({
 			</div>
 		</main>
 	);
-}
+});

@@ -50,7 +50,7 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 function toTempC(raw: number): number {
-	return raw > 100 ? raw - 273.15 : raw;
+	return raw;
 }
 
 function formatTemp(raw: number): string {
