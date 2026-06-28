@@ -205,7 +205,7 @@ def download(catalogue_item: CatalogueItem, root_path: Path) -> str:
 @flow
 def download_sentinel_data(
     download_root: str, time_range: str, bbox_str: str
-) -> list[str]:
+):
     logger = get_run_logger()
     root_path = Path(download_root) / "sentinel-2"
 
