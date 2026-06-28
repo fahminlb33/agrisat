@@ -55,6 +55,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+    depends_on:
+        agrisat-api:
+          condition: service_healthy
 
   agrisat-agent:
     build: ../src/agrisat-agent
@@ -72,6 +75,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+    depends_on:
+      agrisat-api:
+        condition: service_healthy
 
   agrisat-gateway:
     image: nginx
