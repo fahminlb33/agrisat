@@ -13,7 +13,7 @@ const config = defineConfig({
 		devtools(),
 		nitro(),
 		tailwindcss(),
-		tanstackStart({ prerender: { enabled: false } }),
+		tanstackStart({ spa: { enabled: true } }),
 		viteReact(),
 		babel({ presets: [reactCompilerPreset()] }),
 	],
