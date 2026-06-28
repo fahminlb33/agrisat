@@ -1,30 +1,28 @@
-volumes:
-  ollama-models:
-  agent-session:
+name: agrisat
 
 networks:
   agrisat:
 
 services:
-  # ollama:
-  #   image: docker.io/ollama/ollama:latest
-  #   ports:
-  #     - 8001:11434
-  #   networks:
-  #     - agrisat
-  #   volumes:
-  #     - ollama-models:/root/.ollama
-  #   environment:
-  #     - OLLAMA_KEEP_ALIVE=24h
-  #     - OLLAMA_HOST=0.0.0.0
-  #   tty: true
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: all
-  #             capabilities: [gpu]
+  ollama:
+    image: docker.io/ollama/ollama:latest
+    ports:
+      - 8001:11434
+    networks:
+      - agrisat
+    volumes:
+      - /mnt/data/workspace/bogor-agrisat/ollama:/root/.ollama
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+      - OLLAMA_HOST=0.0.0.0
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
   agrisat-api:
     build: ../src/agrisat-api
@@ -35,26 +33,9 @@ services:
     volumes:
       - ./data.db:/data/data.db
     env_file:
-      - api.env
+      - app.env
     healthcheck:
       test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 15s
-
-  agrisat-agent:
-    build: ../src/agrisat-agent
-    ports:
-      - "8004:8080"
-    networks:
-      - agrisat
-    volumes:
-      - agent-session:/data
-    env_file:
-      - agent.env
-    healthcheck:
-      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -67,9 +48,26 @@ services:
     networks:
       - agrisat
     env_file:
-      - web.env
+      - app.env
     healthcheck:
       test: ["CMD", "curl", "--silent", "--fail", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  agrisat-agent:
+    build: ../src/agrisat-agent
+    ports:
+      - "8004:8080"
+    networks:
+      - agrisat
+    volumes:
+      - /mnt/data/workspace/bogor-agrisat/adk:/data
+    env_file:
+      - app.env
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
