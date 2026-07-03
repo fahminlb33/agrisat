@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgriSAT — Development Roadmap</title>
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <!-- PrimeVue -->
+  <link rel="stylesheet" href="https://unpkg.com/primevue@4/resources/themes/aura-light-green/theme.css" />
+  <link rel="stylesheet" href="https://unpkg.com/primeicons@7/primeicons.css" />
+  <link rel="stylesheet" href="https://unpkg.com/primeflex@4/primeflex.css" />
+  <script src="https://unpkg.com/primevue@4/umd/primevue.min.js"></script>
+  <style>
+    :root {
+      --green-50: #f0fdf4;
+      --green-100: #dcfce7;
+      --green-600: #16a34a;
+      --green-700: #15803d;
+      --red-50: #fef2f2;
+      --red-600: #dc2626;
+      --orange-50: #fff7ed;
+      --orange-600: #ea580c;
+      --yellow-50: #fefce8;
+      --yellow-600: #ca8a04;
+      --blue-50: #eff6ff;
+      --blue-600: #2563eb;
+      --purple-50: #faf5ff;
+      --purple-600: #9333ea;
+      --teal-50: #f0fdfa;
+      --teal-600: #0d9488;
+      --surface-50: #f9fafb;
+      --surface-100: #f3f4f6;
+      --surface-200: #e5e7eb;
+      --surface-300: #d1d5db;
+      --surface-500: #6b7280;
+      --surface-700: #374151;
+      --surface-900: #111827;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #ffffff;
+      color: var(--surface-900);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    #app {
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 40%, #eff6ff 100%);
+      border-bottom: 1px solid var(--surface-200);
+      padding: 48px 40px 36px;
+    }
+
+    .header-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--green-100);
+      border: 1px solid var(--green-600);
+      color: var(--green-700);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.75px;
+      color: var(--surface-900);
+      margin-bottom: 8px;
+    }
+
+    h1 span {
+      color: var(--green-600);
+    }
+
+    .header-sub {
+      color: var(--surface-500);
+      font-size: 15px;
+      margin-bottom: 28px;
+      max-width: 700px;
+    }
+
+    .header-meta {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .meta-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--surface-500);
+      font-size: 13px;
+    }
+
+    .meta-chip strong {
+      color: var(--surface-700);
+    }
+
+    /* ── Summary cards ── */
+    .summary-bar {
+      background: var(--surface-50);
+      border-bottom: 1px solid var(--surface-200);
+      padding: 20px 40px;
+    }
+
+    .summary-bar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--surface-200);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .stat-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--surface-500);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    /* ── Main layout ── */
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 32px 40px 60px;
+    }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-label {
+      color: var(--surface-500);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-right: 6px;
+    }
+
+    .filter-btn {
+      background: #ffffff;
+      border: 1px solid var(--surface-200);
+      color: var(--surface-500);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--green-600);
+      color: var(--green-700);
+    }
+
+    .filter-btn.active {
+      color: #fff;
+      border-color: var(--green-600);
+      background: var(--green-600);
+      box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+    }
+
+    /* ── Section ── */
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--surface-100);
+    }
+
+    .section-icon {
+      font-size: 22px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .section-count {
+      background: var(--surface-100);
+      color: var(--surface-500);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--surface-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: box-shadow 0.15s, transform 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .card:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .card.critical::before {
+      background: var(--red-600);
+    }
+
+    .card.high::before {
+      background: var(--orange-600);
+    }
+
+    .card.medium::before {
+      background: var(--yellow-600);
+    }
+
+    .card.low::before {
+      background: var(--blue-600);
+    }
+
+    .card.feature::before {
+      background: var(--purple-600);
+    }
+
+    .card.enhancement::before {
+      background: var(--teal-600);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--surface-900);
+    }
+
+    .badges {
+      display: flex;
+      gap: 5px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      border-radius: 5px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-critical {
+      background: var(--red-50);
+      color: var(--red-600);
+      border: 1px solid #fecaca;
+    }
+
+    .badge-high {
+      background: var(--orange-50);
+      color: var(--orange-600);
+      border: 1px solid #fed7aa;
+    }
+
+    .badge-medium {
+      background: var(--yellow-50);
+      color: var(--yellow-600);
+      border: 1px solid #fef08a;
+    }
+
+    .badge-low {
+      background: var(--blue-50);
+      color: var(--blue-600);
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-feature {
+      background: var(--purple-50);
+      color: var(--purple-600);
+      border: 1px solid #e9d5ff;
+    }
+
+    .badge-enhancement {
+      background: var(--teal-50);
+      color: var(--teal-600);
+      border: 1px solid #99f6e4;
+    }
+
+    .badge-layer {
+      background: var(--surface-50);
+      color: var(--surface-500);
+      border: 1px solid var(--surface-200);
+    }
+
+    .card-desc {
+      color: var(--surface-500);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .card-desc code {
+      background: var(--surface-100);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--surface-700);
+    }
+
+    .card-code {
+      background: var(--surface-50);
+      border: 1px solid var(--surface-200);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-family: 'JetBrains Mono', 'Cascadia Code', 'Consolas', monospace;
+      font-size: 11.5px;
+      color: var(--surface-700);
+      overflow-x: auto;
+      margin-bottom: 10px;
+      white-space: pre;
+      line-height: 1.7;
+    }
+
+    .card-fix {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: var(--green-50);
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--green-700);
+      line-height: 1.5;
+    }
+
+    .card-fix-icon {
+      flex-shrink: 0;
+      font-weight: 700;
+      color: var(--green-600);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--surface-100);
+    }
+
+    .card-file {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--surface-500);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 70%;
+    }
+
+    .effort-chip {
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 5px;
+      padding: 3px 9px;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+
+    .effort-xs {
+      color: var(--green-600);
+      border-color: #bbf7d0;
+      background: var(--green-50);
+    }
+
+    .effort-sm {
+      color: #65a30d;
+      border-color: #d9f99d;
+      background: #f7fee7;
+    }
+
+    .effort-md {
+      color: var(--yellow-600);
+      border-color: #fef08a;
+      background: var(--yellow-50);
+    }
+
+    .effort-lg {
+      color: var(--orange-600);
+      border-color: #fed7aa;
+      background: var(--orange-50);
+    }
+
+    .effort-xl {
+      color: var(--red-600);
+      border-color: #fecaca;
+      background: var(--red-50);
+    }
+
+    /* ── Legend ── */
+    .legend {
+      background: var(--surface-50);
+      border: 1px solid var(--surface-200);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      margin-bottom: 28px;
+    }
+
+    .legend-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--surface-500);
+      margin-bottom: 12px;
+    }
+
+    .legend-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--surface-500);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--surface-200);
+      padding: 24px 40px;
+      text-align: center;
+      color: var(--surface-500);
+      font-size: 12px;
+    }
+
+    /* ── Animations ── */
+    .card-enter-active {
+      transition: all 0.3s ease;
+    }
+
+    .card-leave-active {
+      transition: all 0.2s ease;
+    }
+
+    .card-enter-from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .card-leave-to {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+
+    .fade-enter-active,
+    .fade-leave-active {
+      transition: opacity 0.2s;
+    }
+
+    .fade-enter-from,
+    .fade-leave-to {
+      opacity: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+
+      .header,
+      .summary-bar {
+        padding: 24px 20px;
+      }
+
+      .container {
+        padding: 24px 20px 40px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+    }
+
+    /* ── Expand/Collapse ── */
+    .card-expandable {
+      cursor: pointer;
+    }
+
+    .card-body {
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .card-body.collapsed {
+      max-height: 0;
+    }
+
+    .card-body.expanded {
+      max-height: 600px;
+    }
+
+    .expand-icon {
+      transition: transform 0.2s;
+      color: var(--surface-500);
+      font-size: 12px;
+    }
+
+    .expand-icon.rotated {
+      transform: rotate(180deg);
+    }
+
+    /* ── Completed items ── */
+    .card.completed {
+      opacity: 0.75;
+      border-color: var(--green-600);
+    }
+
+    .card.completed::after {
+      content: "✓ Done";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--green-600);
+      color: #fff;
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Status filter toggle ── */
+    .status-toggle {
+      display: flex;
+      gap: 4px;
+      margin-left: 16px;
+      padding-left: 16px;
+      border-left: 1px solid var(--surface-200);
+    }
+
+    .status-btn {
+      background: #ffffff;
+      border: 1px solid var(--surface-200);
+      color: var(--surface-500);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .status-btn:hover {
+      border-color: var(--green-600);
+      color: var(--green-700);
+    }
+
+    .status-btn.active {
+      color: #fff;
+      border-color: var(--green-600);
+      background: var(--green-600);
+      box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+    }
+
+    /* ── Search ── */
+    .search-input {
+      border: 1px solid var(--surface-200);
+      border-radius: 8px;
+      padding: 8px 14px 8px 36px;
+      font-size: 13px;
+      width: 260px;
+      background: #fff;
+      color: var(--surface-900);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--green-600);
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+    }
+
+    .search-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: var(--surface-500);
+      font-size: 14px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+
+    <!-- ──────────── HEADER ──────────── -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-badge">🌎 AgriSAT Platform</div>
+        <h1>Development <span>Roadmap</span></h1>
+        <p class="header-sub">
+          Deep-analysis findings across the API, Agent, and Web layers — bugs, security, performance, features &amp;
+          tech debt.
+        </p>
+        <div class="header-meta">
+          <div class="meta-chip">📅 Generated <strong>June 14, 2026</strong></div>
+          <div class="meta-chip">🔎 Services <strong>agrisat-api · agrisat-agent · agrisat-web</strong></div>
+          <div class="meta-chip">📦 Stack <strong>FastAPI · Google ADK · TanStack Start · MapLibre</strong></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ──────────── SUMMARY ──────────── -->
+    <div class="summary-bar">
+      <div class="summary-bar-inner">
+        <div class="stat-card" v-for="s in stats" :key="s.label">
+          <div class="stat-icon" :style="{ background: s.bgColor }">{{ s.icon }}</div>
+          <div>
+            <div class="stat-value" :style="{ color: s.color }">{{ s.value }}</div>
+            <div class="stat-label">{{ s.label }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────── MAIN ──────────── -->
+    <main class="container">
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-title">Legend</div>
+        <div class="legend-grid">
+          <div class="legend-item" v-for="l in legend" :key="l.label">
+            <div class="legend-dot" :style="{ background: l.color }"></div>
+            {{ l.label }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters + Search -->
+      <div class="filter-bar">
+        <span class="filter-label">Filter</span>
+        <button v-for="f in filters" :key="f.value" class="filter-btn" :class="{ active: activeFilter === f.value }"
+          @click="activeFilter = f.value">{{ f.label }}</button>
+
+        <div class="status-toggle">
+          <button class="status-btn" :class="{ active: statusFilter === 'all' }" @click="statusFilter = 'all'">All</button>
+          <button class="status-btn" :class="{ active: statusFilter === 'pending' }" @click="statusFilter = 'pending'">⏳ Pending</button>
+          <button class="status-btn" :class="{ active: statusFilter === 'done' }" @click="statusFilter = 'done'">✓ Done</button>
+        </div>
+
+        <div class="search-wrapper">
+          <i class="pi pi-search search-icon"></i>
+          <input class="search-input" type="text" v-model="searchQuery" placeholder="Search issues..." />
+        </div>
+      </div>
+
+      <!-- Sections -->
+      <div v-for="section in filteredSections" :key="section.id" class="section">
+        <div class="section-header">
+          <span class="section-icon">{{ section.icon }}</span>
+          <span class="section-title">{{ section.title }}</span>
+          <span class="section-count">{{ sectionVisibleCount(section) }} items</span>
+        </div>
+        <transition-group name="card" tag="div" class="cards">
+          <div v-for="item in getFilteredItems(section)" :key="item.id" class="card card-expandable"
+            :class="[item.severity, { completed: item.completed }]" @click="toggleExpand(item.id)">
+            <div class="card-top">
+              <div class="card-title">{{ item.title }}</div>
+              <div class="badges">
+                <span class="badge" :class="'badge-' + item.severity">{{ capitalize(item.severity) }}</span>
+                <span class="badge badge-layer" v-for="tag in item.layers" :key="tag">{{ tag }}</span>
+              </div>
+            </div>
+
+            <div class="card-body" :class="expanded[item.id] ? 'expanded' : 'collapsed'">
+              <p class="card-desc" v-html="item.description"></p>
+              <div class="card-code" v-if="item.code">{{ item.code }}</div>
+              <div class="card-fix" v-if="item.fix">
+                <span class="card-fix-icon">✓</span>
+                <span v-html="item.fix"></span>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <span class="card-file">{{ item.file }}</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="effort-chip" :class="'effort-' + item.effort.toLowerCase()">Effort: {{ item.effort
+                  }}</span>
+                <i class="pi pi-chevron-down expand-icon" :class="{ rotated: expanded[item.id] }"></i>
+              </div>
+            </div>
+          </div>
+        </transition-group>
+      </div>
+
+      <!-- Empty state -->
+      <div v-if="totalVisible === 0" style="text-align:center;padding:60px 20px;color:var(--surface-500);">
+        <i class="pi pi-search" style="font-size:32px;margin-bottom:12px;display:block;"></i>
+        <p style="font-size:15px;">No issues match your current filter and search.</p>
+      </div>
+
+    </main>
+
+    <footer>
+      Generated by deep static analysis · AgriSAT Platform · June 14, 2026 · Powered by Vue 3 + PrimeVue
+    </footer>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed, reactive } = Vue;
+
+    let roadmapData = { sections: [] };
+
+    async function loadRoadmapData() {
+      try {
+        const response = await fetch('./roadmap-data.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        roadmapData = await response.json();
+      } catch (e) {
+        console.error('Failed to load roadmap-data.json:', e);
+        console.info('If opening via file://, use a local server (e.g. python -m http.server)');
+      }
+      initApp();
+    }
+
+    function initApp() {
+      createApp({
+        setup() {
+          const activeFilter = ref('all');
+          const statusFilter = ref('all');
+          const searchQuery = ref('');
+          const expanded = reactive({});
+
+          const sections = roadmapData.sections;
+
+          const allItems = sections.flatMap(s => s.items);
+          const completedCount = allItems.filter(i => i.completed).length;
+          const pendingCount = allItems.filter(i => !i.completed).length;
+
+          const stats = [
+            { icon: '🔴', value: sections.find(s => s.id === 'critical')?.items.length || 0, label: 'Critical Bugs', color: '#dc2626', bgColor: '#fef2f2' },
+            { icon: '🟠', value: sections.find(s => s.id === 'high')?.items.length || 0, label: 'High Issues', color: '#ea580c', bgColor: '#fff7ed' },
+            { icon: '🟡', value: sections.find(s => s.id === 'medium')?.items.length || 0, label: 'Medium Issues', color: '#ca8a04', bgColor: '#fefce8' },
+            { icon: '🔵', value: sections.find(s => s.id === 'low')?.items.length || 0, label: 'Low / Tech Debt', color: '#2563eb', bgColor: '#eff6ff' },
+            { icon: '✅', value: completedCount, label: 'Completed', color: '#16a34a', bgColor: '#f0fdf4' },
+            { icon: '⏳', value: pendingCount, label: 'Pending', color: '#ea580c', bgColor: '#fff7ed' }
+          ];
+
+          const legend = [
+            { color: '#dc2626', label: 'Critical — production-breaking or data-loss risk' },
+            { color: '#ea580c', label: 'High — significant impact on reliability or security' },
+            { color: '#ca8a04', label: 'Medium — incorrect behavior under specific conditions' },
+            { color: '#2563eb', label: 'Low — code quality, minor UX, or cleanup' },
+            { color: '#9333ea', label: 'Feature — new capability not yet present' },
+            { color: '#0d9488', label: 'Enhancement — improvement on existing behavior' }
+          ];
+
+          const filters = [
+            { label: 'All', value: 'all' },
+            { label: '🔴 Critical', value: 'critical' },
+            { label: '🟠 High', value: 'high' },
+            { label: '🟡 Medium', value: 'medium' },
+            { label: '🔵 Low', value: 'low' },
+            { label: '✨ Features', value: 'feature' },
+            { label: '🛠 Enhancements', value: 'enhancement' },
+            { label: 'API', value: 'api' },
+            { label: 'Agent', value: 'agent' },
+            { label: 'Web', value: 'web' },
+            { label: 'Infra', value: 'infra' }
+          ];
+
+          function matchesFilter(item) {
+            if (activeFilter.value === 'all') return true;
+            return item.tags.includes(activeFilter.value);
+          }
+
+          function matchesStatus(item) {
+            if (statusFilter.value === 'all') return true;
+            if (statusFilter.value === 'done') return item.completed === true;
+            if (statusFilter.value === 'pending') return item.completed !== true;
+            return true;
+          }
+
+          function matchesSearch(item) {
+            if (!searchQuery.value.trim()) return true;
+            const q = searchQuery.value.toLowerCase();
+            return (
+              item.title.toLowerCase().includes(q) ||
+              item.description.toLowerCase().includes(q) ||
+              item.file.toLowerCase().includes(q) ||
+              item.layers.some(l => l.toLowerCase().includes(q))
+            );
+          }
+
+          function getFilteredItems(section) {
+            return section.items.filter(item => matchesFilter(item) && matchesStatus(item) && matchesSearch(item));
+          }
+
+          const filteredSections = computed(() => {
+            return sections.filter(s => getFilteredItems(s).length > 0);
+          });
+
+          function sectionVisibleCount(section) {
+            return getFilteredItems(section).length;
+          }
+
+          const totalVisible = computed(() => {
+            return sections.reduce((acc, s) => acc + getFilteredItems(s).length, 0);
+          });
+
+          function toggleExpand(id) {
+            expanded[id] = !expanded[id];
+          }
+
+          function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+          }
+
+          return {
+            activeFilter, searchQuery, expanded,
+            stats, legend, filters, sections,
+            filteredSections, getFilteredItems,
+            sectionVisibleCount, totalVisible,
+            toggleExpand, capitalize
+          };
+        }
+      }).mount('#app');
+    }
+
+    loadRoadmapData();
+  </script>
+</body>
+
+</html>
