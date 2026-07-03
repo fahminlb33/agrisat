@@ -507,29 +507,29 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 										}
 									/>
 									{hudSections.insights && (
-										<div className="px-3 pb-3 pt-0.5 space-y-1.5">
-											{insights.slice(0, 4).map((insight, i) => (
-												<div
-													key={i}
-													className={cn(
-														"rounded-lg border px-2.5 py-2 text-[11px] leading-snug",
-														severityBadgeClass(insight.severity),
-													)}
-												>
-													<div className="flex items-start gap-1.5">
-														{severityIcon(insight.severity)}
-														<div className="min-w-0">
-															<p className="font-medium leading-tight">
-																{insight.title}
-															</p>
-															<p className="mt-0.5 text-[10px] opacity-80 leading-snug">
-																{insight.description}
-															</p>
+										<ScrollArea className="h-48">
+											<div className="px-3 pb-3 pt-0.5 space-y-1.5">
+												{insights.map((insight, i) => (
+													<div
+														key={i}
+														className={cn(
+															"rounded-lg border px-2.5 py-2 text-[11px] leading-snug",
+															severityBadgeClass(insight.severity),
+														)}
+													>
+														<div className="flex items-start gap-1.5">
+															{severityIcon(insight.severity)}
+															<div className="min-w-0">
+																<p className="font-medium leading-tight">{insight.title}</p>
+																<p className="mt-0.5 text-[10px] opacity-80 leading-snug">
+																	{insight.description}
+																</p>
+															</div>
 														</div>
 													</div>
-												</div>
-											))}
-										</div>
+												))}
+											</div>
+										</ScrollArea>
 									)}
 								</>
 							)}

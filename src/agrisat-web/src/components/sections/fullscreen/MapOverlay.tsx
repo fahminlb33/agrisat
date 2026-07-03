@@ -43,17 +43,39 @@ async function fetchPolygons(levelId: number): Promise<FeatureCollection> {
 		.json<FeatureCollection>();
 }
 
-async function fetchRasterBlob(
-	variableId: number,
-	ts: string,
-): Promise<string | null> {
+// Cache blob URLs so they survive React re-renders and aren't revoked prematurely.
+// Each unique variable+date combo gets one blob URL that persists until explicitly evicted.
+const blobCache = new Map<string, string>();
+const BLOB_CACHE_MAX = 20;
+
+function blobCacheKey(variableId: number, ts: string) {
+	return `${variableId}__${ts}`;
+}
+
+function evictOldestBlobs() {
+	while (blobCache.size > BLOB_CACHE_MAX) {
+		const firstKey = blobCache.keys().next().value!;
+		const url = blobCache.get(firstKey)!;
+		URL.revokeObjectURL(url);
+		blobCache.delete(firstKey);
+	}
+}
+
+async function fetchRasterBlob(variableId: number, ts: string): Promise<string | null> {
+	const key = blobCacheKey(variableId, ts);
+	const cached = blobCache.get(key);
+	if (cached) return cached;
+
 	const response = await httpClient.get("layers/rasters", {
 		searchParams: { variable_id: variableId, ts },
 		throwHttpErrors: false,
 	});
 	if (!response.ok) return null;
 	const blob = await response.blob();
-	return URL.createObjectURL(blob);
+	const url = URL.createObjectURL(blob);
+	blobCache.set(key, url);
+	evictOldestBlobs();
+	return url;
 }
 
 function computeBounds(
@@ -408,7 +430,6 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 	const layersAddedRef = useRef(false);
 	const rasterLayerAddedRef = useRef(false);
 	const eventsRegisteredRef = useRef(false);
-	const prevRasterUrlRef = useRef<string | null>(null);
 	const displayedRasterUrlRef = useRef<string | null>(null);
 
 	const zonesRef = useRef(zones);
@@ -447,6 +468,8 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 		placeholderData: keepPreviousData,
 	});
 
+	// Blob URL lifecycle is managed by the module-level blobCache.
+	// No eager revokeObjectURL here — URLs stay valid while the map uses them.
 	rasterImageUrlRef.current = rasterImageUrl;
 
 	if (geojson) {
@@ -478,17 +501,7 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 	}
 
 	// Blob URL cleanup
-	useEffect(() => {
-		const prevUrl = prevRasterUrlRef.current;
-		if (prevUrl && prevUrl !== rasterImageUrl) URL.revokeObjectURL(prevUrl);
-		prevRasterUrlRef.current = rasterImageUrl ?? null;
-		return () => {
-			if (prevRasterUrlRef.current) {
-				URL.revokeObjectURL(prevRasterUrlRef.current);
-				prevRasterUrlRef.current = null;
-			}
-		};
-	}, [rasterImageUrl]);
+	// No-op: lifecycle managed by module-level blobCache with LRU eviction.
 
 	const syncZoneLayers = useCallback(() => {
 		const map = mapRef.current;
