@@ -7,8 +7,8 @@ import MapPanel, {
 	type MapPanelProps,
 	computeZoneAverages,
 	getHeatmapColor,
-	getVariableKey,
 } from "./MapPanel";
+import { getVariableKey } from "#/lib/variables";
 import {
 	createQueryContextStore,
 	type ZoneLevelRegistry,

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { env } from "#/lib/env";
 
 // ---------------------------------------------------------------------------
 // LLM config
@@ -49,7 +50,7 @@ export type SettingsStore = AppSettings & SettingsActions;
 
 export const DEFAULT_LLM: LlmSettings = {
   provider: "gemini",
-  agentHost: import.meta.env.VITE_AGENT_HOST ?? "http://localhost:8080",
+  agentHost: env.VITE_AGENT_HOST,
   geminiModel: "gemma-4-26b-a4b-it",
   geminiApiKey: "",
   ollamaBaseUrl: "http://localhost:11434",
@@ -74,8 +75,8 @@ function mergeLlm(persisted: Partial<LlmSettings>): LlmSettings {
 // Store
 // ---------------------------------------------------------------------------
 
-export const useSettingsStore = create<SettingsStore>()(
-  persist(
+export const useSettingsStore = create<SettingsStore>()( 
+  persist<SettingsStore, [], [], Pick<AppSettings, "llm">>(
     (set) => ({
       ...DEFAULT_SETTINGS,
 

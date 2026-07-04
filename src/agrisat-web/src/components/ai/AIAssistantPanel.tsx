@@ -14,6 +14,7 @@ import {
 	PanelRightOpen,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "#/components/ui/button.tsx";
 import { cn } from "#/lib/utils.ts";
 import { useAgentChat } from "#/hooks/useAgentChat.ts";
@@ -92,6 +93,7 @@ export function AIAssistantPanel({
 	expanded: expandedProp,
 	onExpandedChange,
 }: AIAssistantPanelProps) {
+	const { t } = useTranslation();
 	const [activeMode, setActiveMode] = useState<ChatMode>("explain");
 	// Support both controlled (parent owns expanded) and uncontrolled modes
 	const [expandedInternal, setExpandedInternal] = useState(false);
@@ -164,15 +166,15 @@ export function AIAssistantPanel({
 				<div className="flex h-full flex-col w-full">
 					{/* Header */}
 					<div className="flex items-center justify-between border-b border-border px-4 py-3">
-						<h2 className="text-sm font-semibold">AI Agro Assistant</h2>
+						<h2 className="text-sm font-semibold">{t("ai.title")}</h2>
 						<div className="flex items-center gap-1">
 							<Button
 								variant="ghost"
 								size="icon"
 								onClick={() => setExpanded(!expanded)}
-								aria-label={expanded ? "Collapse panel" : "Expand panel"}
+								aria-label={expanded ? t("ai.collapse") : t("ai.expand")}
 								className="hidden sm:flex h-7 w-7"
-								title={expanded ? "Collapse panel" : "Expand panel"}
+								title={expanded ? t("ai.collapse") : t("ai.expand")}
 							>
 								{expanded ? (
 									<PanelRightOpen className="h-3.5 w-3.5" />
@@ -184,9 +186,9 @@ export function AIAssistantPanel({
 								variant="ghost"
 								size="icon"
 								onClick={clearMessages}
-								aria-label="Clear chat history"
+								aria-label={t("ai.clear")}
 								className="h-7 w-7"
-								title="Clear chat"
+								title={t("ai.clear")}
 							>
 								<Trash2 className="h-3.5 w-3.5" />
 							</Button>
@@ -194,7 +196,7 @@ export function AIAssistantPanel({
 								variant="ghost"
 								size="icon"
 								onClick={onClose}
-								aria-label="Close AI assistant"
+								aria-label={t("ai.close")}
 								className="h-7 w-7"
 							>
 								<X className="h-4 w-4" />
@@ -218,7 +220,7 @@ export function AIAssistantPanel({
 									)}
 									aria-pressed={activeMode === mode}
 								>
-									{mode}
+									{t(`ai.modes.${mode}`)}
 								</button>
 							),
 						)}
@@ -230,8 +232,8 @@ export function AIAssistantPanel({
               {messages.length === 0 ? (
                 <ConversationEmptyState
                   icon={<Bot className="h-8 w-8" />}
-                  title="AgriSat AI Assistant"
-                  description="Ask about crop health, weather forecasts, or explore monitoring zones."
+                  title={t("ai.emptyTitle")}
+                  description={t("ai.emptyDescription")}
                 />
               ) : (
                 messages.map((message) => (
@@ -257,7 +259,7 @@ export function AIAssistantPanel({
 											<span className="inline-flex items-center gap-1.5">
 												<span className="inline-block h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
 												<span className="animate-pulse">
-													{activity ?? "Connecting..."}
+													{activity ?? t("ai.connecting")}
 												</span>
 											</span>
 										</div>
@@ -299,7 +301,7 @@ export function AIAssistantPanel({
 								onClick={stop}
 								className="text-xs text-muted-foreground"
 							>
-								Stop generating
+								{t("ai.stop")}
 							</Button>
 						</div>
 					)}
@@ -313,7 +315,7 @@ export function AIAssistantPanel({
 							ref={inputRef}
 							value={inputValue}
 							onChange={(e) => setInputValue(e.target.value)}
-							placeholder="Ask about your field..."
+							placeholder={t("ai.placeholder")}
 							disabled={isLoading}
 							className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50"
 							aria-label="Chat message input"
@@ -323,7 +325,7 @@ export function AIAssistantPanel({
 							size="sm"
 							disabled={!inputValue.trim() || isLoading}
 						>
-							Send
+							{t("ai.send")}
 						</Button>
 					</form>
 				</div>

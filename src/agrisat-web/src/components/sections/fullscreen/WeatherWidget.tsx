@@ -9,6 +9,7 @@ import {
 	Wind,
 } from "lucide-react";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 import {
 	Area,
 	AreaChart,
@@ -104,6 +105,7 @@ const WeatherSummaryCards = memo(function WeatherSummaryCards({
 	precipitation: number;
 	envData: { ndvi: number; ndmi: number } | null;
 }) {
+	const { t } = useTranslation();
 	const tempC = toTempC(weather.temperature);
 
 	return (
@@ -111,14 +113,14 @@ const WeatherSummaryCards = memo(function WeatherSummaryCards({
 			<StatTile
 				icon={Thermometer}
 				value={`${tempC.toFixed(1)}°C`}
-				label="Temp"
+				label={t("weather.temp")}
 				colorClass="text-orange-500"
 				bgClass="bg-orange-50/80 dark:bg-orange-900/20"
 			/>
 			<StatTile
 				icon={Droplets}
 				value={`${precipitation.toFixed(2)}mm`}
-				label="Rain"
+				label={t("weather.rain")}
 				colorClass="text-blue-500"
 				bgClass="bg-blue-50/80 dark:bg-blue-900/20"
 			/>
@@ -131,7 +133,7 @@ const WeatherSummaryCards = memo(function WeatherSummaryCards({
 							: Sun
 				}
 				value={`${Number(weather.cloud_cover_pct).toFixed(1)}%`}
-				label="Cloud"
+				label={t("weather.cloud")}
 				colorClass={
 					weather.is_raining
 						? "text-blue-400"
@@ -185,6 +187,7 @@ function ChartRow({
 }
 
 export const WeatherWidget = memo(function WeatherWidget() {
+	const { t } = useTranslation();
 	const zoneId = useQueryContext((s) => s.zoneId);
 	const levelId = useQueryContext((s) => s.levelId);
 	const timeRange = useQueryContext((s) => s.timeRange);
@@ -365,7 +368,7 @@ export const WeatherWidget = memo(function WeatherWidget() {
 					</Button>
 				</TooltipTrigger>
 				<TooltipContent side="bottom">
-					{expanded ? "Collapse weather panel" : "Expand weather charts"}
+					{expanded ? t("weather.collapse") : t("weather.expand")}
 				</TooltipContent>
 			</Tooltip>
 
@@ -422,7 +425,7 @@ export const WeatherWidget = memo(function WeatherWidget() {
 					/>
 
 					{/* Temperature */}
-					<ChartRow label="Temperature" height={55}>
+					<ChartRow label={t("weather.temperature")} height={55}>
 						<AreaChart
 							data={chartData}
 							margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
@@ -455,7 +458,7 @@ export const WeatherWidget = memo(function WeatherWidget() {
 					</ChartRow>
 
 					{/* Precipitation */}
-					<ChartRow label="Precipitation" height={40} className="mt-2">
+					<ChartRow label={t("weather.precipitation")} height={40} className="mt-2">
 						<BarChart
 							data={chartData}
 							margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
@@ -472,7 +475,7 @@ export const WeatherWidget = memo(function WeatherWidget() {
 					</ChartRow>
 
 					{/* Cloud Cover */}
-					<ChartRow label="Cloud Cover" height={35} className="mt-2">
+					<ChartRow label={t("weather.cloudCover")} height={35} className="mt-2">
 						<LineChart
 							data={chartData}
 							margin={{ top: 4, right: 0, bottom: 0, left: 0 }}

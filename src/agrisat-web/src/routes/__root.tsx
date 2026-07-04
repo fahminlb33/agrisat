@@ -13,6 +13,9 @@ import { TooltipProvider } from "../components/ui/tooltip";
 
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
 
+// Initialize i18next before any component renders
+import "../i18n";
+
 import appCss from "../styles.css?url";
 
 import type { QueryClient } from "@tanstack/react-query";
@@ -51,6 +54,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 		],
 		links: [
 			{
+				rel: "icon",
+				type: "image/png",
+				href: "/logo-kodesiana.png",
+			},
+			{
 				rel: "stylesheet",
 				href: appCss,
 			},
@@ -87,6 +95,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<head>
+				<script src="/__env.js" />
 				<script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 				<HeadContent />
 			</head>

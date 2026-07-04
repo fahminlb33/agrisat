@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import StaleDataIndicator from "./StaleDataIndicator";
 
 // -----------------------------------------------------------
@@ -38,7 +39,7 @@ interface VariantConfig {
 	iconColorClass: string;
 }
 
-function getVariantConfig(variant: ErrorVariant): VariantConfig {
+function getVariantConfig(variant: ErrorVariant, t: (key: string) => string): VariantConfig {
 	switch (variant) {
 		case "no-satellite-image":
 			return {
@@ -62,9 +63,8 @@ function getVariantConfig(variant: ErrorVariant): VariantConfig {
 						<line x1="3" y1="15" x2="21" y2="15" />
 					</svg>
 				),
-				title: "No satellite image available",
-				message:
-					"No satellite imagery is available for the selected date and variable. This may be due to cloud cover or data processing delays.",
+				title: t("errors.noSatelliteImage"),
+				message: t("errors.noSatelliteImageDesc"),
 				iconBgClass: "bg-blue-50",
 				iconColorClass: "text-blue-500",
 			};
@@ -89,9 +89,8 @@ function getVariantConfig(variant: ErrorVariant): VariantConfig {
 						<path d="M12 16h.01" />
 					</svg>
 				),
-				title: "No data available",
-				message:
-					"No data is available for the selected zone and time range. Try expanding the time range or selecting a different zone.",
+				title: t("errors.noData"),
+				message: t("errors.noDataDesc"),
 				iconBgClass: "bg-[var(--chip-bg)]",
 				iconColorClass: "text-[var(--sea-ink-soft)]",
 			};
@@ -120,9 +119,8 @@ function getVariantConfig(variant: ErrorVariant): VariantConfig {
 						<line x1="12" y1="20" x2="12.01" y2="20" />
 					</svg>
 				),
-				title: "Unable to connect",
-				message:
-					"The service is currently unreachable. Please check your connection and try again.",
+				title: t("errors.networkError"),
+				message: t("errors.networkErrorDesc"),
 				iconBgClass: "bg-red-50",
 				iconColorClass: "text-red-500",
 			};
@@ -148,8 +146,8 @@ function getVariantConfig(variant: ErrorVariant): VariantConfig {
 						<line x1="12" y1="16" x2="12.01" y2="16" />
 					</svg>
 				),
-				title: "Something went wrong",
-				message: "An unexpected error occurred. Please try again.",
+				title: t("errors.somethingWrong"),
+				message: t("errors.unexpectedError"),
 				iconBgClass: "bg-red-50",
 				iconColorClass: "text-red-500",
 			};
@@ -179,7 +177,8 @@ export default function ErrorState({
 	message: messageOverride,
 	children,
 }: ErrorStateProps) {
-	const config = getVariantConfig(variant);
+	const { t } = useTranslation();
+	const config = getVariantConfig(variant, t);
 	const displayTitle = titleOverride ?? config.title;
 	const displayMessage = messageOverride ?? config.message;
 
@@ -211,7 +210,7 @@ export default function ErrorState({
 						onClick={onRetry}
 						className="rounded-lg border border-[var(--chip-line)] bg-[var(--chip-bg)] px-4 py-2 text-sm font-medium text-[var(--sea-ink)] transition hover:bg-[var(--link-bg-hover)]"
 					>
-						Retry
+						{t("common.retry")}
 					</button>
 				)}
 			</div>

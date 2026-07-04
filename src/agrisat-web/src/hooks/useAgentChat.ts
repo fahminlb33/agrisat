@@ -1,5 +1,5 @@
 import { useReducer, useCallback, useRef } from "react";
-import { createSession, runAgentSSE, TokenBudgetError, type ADKSession } from "#/services/agent";
+import { createSession, runAgentSSE, type ADKSession } from "#/services/agent";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -23,8 +23,8 @@ export type ChatStatus =
   | "error";
 
 export interface UseAgentChatOptions {
-	/** Unique user identifier. Defaults to "web-user". */
-	userId?: string;
+  /** Unique user identifier. Defaults to "web-user". */
+  userId?: string;
 }
 
 export interface UseAgentChatReturn {
@@ -157,26 +157,26 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
 let messageCounter = 0;
 function generateId(): string {
-	return `msg-${Date.now()}-${++messageCounter}`;
+  return `msg-${Date.now()}-${++messageCounter}`;
 }
 
 /**
  * Maps ADK tool/function names to user-friendly activity labels.
  */
 const TOOL_LABELS: Record<string, string> = {
-	get_current_date: "Checking date...",
-	list_levels: "Loading zone hierarchy...",
-	list_zones: "Fetching zones...",
-	list_variables: "Loading variables...",
-	list_environment_time_indices: "Checking available dates...",
-	get_environment_stats: "Analyzing satellite data...",
-	list_weather_time_indices: "Checking weather data...",
-	get_weather_stats: "Fetching weather stats...",
-	get_environment_raster: "Generating raster map...",
+  get_current_date: "Checking date...",
+  list_levels: "Loading zone hierarchy...",
+  list_zones: "Fetching zones...",
+  list_variables: "Loading variables...",
+  list_environment_time_indices: "Checking available dates...",
+  get_environment_stats: "Analyzing satellite data...",
+  list_weather_time_indices: "Checking weather data...",
+  get_weather_stats: "Fetching weather stats...",
+  get_environment_raster: "Generating raster map...",
 };
 
 function getToolLabel(toolName: string): string {
-	return TOOL_LABELS[toolName] ?? "Processing...";
+  return TOOL_LABELS[toolName] ?? "Processing...";
 }
 
 // ---------------------------------------------------------------------------
@@ -196,14 +196,14 @@ function getToolLabel(toolName: string): string {
  * don't re-render unnecessarily. (REQ-3, REQ-4)
  */
 export function useAgentChat(
-	options: UseAgentChatOptions = {},
+  options: UseAgentChatOptions = {},
 ): UseAgentChatReturn {
-	const { userId = "web-user" } = options;
+  const { userId = "web-user" } = options;
 
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
 
-	const sessionRef = useRef<ADKSession | null>(null);
-	const abortRef = useRef<AbortController | null>(null);
+  const sessionRef = useRef<ADKSession | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // RAF-based flush for streaming text accumulation (REQ-3.1)
   // pendingTextRef holds the full accumulated text since the last flush.
@@ -271,9 +271,9 @@ export function useAgentChat(
         // Ensure session exists (may set status → "creating-session" then return)
         const session = await ensureSession();
 
-				// Create abort controller for cancellation
-				const abort = new AbortController();
-				abortRef.current = abort;
+        // Create abort controller for cancellation
+        const abort = new AbortController();
+        abortRef.current = abort;
 
         // Append placeholder assistant message and transition to "thinking"
         const assistantId = generateId();
@@ -347,12 +347,9 @@ export function useAgentChat(
           return;
         }
 
-        const errorMessage =
-          err instanceof TokenBudgetError
-            ? err.message
-            : err instanceof Error
-              ? err.message
-              : "Unknown error";
+        const errorMessage = err instanceof Error
+          ? err.message
+          : "Unknown error";
         dispatch({ type: "ERROR", error: errorMessage });
       } finally {
         // Cancel any pending RAF and reset accumulator on cleanup (e.g. abort,

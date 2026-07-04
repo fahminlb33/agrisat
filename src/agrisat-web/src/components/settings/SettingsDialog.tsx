@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Settings,
   Cpu,
@@ -102,6 +103,7 @@ function TokenUsageMeter({ userId = "web-user" }: { userId?: string }) {
 // ---------------------------------------------------------------------------
 
 function LlmTab() {
+  const { t } = useTranslation();
   const { llm, setLlm } = useSettingsStore();
   const [testStatus, setTestStatus] = useState<TestStatus>("idle");
   const [testError, setTestError] = useState<string | null>(null);
@@ -131,15 +133,14 @@ function LlmTab() {
     <div className="space-y-5">
       {/* ── Info banner ──────────────────────────────────────────── */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs text-blue-800 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-400">
-        Settings are sent with every request — changes apply instantly, no
-        restart needed. Each user's config is fully independent.
+        {t("settings.infoBanner")}
       </div>
 
       {/* ── Agent Host ───────────────────────────────────────────── */}
       <div className="space-y-1.5">
-        <Label htmlFor="agent-host">Agent Host URL</Label>
+        <Label htmlFor="agent-host">{t("settings.agentHost")}</Label>
         <p className="text-xs text-muted-foreground">
-          Address of the running ADK agent server.
+          {t("settings.agentHostDesc")}
         </p>
         <div className="flex gap-2">
           <Input
@@ -164,12 +165,12 @@ function LlmTab() {
             ) : testStatus === "error" ? (
               <XCircle className="h-3.5 w-3.5 text-destructive" />
             ) : null}
-            Test
+            {t("settings.test")}
           </Button>
         </div>
         {testStatus === "ok" && (
           <p className="text-xs text-green-600 dark:text-green-400">
-            Agent reachable
+            {t("settings.agentReachable")}
           </p>
         )}
         {testStatus === "error" && testError && (
@@ -179,7 +180,7 @@ function LlmTab() {
 
       {/* ── Provider ─────────────────────────────────────────────── */}
       <div className="space-y-1.5">
-        <Label htmlFor="llm-provider">LLM Provider</Label>
+        <Label htmlFor="llm-provider">{t("settings.llmProvider")}</Label>
         <Select
           value={provider}
           onValueChange={(v) => setLlm({ provider: v as LlmProvider })}
@@ -188,9 +189,9 @@ function LlmTab() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="gemini">Gemini (cloud)</SelectItem>
-            <SelectItem value="ollama">Ollama (local)</SelectItem>
-            <SelectItem value="lmstudio">LM Studio (local)</SelectItem>
+            <SelectItem value="gemini">{t("settings.geminiCloud")}</SelectItem>
+            <SelectItem value="ollama">{t("settings.ollamaLocal")}</SelectItem>
+            <SelectItem value="lmstudio">{t("settings.lmStudioLocal")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -375,6 +376,7 @@ export interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ trigger }: SettingsDialogProps) {
+  const { t } = useTranslation();
   const { reset } = useSettingsStore();
   const [open, setOpen] = useState(false);
 
@@ -382,14 +384,14 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
     <Button
       variant="ghost"
       size="sm"
-      aria-label="Open settings"
+      aria-label={t("settings.openSettings")}
       className={cn(
         "gap-1.5 text-xs text-sidebar-foreground",
         "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
       )}
     >
       <Settings className="h-4 w-4" />
-      <span className="hidden sm:inline">Settings</span>
+      <span className="hidden sm:inline">{t("settings.title")}</span>
     </Button>
   );
 
@@ -404,7 +406,7 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Settings
+            {t("settings.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -412,7 +414,7 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
           <TabsList className="w-full">
             <TabsTrigger value="llm" className="flex-1 gap-1.5">
               <Cpu className="h-3.5 w-3.5" />
-              LLM Connection
+              {t("settings.llmConnection")}
             </TabsTrigger>
           </TabsList>
 
@@ -429,10 +431,10 @@ export function SettingsDialog({ trigger }: SettingsDialogProps) {
             onClick={reset}
             className="text-xs text-muted-foreground"
           >
-            Reset to defaults
+            {t("settings.resetDefaults")}
           </Button>
           <Button type="button" size="sm" onClick={() => setOpen(false)}>
-            Done
+            {t("settings.done")}
           </Button>
         </div>
       </DialogContent>

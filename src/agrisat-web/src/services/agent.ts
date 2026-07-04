@@ -9,7 +9,9 @@
  * The agent app name is "agrisat_agent" (matches the `name` field in agent.py).
  */
 
-const AGENT_HOST = import.meta.env.VITE_AGENT_HOST ?? "http://127.0.0.1:8080";
+import { env } from "#/lib/env";
+
+const AGENT_HOST = env.VITE_AGENT_HOST;
 const APP_NAME = "agrisat_agent";
 
 // ---------------------------------------------------------------------------
@@ -78,6 +80,38 @@ export interface ADKEvent {
 	/** Actions from the agent */
 	actions?: Record<string, unknown>;
 }
+
+// ---------------------------------------------------------------------------
+// Token Usage
+// ---------------------------------------------------------------------------
+
+export interface TokenUsageResponse {
+	used: number;
+	budget: number;
+}
+
+/**
+ * Fetches the current token usage for a user from the agent host.
+ */
+export async function fetchTokenUsage(
+	userId: string,
+): Promise<TokenUsageResponse> {
+	const res = await fetch(
+		`${AGENT_HOST}/apps/${APP_NAME}/users/${userId}/token_usage`,
+	);
+
+	if (!res.ok) {
+		throw new Error(
+			`Failed to fetch token usage: ${res.status} ${res.statusText}`,
+		);
+	}
+
+	return res.json() as Promise<TokenUsageResponse>;
+}
+
+// ---------------------------------------------------------------------------
+// Streaming Chat
+// ---------------------------------------------------------------------------
 
 /**
  * Sends a message to the ADK agent and returns an async iterator of SSE events.

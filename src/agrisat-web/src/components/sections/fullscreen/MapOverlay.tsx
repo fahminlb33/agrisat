@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import MapLibreGL from "maplibre-gl";
 import type { FeatureCollection, Geometry } from "geojson";
 import dayjs from "dayjs";
@@ -192,6 +193,7 @@ function MapToolbar({
 	mode,
 	onModeChange,
 }: MapToolbarProps) {
+	const { t } = useTranslation();
 	const handleZoomIn = () => {
 		const map = mapRef.current;
 		if (!map) return;
@@ -229,26 +231,26 @@ function MapToolbar({
 
 	return (
 		<div className="absolute bottom-[4.5rem] md:bottom-[2.5rem] right-4 z-20 flex flex-col overflow-hidden rounded-xl border border-zinc-200/80 bg-white/95 shadow-lg backdrop-blur-md dark:border-zinc-700/60 dark:bg-zinc-900/95">
-			<ToolbarBtn onClick={handleZoomIn} title="Zoom in">
+			<ToolbarBtn onClick={handleZoomIn} title={t("map.zoomIn")}>
 				<Plus className="h-4 w-4" />
 			</ToolbarBtn>
-			<ToolbarBtn onClick={handleZoomOut} title="Zoom out">
+			<ToolbarBtn onClick={handleZoomOut} title={t("map.zoomOut")}>
 				<Minus className="h-4 w-4" />
 			</ToolbarBtn>
 
 			<ToolbarDivider />
 
-			<ToolbarBtn onClick={handleResetNorth} title="Reset north">
+			<ToolbarBtn onClick={handleResetNorth} title={t("map.resetNorth")}>
 				<Compass className="h-4 w-4" />
 			</ToolbarBtn>
 
 			<ToolbarDivider />
 
-			<ToolbarBtn onClick={handleHome} title="Home — Bogor overview">
+			<ToolbarBtn onClick={handleHome} title={t("map.home")}>
 				<Home className="h-4 w-4" />
 			</ToolbarBtn>
 
-			<ToolbarBtn onClick={handlePanToZone} title="Pan to selected zone">
+			<ToolbarBtn onClick={handlePanToZone} title={t("map.panToZone")}>
 				<Crosshair className="h-4 w-4" />
 			</ToolbarBtn>
 
@@ -258,8 +260,8 @@ function MapToolbar({
 				active={mode === "box-zoom"}
 				title={
 					mode === "box-zoom"
-						? "Exit box zoom (Esc)"
-						: "Box zoom — drag a rectangle to zoom"
+						? t("map.exitBoxZoom")
+						: t("map.boxZoom")
 				}
 			>
 				<RectangleHorizontal className="h-4 w-4" />
@@ -585,8 +587,7 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 		const currentUrl = rasterImageUrlRef.current ?? null;
 		const bounds = rasterBoundsRef.current;
 
-		if (currentUrl === displayedRasterUrlRef.current) return;
-
+		// Always remove old raster layer first to avoid stale state
 		if (rasterLayerAddedRef.current) {
 			if (map.getLayer("raster-overlay")) map.removeLayer("raster-overlay");
 			if (map.getSource("raster-overlay")) map.removeSource("raster-overlay");
@@ -709,7 +710,7 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 	useEffect(() => {
 		displayedRasterUrlRef.current = null;
 		applyRasterLayer();
-	}, [rasterImageUrl, applyRasterLayer]);
+	}, [rasterImageUrl, dateStr, activeVariableId, applyRasterLayer]);
 
 	useEffect(() => {
 		applyRasterLayer();

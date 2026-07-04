@@ -83,11 +83,8 @@ export class ErrorBoundary extends Component<
 
 					<div className="text-center">
 						<h3 className="text-sm font-semibold text-[var(--sea-ink)]">
-							Something went wrong
-						</h3>
-						<p className="mt-1 text-xs text-[var(--sea-ink-soft)]">
 							{this.state.error?.message ?? "An unexpected error occurred."}
-						</p>
+						</h3>
 					</div>
 
 					<button

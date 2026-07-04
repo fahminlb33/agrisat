@@ -13,7 +13,10 @@ import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
 	id: string;
-	label: string;
+	/** Static label (used as fallback if labelKey is not provided) */
+	label?: string;
+	/** i18n key for the label — resolved via useTranslation */
+	labelKey?: string;
 	icon: LucideIcon;
 	path: string;
 	badge?: number;

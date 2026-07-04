@@ -1,6 +1,7 @@
 import { memo, useEffect, useMemo, useRef } from "react";
 import { Cloud, Layers } from "lucide-react";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 import type {
 	Zone as ApiZone,
@@ -37,6 +38,7 @@ export const BottomBar = memo(function BottomBar({
 	zones,
 	variables,
 }: BottomBarProps) {
+	const { t } = useTranslation();
 	// Query context subscriptions (granular)
 	const zoneId = useQueryContext((s) => s.zoneId);
 	const levelId = useQueryContext((s) => s.levelId);
@@ -156,13 +158,13 @@ export const BottomBar = memo(function BottomBar({
 								<>
 									<Layers className="h-3.5 w-3.5 text-muted-foreground" />
 									<span className="hidden sm:inline text-xs text-muted-foreground">
-										Select zone
+										{t("controls.selectZone")}
 									</span>
 								</>
 							)}
 						</Button>
 					</TooltipTrigger>
-					<TooltipContent side="top">Search zones</TooltipContent>
+					<TooltipContent side="top">{t("controls.searchZones")}</TooltipContent>
 				</Tooltip>
 
 				<Separator orientation="vertical" className="mx-0.5 h-4" />
@@ -181,7 +183,7 @@ export const BottomBar = memo(function BottomBar({
 					/>
 				) : (
 					<span className="flex-1 text-center text-xs text-muted-foreground">
-						No layer data
+						{t("controls.noLayerData")}
 					</span>
 				)}
 
@@ -200,7 +202,7 @@ export const BottomBar = memo(function BottomBar({
 								</span>
 							</div>
 						</TooltipTrigger>
-						<TooltipContent side="top">Cloud cover</TooltipContent>
+						<TooltipContent side="top">{t("controls.cloudCover")}</TooltipContent>
 					</Tooltip>
 				)}
 
@@ -211,7 +213,7 @@ export const BottomBar = memo(function BottomBar({
 								{(currentZone.area / 1_000_000).toFixed(1)} km²
 							</span>
 						</TooltipTrigger>
-						<TooltipContent side="top">Zone area</TooltipContent>
+						<TooltipContent side="top">{t("controls.zoneArea")}</TooltipContent>
 					</Tooltip>
 				)}
 			</div>

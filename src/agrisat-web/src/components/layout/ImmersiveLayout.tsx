@@ -4,6 +4,7 @@ import { AIAssistantPanel } from "#/components/ai/AIAssistantPanel";
 import ThemeToggle from "#/components/ThemeToggle";
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
+import { env } from "#/lib/env";
 import { useControls } from "#/components/sections/fullscreen";
 import {
 	MapOverlay,
@@ -32,6 +33,8 @@ export function ImmersiveLayout({
 	const closeAiPanel = useControls((s) => s.closeAiPanel);
 
 	const [aiExpanded, setAiExpanded] = useState(false);
+
+	const aiEnabled = env.VITE_AI_ENABLED !== "false";
 
 	return (
 		<div className="fixed inset-0 z-50 h-screen w-full overflow-hidden bg-background text-foreground">
@@ -67,20 +70,22 @@ export function ImmersiveLayout({
 			<BottomBar levels={levels} zones={zones} variables={variables} />
 
 			{/* AI Assistant button — bottom left, sits above the bottom bar */}
-			<div className="absolute bottom-[4.5rem] md:bottom-5 left-4 z-20 animate-in fade-in slide-in-from-left-4 duration-300">
-				<Button
-					variant="ghost"
-					onClick={openAiPanel}
-					aria-label="Open AI Assistant"
-					className="rounded-xl bg-background/95 px-3 py-2.5 h-auto shadow-lg backdrop-blur-md ring-1 ring-border/50 transition-all duration-200 hover:shadow-xl hover:bg-background/95 gap-2"
-				>
-					<Bot className="h-4 w-4 text-emerald-500" />
-					<span className="text-xs font-medium text-foreground">AI</span>
-				</Button>
-			</div>
+			{aiEnabled && (
+				<div className="absolute bottom-[4.5rem] md:bottom-5 left-4 z-20 animate-in fade-in slide-in-from-left-4 duration-300">
+					<Button
+						variant="ghost"
+						onClick={openAiPanel}
+						aria-label="Open AI Assistant"
+						className="rounded-xl bg-background/95 px-3 py-2.5 h-auto shadow-lg backdrop-blur-md ring-1 ring-border/50 transition-all duration-200 hover:shadow-xl hover:bg-background/95 gap-2"
+					>
+						<Bot className="h-4 w-4 text-emerald-500" />
+						<span className="text-xs font-medium text-foreground">AI</span>
+					</Button>
+				</div>
+			)}
 
 			{/* AI Assistant Panel overlay */}
-			{aiPanelOpen && (
+			{aiEnabled && aiPanelOpen && (
 				<div
 					className={cn(
 						"absolute z-30 overflow-hidden rounded-xl bg-background/95 shadow-lg backdrop-blur-md ring-1 ring-border/50 animate-in slide-in-from-bottom-8 duration-300 transition-[width,height]",

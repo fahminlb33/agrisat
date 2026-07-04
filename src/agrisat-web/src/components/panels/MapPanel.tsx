@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
+import { useTranslation } from "react-i18next";
 import MapLibreGL from "maplibre-gl";
 import type { FeatureCollection, Feature, Geometry } from "geojson";
 import dayjs from "dayjs";
@@ -231,6 +232,7 @@ function createMaskGeojson(
 // -----------------------------------------------------------
 
 export default memo(function MapPanel({ store, zoneAverages, environmentalData }: MapPanelProps) {
+	const { t } = useTranslation();
 	const levelId = useStore(store, (s) => s.levelId);
 	const zoneId = useStore(store, (s) => s.zoneId);
 	const activeVariableId = useStore(store, (s) => s.activeVariableId);
@@ -918,7 +920,7 @@ export default memo(function MapPanel({ store, zoneAverages, environmentalData }
 					>
 						<CardContent className="pt-3">
 							<p className="text-sm text-muted-foreground">
-								Select a level to view zones on the map
+								{t("map.selectLevel")}
 							</p>
 						</CardContent>
 					</Card>
@@ -949,7 +951,7 @@ export default memo(function MapPanel({ store, zoneAverages, environmentalData }
 								role="status"
 								aria-live="polite"
 							>
-								No satellite image available for the selected date
+								{t("map.noSatelliteImage")}
 							</p>
 						</CardContent>
 					</Card>
