@@ -16,7 +16,7 @@ export const navigationConfig: NavConfig = {
 			items: [
 				{
 					id: "overview",
-					label: "Overview",
+					labelKey: "nav.overview",
 					icon: LayoutDashboard,
 					path: "/",
 				},

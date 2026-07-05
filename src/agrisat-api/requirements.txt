@@ -1,10 +1,9 @@
-# AI
-google-adk>=1.33.0
-
 # API
 pydantic-settings>=2.14.0
 fastapi[standard-no-fastapi-cloud-cli]>=0.136.1
 
 # Utilities
 pillow>=12.2.0
+# aiosqlite is required for the planned async DB migration (see H1 in roadmap).
+# Currently unused — all DB code still uses synchronous sqlite3.
 aiosqlite>=0.22.1

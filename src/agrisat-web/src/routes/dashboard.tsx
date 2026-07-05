@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
+import { useTranslation } from "react-i18next";
 
 import ControlsPanel from "#/components/panels/ControlsPanel";
 import MapPanel from "#/components/panels/MapPanel";
@@ -77,6 +78,7 @@ function useStoreState(store: ReturnType<typeof createQueryContextStore>) {
 }
 
 function Dashboard() {
+	const { t } = useTranslation();
 	const { data: rawLevels, isLoading: levelsLoading } = useLevels();
 	const { data: rawZones, isLoading: zonesLoading } = useZones();
 	const { data: rawVariables, isLoading: variablesLoading } = useVariables();
@@ -133,7 +135,7 @@ function Dashboard() {
 			<main className="flex h-[calc(100vh-64px)] items-center justify-center">
 				<div className="text-center">
 					<div className="mb-3 h-8 w-8 animate-spin rounded-full border-2 border-[var(--lagoon)] border-t-transparent mx-auto" />
-					<p className="text-sm text-[var(--sea-ink-soft)]">Loading AgriSat…</p>
+					<p className="text-sm text-[var(--sea-ink-soft)]">{t("app.loading")}</p>
 				</div>
 			</main>
 		);
@@ -149,7 +151,7 @@ function Dashboard() {
 	);
 }
 
-function DashboardContent({
+const DashboardContent = memo(function DashboardContent({
 	store,
 	levels,
 	zones,
@@ -381,4 +383,4 @@ function DashboardContent({
 			</div>
 		</main>
 	);
-}
+});

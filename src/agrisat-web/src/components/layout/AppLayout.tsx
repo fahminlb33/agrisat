@@ -3,9 +3,11 @@ import { Bot } from "lucide-react";
 import { Sidebar } from "#/components/sidebar/Sidebar";
 import { AIAssistantPanel } from "#/components/ai/AIAssistantPanel";
 import ThemeToggle from "#/components/ThemeToggle";
+import { SettingsDialog } from "#/components/settings/SettingsDialog";
 import { useSidebarState } from "#/hooks/use-sidebar-state";
 import { useResponsiveLayout } from "#/hooks/use-responsive-layout";
 import { cn } from "#/lib/utils";
+import { env } from "#/lib/env";
 import { Button } from "#/components/ui/button";
 
 export interface AppLayoutProps {
@@ -15,6 +17,8 @@ export interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
 	const [sidebarCollapsed, toggleSidebarCollapse] = useSidebarState();
 	const [aiPanelOpen, setAiPanelOpen] = useState(false);
+
+	const aiEnabled = env.VITE_AI_ENABLED !== "false";
 
 	const { forceSidebarCollapsed, aiPanelAsOverlay } =
 		useResponsiveLayout(aiPanelOpen);
@@ -30,24 +34,25 @@ export function AppLayout({ children }: AppLayoutProps) {
 				onToggleCollapse={toggleSidebarCollapse}
 			/>
 
-			{/* Center + Right wrapper */}
-			<div className="flex flex-1 flex-col overflow-hidden">
-				{/* Top bar with theme toggle and AI toggle */}
-				<div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
-					<ThemeToggle />
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={() => setAiPanelOpen((prev) => !prev)}
-						aria-label={
-							aiPanelOpen ? "Close AI assistant" : "Open AI assistant"
-						}
-						className="gap-1.5 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-					>
-						<Bot className="h-4 w-4" />
-						<span className="hidden sm:inline">AI Assistant</span>
-					</Button>
-				</div>
+      {/* Center + Right wrapper */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Top bar with theme toggle and AI toggle */}
+        <div className="flex h-12 shrink-0 items-center justify-end border-b border-sidebar-border bg-sidebar px-3 gap-2">
+          <ThemeToggle />
+          <SettingsDialog />
+          {aiEnabled && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setAiPanelOpen((prev) => !prev)}
+              aria-label={aiPanelOpen ? "Close AI assistant" : "Open AI assistant"}
+              className="gap-1.5 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <Bot className="h-4 w-4" />
+              <span className="hidden sm:inline">AI Assistant</span>
+            </Button>
+          )}
+        </div>
 
 				{/* Content + AI Panel row */}
 				<div className="flex flex-1 overflow-hidden">
@@ -62,7 +67,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 					</main>
 
 					{/* Right: AI Assistant Panel — inline mode (viewport >= 768px) */}
-					{!aiPanelAsOverlay && (
+					{aiEnabled && !aiPanelAsOverlay && (
 						<AIAssistantPanel
 							open={aiPanelOpen}
 							onClose={() => setAiPanelOpen(false)}
@@ -70,7 +75,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 					)}
 
 					{/* Right: AI Assistant Panel — full-screen overlay mode (viewport < 768px) */}
-					{aiPanelAsOverlay && aiPanelOpen && (
+					{aiEnabled && aiPanelAsOverlay && aiPanelOpen && (
 						<div
 							className="fixed inset-0 z-50 flex flex-col bg-card"
 							role="dialog"

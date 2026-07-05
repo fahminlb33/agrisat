@@ -6,8 +6,9 @@ import type {
 	ZoneInsight,
 } from "#/types/api";
 import { Info } from "lucide-react";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useStore } from "zustand";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "#/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
@@ -227,14 +228,15 @@ const VARIABLE_LABELS: Record<string, string> = {
 };
 
 function TrendIndicator({ trend }: { trend: TrendDirection }) {
+	const { t } = useTranslation();
 	if (trend === "increasing") {
 		return (
 			<Badge
 				variant="outline"
 				className="border-green-200 bg-green-50 text-green-700"
-				aria-label="Trend: increasing"
+				aria-label={`${t("analysis.trend.increasing")}`}
 			>
-				↑ Increasing
+				↑ {t("analysis.trend.increasing")}
 			</Badge>
 		);
 	}
@@ -243,9 +245,9 @@ function TrendIndicator({ trend }: { trend: TrendDirection }) {
 			<Badge
 				variant="outline"
 				className="border-red-200 bg-red-50 text-red-700"
-				aria-label="Trend: decreasing"
+				aria-label={`${t("analysis.trend.decreasing")}`}
 			>
-				↓ Decreasing
+				↓ {t("analysis.trend.decreasing")}
 			</Badge>
 		);
 	}
@@ -253,9 +255,9 @@ function TrendIndicator({ trend }: { trend: TrendDirection }) {
 		<Badge
 			variant="outline"
 			className="text-muted-foreground"
-			aria-label="Trend: stable"
+			aria-label={`${t("analysis.trend.stable")}`}
 		>
-			→ Stable
+			→ {t("analysis.trend.stable")}
 		</Badge>
 	);
 }
@@ -269,6 +271,7 @@ function MetricCard({
 	dataPointCount: number;
 	description?: string;
 }) {
+	const { t } = useTranslation();
 	return (
 		<Card size="sm">
 			<CardHeader className="pb-1">
@@ -283,9 +286,9 @@ function MetricCard({
 						) : (
 							<span
 								className="text-xs text-muted-foreground"
-								aria-label="Trend unavailable"
+								aria-label={t("analysis.trend.unavailable")}
 							>
-								— No trend
+								{t("analysis.trend.unavailable")}
 							</span>
 						)}
 						{description && (
@@ -321,25 +324,25 @@ function MetricCard({
 			<CardContent>
 				<div className="grid grid-cols-4 gap-2 text-xs">
 					<div>
-						<span className="block text-muted-foreground">Current</span>
+						<span className="block text-muted-foreground">{t("analysis.current")}</span>
 						<span className="font-medium text-foreground">
 							{metric.current.toFixed(4)}
 						</span>
 					</div>
 					<div>
-						<span className="block text-muted-foreground">Average</span>
+						<span className="block text-muted-foreground">{t("analysis.average")}</span>
 						<span className="font-medium text-foreground">
 							{metric.average.toFixed(4)}
 						</span>
 					</div>
 					<div>
-						<span className="block text-muted-foreground">Min</span>
+						<span className="block text-muted-foreground">{t("analysis.min")}</span>
 						<span className="font-medium text-foreground">
 							{metric.min.toFixed(4)}
 						</span>
 					</div>
 					<div>
-						<span className="block text-muted-foreground">Max</span>
+						<span className="block text-muted-foreground">{t("analysis.max")}</span>
 						<span className="font-medium text-foreground">
 							{metric.max.toFixed(4)}
 						</span>
@@ -352,7 +355,7 @@ function MetricCard({
 							{metric.trendMagnitude.toFixed(5)}/obs
 						</span>
 						<span>·</span>
-						<span>{dataPointCount} data points</span>
+						<span>{t("analysis.dataPoints", { count: dataPointCount })}</span>
 					</div>
 				)}
 			</CardContent>
@@ -369,6 +372,7 @@ function WeatherCard({
 	weatherData: WeatherTimePoint[];
 	zoneName?: string;
 }) {
+	const { t } = useTranslation();
 	if (
 		summary.currentTemperature === null &&
 		summary.avgTemperature === null &&
@@ -385,7 +389,7 @@ function WeatherCard({
 		<Card size="sm">
 			<CardHeader className="pb-1">
 				<CardTitle className="flex items-center justify-between text-sm">
-					<span>Weather</span>
+					<span>{t("analysis.weather")}</span>
 					{zoneName && (
 						<span className="text-[10px] font-normal text-muted-foreground">
 							📍 {zoneName}
@@ -399,8 +403,7 @@ function WeatherCard({
 					<div className="mb-3 -mx-1 overflow-x-auto">
 						<div className="flex gap-0 min-w-max">
 							{timelinePoints.map((point, idx) => {
-								const tempRaw = point.temperature;
-								const tempC = tempRaw > 100 ? tempRaw - 273.15 : tempRaw;
+								const tempC = point.temperature;
 								const hour = new Date(point.timestamp).getHours();
 
 								let icon = "☀️";
@@ -435,31 +438,23 @@ function WeatherCard({
 				<div className="grid grid-cols-2 gap-2 text-xs">
 					{summary.currentTemperature !== null && (
 						<div>
-							<span className="block text-muted-foreground">Temperature</span>
+							<span className="block text-muted-foreground">{t("weather.temperature")}</span>
 							<span className="font-medium text-foreground">
-								{(summary.currentTemperature > 100
-									? summary.currentTemperature - 273.15
-									: summary.currentTemperature
-								).toFixed(1)}{" "}
-								°C
+								{summary.currentTemperature.toFixed(1)} °C
 							</span>
 						</div>
 					)}
 					{summary.avgTemperature !== null && (
 						<div>
-							<span className="block text-muted-foreground">Avg Temp</span>
+							<span className="block text-muted-foreground">{t("weather.avgTemp")}</span>
 							<span className="font-medium text-foreground">
-								{(summary.avgTemperature > 100
-									? summary.avgTemperature - 273.15
-									: summary.avgTemperature
-								).toFixed(1)}{" "}
-								°C
+								{summary.avgTemperature.toFixed(1)} °C
 							</span>
 						</div>
 					)}
 					{summary.totalPrecipitation !== null && (
 						<div>
-							<span className="block text-muted-foreground">Precipitation</span>
+							<span className="block text-muted-foreground">{t("weather.precipitation")}</span>
 							<span className="font-medium text-foreground">
 								{summary.totalPrecipitation.toFixed(4)} kg/m²
 							</span>
@@ -467,7 +462,7 @@ function WeatherCard({
 					)}
 					{summary.avgCloudCover !== null && (
 						<div>
-							<span className="block text-muted-foreground">Cloud Cover</span>
+							<span className="block text-muted-foreground">{t("weather.cloudCover")}</span>
 							<span className="font-medium text-foreground">
 								{summary.avgCloudCover.toFixed(1)} %
 							</span>
@@ -538,6 +533,7 @@ function InsightCard({ insight }: { insight: ZoneInsight }) {
 }
 
 function InsightsSection({ insights }: { insights: ZoneInsight[] }) {
+	const { t } = useTranslation();
 	const sorted = useMemo(
 		() =>
 			[...insights].sort(
@@ -554,7 +550,7 @@ function InsightsSection({ insights }: { insights: ZoneInsight[] }) {
 				id="insights-label"
 				className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 			>
-				Insights
+				{t("analysis.insights")}
 			</h3>
 			<div className="flex flex-col gap-2">
 				{sorted.map((insight, idx) => (
@@ -581,6 +577,7 @@ function ComparisonDeltaRow({
 	targetAName: string;
 	targetBName: string;
 }) {
+	const { t } = useTranslation();
 	const label =
 		VARIABLE_LABELS[delta.variable_key] ?? delta.variable_key.toUpperCase();
 
@@ -604,14 +601,14 @@ function ComparisonDeltaRow({
 						</span>
 					</div>
 					<div>
-						<span className="block text-muted-foreground">Abs. Diff</span>
+						<span className="block text-muted-foreground">{t("analysis.absDiff")}</span>
 						<span className="font-medium text-foreground">
 							{delta.absolute_diff >= 0 ? "+" : ""}
 							{delta.absolute_diff.toFixed(4)}
 						</span>
 					</div>
 					<div>
-						<span className="block text-muted-foreground">Rel. Diff</span>
+						<span className="block text-muted-foreground">{t("analysis.relDiff")}</span>
 						<span className="font-medium text-foreground">
 							{delta.relative_diff_pct >= 0 ? "+" : ""}
 							{delta.relative_diff_pct.toFixed(1)}%
@@ -637,14 +634,15 @@ function ComparisonView({
 	targetBName: string;
 	missingData?: "target_a" | "target_b" | "both" | null;
 }) {
+	const { t } = useTranslation();
 	if (missingData) {
 		let message: string;
 		if (missingData === "both") {
-			message = `No data available for both "${targetAName}" and "${targetBName}". Comparison cannot be completed.`;
+			message = t("analysis.comparisonNoDataBoth", { a: targetAName, b: targetBName });
 		} else if (missingData === "target_a") {
-			message = `No data available for "${targetAName}". Comparison cannot be completed.`;
+			message = t("analysis.comparisonNoDataA", { a: targetAName });
 		} else {
-			message = `No data available for "${targetBName}". Comparison cannot be completed.`;
+			message = t("analysis.comparisonNoDataB", { b: targetBName });
 		}
 
 		return (
@@ -653,7 +651,7 @@ function ComparisonView({
 					id="comparison-label"
 					className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 				>
-					Comparison
+					{t("analysis.comparison")}
 				</h3>
 				<Card size="sm" className="border-amber-200 bg-amber-50">
 					<CardContent className="pt-3">
@@ -672,7 +670,7 @@ function ComparisonView({
 				id="comparison-label"
 				className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 			>
-				Comparison: {targetAName} vs {targetBName}
+				{t("analysis.comparisonVs", { a: targetAName, b: targetBName })}
 			</h3>
 			<div className="flex flex-col gap-2">
 				{comparisonResult.deltas.map((delta) => (
@@ -697,13 +695,14 @@ function DataSourceFooter({
 }: {
 	dataSource: DataSourceAttribution;
 }) {
+	const { t } = useTranslation();
 	return (
 		<footer className="mt-auto border-t border-border pt-3">
 			<p className="text-[10px] text-muted-foreground">
-				<span className="font-medium">Source:</span> {dataSource.satelliteName}
+				<span className="font-medium">{t("analysis.source")}:</span> {dataSource.satelliteName}
 			</p>
 			<p className="text-[10px] text-muted-foreground">
-				<span className="font-medium">Last observation:</span>{" "}
+				<span className="font-medium">{t("analysis.lastObservation")}:</span>{" "}
 				<time dateTime={dataSource.lastObservationDate}>
 					{dataSource.lastObservationDate}
 				</time>
@@ -716,7 +715,7 @@ function DataSourceFooter({
 // Main Component
 // -----------------------------------------------------------
 
-export default function AnalysisPanel({
+export default memo(function AnalysisPanel({
 	store,
 	environmentalData,
 	weatherData,
@@ -729,6 +728,7 @@ export default function AnalysisPanel({
 	dataSource,
 	variableDescriptions,
 }: AnalysisPanelProps) {
+	const { t } = useTranslation();
 	const zoneId = useStore(store, (s) => s.zoneId);
 	const comparisonMode = useStore(store, (s) => s.comparisonMode);
 
@@ -768,11 +768,11 @@ export default function AnalysisPanel({
 		return (
 			<aside
 				className="flex h-full flex-col items-center justify-center border-l border-border bg-card p-4"
-				aria-label="Analysis Panel"
+				aria-label={t("analysis.title")}
 			>
 				<div className="text-center">
 					<p className="text-sm text-muted-foreground">
-						Select a zone to view analysis
+						{t("analysis.selectZone")}
 					</p>
 				</div>
 			</aside>
@@ -786,7 +786,7 @@ export default function AnalysisPanel({
 		return (
 			<aside
 				className="flex h-full flex-col border-l border-border bg-card p-4"
-				aria-label="Analysis Panel"
+				aria-label={t("analysis.title")}
 			>
 				{zoneInfo && (
 					<div className="mb-4">
@@ -803,8 +803,7 @@ export default function AnalysisPanel({
 						className="text-center text-sm text-muted-foreground"
 						role="status"
 					>
-						No data available for the selected zone and time range. Try
-						expanding the time range.
+						{t("analysis.noData")}
 					</p>
 				</div>
 			</aside>
@@ -819,7 +818,7 @@ export default function AnalysisPanel({
 	return (
 		<aside
 			className="flex h-full flex-col border-l pr-4 border-border bg-card"
-			aria-label="Analysis Panel"
+			aria-label={t("analysis.title")}
 		>
 			<ScrollArea className="h-full">
 				<div className="flex flex-col gap-4 p-4">
@@ -838,7 +837,7 @@ export default function AnalysisPanel({
 					{/* Single-point notice */}
 					{dataPointCount === 1 && (
 						<p className="text-xs text-muted-foreground" role="status">
-							Only 1 data point available — trend cannot be computed.
+							{t("analysis.singlePoint")}
 						</p>
 					)}
 
@@ -849,7 +848,7 @@ export default function AnalysisPanel({
 								id="weather-label"
 								className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 							>
-								Weather
+								{t("analysis.weather")}
 							</h3>
 							<WeatherCard
 								summary={weatherSummary}
@@ -866,7 +865,7 @@ export default function AnalysisPanel({
 								id="env-metrics-label"
 								className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 							>
-								Environmental Indices
+								{t("analysis.environmental")}
 							</h3>
 							<div className="flex flex-col gap-2">
 								{metrics.map((metric) => (
@@ -903,13 +902,12 @@ export default function AnalysisPanel({
 								id="comparison-missing-label"
 								className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
 							>
-								Comparison
+								{t("analysis.comparison")}
 							</h3>
 							<Card size="sm" className="border-amber-200 bg-amber-50">
 								<CardContent className="pt-3">
 									<p className="text-xs text-amber-800" role="status">
-										Comparison cannot be completed due to missing data for one
-										or both targets.
+										{t("analysis.comparisonMissing")}
 									</p>
 								</CardContent>
 							</Card>
@@ -927,4 +925,4 @@ export default function AnalysisPanel({
 			</ScrollArea>
 		</aside>
 	);
-}
+});

@@ -14,6 +14,7 @@ import {
 	ChevronRight,
 } from "lucide-react";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 
 import { useEnvironmentalData } from "#/hooks/useEnvironmentalData";
 import { useWeatherData } from "#/hooks/useWeatherData";
@@ -56,20 +57,21 @@ const ENV_LABELS: Record<EnvKey, { label: string; description: string }> = {
 };
 
 function toTempC(raw: number) {
-	return raw > 100 ? raw - 273.15 : raw;
+	return raw;
 }
 
-function ndviHealthLabel(v: number): { label: string; color: string } {
+function ndviHealthLabel(v: number): { label: string; color: string; key: string } {
 	if (v >= 0.6)
 		return {
 			label: "Healthy",
+			key: "healthy",
 			color: "text-emerald-600 dark:text-emerald-400",
 		};
 	if (v >= 0.4)
-		return { label: "Moderate", color: "text-lime-600 dark:text-lime-400" };
+		return { label: "Moderate", key: "moderate", color: "text-lime-600 dark:text-lime-400" };
 	if (v >= 0.2)
-		return { label: "Sparse", color: "text-amber-600 dark:text-amber-400" };
-	return { label: "Stressed", color: "text-red-600 dark:text-red-400" };
+		return { label: "Sparse", key: "sparse", color: "text-amber-600 dark:text-amber-400" };
+	return { label: "Stressed", key: "stressed", color: "text-red-600 dark:text-red-400" };
 }
 
 function trendIcon(dir: TrendDirection) {
@@ -239,6 +241,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 	zones: ApiZone[];
 	levels: ApiLevel[];
 }) {
+	const { t } = useTranslation();
 	// Expand state — persisted in the controls store across zone changes
 	const hudSections = useControls((s) => s.hudSections);
 	const toggleHudSection = useControls((s) => s.toggleHudSection);
@@ -354,7 +357,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 									)}
 								>
 									<Leaf className="h-3 w-3" />
-									{ndviHealth.label}
+									{t(`zoneHud.health.${ndviHealth.key}`)}
 								</span>
 							)}
 							{envLoading && <Skeleton className="h-3 w-16" />}
@@ -370,7 +373,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 							{envPoint && (
 								<>
 									<SectionToggle
-										label={`Vegetation${snapshotDate ? ` · ${snapshotDate}` : ""}`}
+										label={`${t("zoneHud.vegetation")}${snapshotDate ? ` · ${snapshotDate}` : ""}`}
 										open={hudSections.vegetation}
 										onToggle={() => toggleHudSection("vegetation")}
 									/>
@@ -386,7 +389,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 								<>
 									<Separator />
 									<SectionToggle
-										label="Analysis"
+										label={t("zoneHud.analysis")}
 										open={hudSections.analysis}
 										onToggle={() => toggleHudSection("analysis")}
 										badge={
@@ -441,7 +444,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 								<>
 									<Separator />
 									<SectionToggle
-										label="Weather"
+										label={t("zoneHud.weather")}
 										open={hudSections.weather}
 										onToggle={() => toggleHudSection("weather")}
 										badge={
@@ -453,23 +456,23 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 									{hudSections.weather && (
 										<div className="pb-1">
 											<StatRow
-												label="Temperature"
+												label={t("weather.temperature")}
 												value={`${toTempC(wxPoint.temperature).toFixed(1)} °C`}
 												sub={dayjs(wxPoint.timestamp).format("D MMM")}
 											/>
 											<StatRow
-												label="Precipitation"
+												label={t("weather.precipitation")}
 												value={`${(wxPoint.precipitation * 1000).toFixed(2)} mm`}
 											/>
 											<StatRow
-												label="Cloud cover"
+												label={t("weather.cloudCover")}
 												value={`${Number(wxPoint.cloud_cover_pct).toFixed(1)}%`}
 											/>
 											{wxPoint.is_raining && (
 												<div className="mx-3 mb-2 mt-0.5 flex items-center gap-2 rounded-lg bg-blue-50/80 px-2.5 py-1.5 dark:bg-blue-900/20">
 													<Droplets className="h-3.5 w-3.5 text-blue-500" />
 													<span className="text-[11px] text-blue-700 dark:text-blue-300">
-														Currently raining
+														{t("weather.raining")}
 													</span>
 												</div>
 											)}
@@ -482,7 +485,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 								<>
 									<Separator />
 									<SectionToggle
-										label="Insights"
+										label={t("zoneHud.insights")}
 										open={hudSections.insights}
 										onToggle={() => toggleHudSection("insights")}
 										badge={
@@ -507,8 +510,8 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 										}
 									/>
 									{hudSections.insights && (
-										<div className="px-3 pb-3 pt-0.5 space-y-1.5">
-											{insights.slice(0, 4).map((insight, i) => (
+										<div className="px-3 pb-3 pt-0.5 space-y-1.5 max-h-48 overflow-y-auto">
+											{insights.map((insight, i) => (
 												<div
 													key={i}
 													className={cn(
@@ -519,9 +522,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 													<div className="flex items-start gap-1.5">
 														{severityIcon(insight.severity)}
 														<div className="min-w-0">
-															<p className="font-medium leading-tight">
-																{insight.title}
-															</p>
+															<p className="font-medium leading-tight">{insight.title}</p>
 															<p className="mt-0.5 text-[10px] opacity-80 leading-snug">
 																{insight.description}
 															</p>
@@ -538,7 +539,7 @@ const ZoneHUDContent = memo(function ZoneHUDContent({
 								<div className="px-3 py-6 text-center">
 									<BarChart2 className="mx-auto mb-2 h-8 w-8 text-muted-foreground/30" />
 									<p className="text-xs text-muted-foreground">
-										No data for this zone yet
+										{t("zoneHud.noData")}
 									</p>
 								</div>
 							)}

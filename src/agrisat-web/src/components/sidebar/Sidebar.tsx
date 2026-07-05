@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Leaf } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "#/lib/utils";
 import { navigationConfig } from "#/config/navigation";
 import type { NavItem, NavSection } from "#/types/sidebar";
@@ -113,12 +114,14 @@ interface SidebarNavItemProps {
 }
 
 function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
+	const { t } = useTranslation();
 	const Icon = item.icon;
+	const displayLabel = item.labelKey ? t(item.labelKey) : (item.label ?? "");
 
 	// Determine tooltip content and delay
 	const tooltipContent = item.disabled
-		? item.tooltip || `${item.label} is unavailable`
-		: item.label;
+		? item.tooltip || `${displayLabel} is unavailable`
+		: displayLabel;
 	const tooltipDelay = item.disabled ? 0 : 300;
 
 	// Show tooltip when collapsed (always) or when disabled (always)
@@ -137,7 +140,7 @@ function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
 			<span className="relative flex h-8 w-8 shrink-0 items-center justify-center">
 				<Icon className="h-5 w-5" />
 			</span>
-			{!collapsed && <span className="truncate">{item.label}</span>}
+			{!collapsed && <span className="truncate">{displayLabel}</span>}
 		</div>
 	) : (
 		<Link
@@ -175,7 +178,7 @@ function SidebarNavItem({ item, collapsed }: SidebarNavItemProps) {
 					</span>
 
 					{/* Label (expanded only) */}
-					{!collapsed && <span className="truncate">{item.label}</span>}
+					{!collapsed && <span className="truncate">{displayLabel}</span>}
 
 					{/* Badge count text (expanded only) */}
 					{!collapsed && item.badge != null && item.badge > 0 && (

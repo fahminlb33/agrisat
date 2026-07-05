@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { Info } from "lucide-react";
 
@@ -91,7 +91,7 @@ const CATEGORY_LABELS: Record<Variable["category"], string> = {
 // Component
 // -----------------------------------------------------------
 
-export default function ControlsPanel({
+export default memo(function ControlsPanel({
 	levels,
 	zones,
 	variables,
@@ -370,4 +370,4 @@ export default function ControlsPanel({
 			</ScrollArea>
 		</aside>
 	);
-}
+});

@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import MapLibreGL from "maplibre-gl";
 import type { FeatureCollection, Geometry } from "geojson";
 import dayjs from "dayjs";
@@ -43,17 +44,39 @@ async function fetchPolygons(levelId: number): Promise<FeatureCollection> {
 		.json<FeatureCollection>();
 }
 
-async function fetchRasterBlob(
-	variableId: number,
-	ts: string,
-): Promise<string | null> {
+// Cache blob URLs so they survive React re-renders and aren't revoked prematurely.
+// Each unique variable+date combo gets one blob URL that persists until explicitly evicted.
+const blobCache = new Map<string, string>();
+const BLOB_CACHE_MAX = 20;
+
+function blobCacheKey(variableId: number, ts: string) {
+	return `${variableId}__${ts}`;
+}
+
+function evictOldestBlobs() {
+	while (blobCache.size > BLOB_CACHE_MAX) {
+		const firstKey = blobCache.keys().next().value!;
+		const url = blobCache.get(firstKey)!;
+		URL.revokeObjectURL(url);
+		blobCache.delete(firstKey);
+	}
+}
+
+async function fetchRasterBlob(variableId: number, ts: string): Promise<string | null> {
+	const key = blobCacheKey(variableId, ts);
+	const cached = blobCache.get(key);
+	if (cached) return cached;
+
 	const response = await httpClient.get("layers/rasters", {
 		searchParams: { variable_id: variableId, ts },
 		throwHttpErrors: false,
 	});
 	if (!response.ok) return null;
 	const blob = await response.blob();
-	return URL.createObjectURL(blob);
+	const url = URL.createObjectURL(blob);
+	blobCache.set(key, url);
+	evictOldestBlobs();
+	return url;
 }
 
 function computeBounds(
@@ -170,6 +193,7 @@ function MapToolbar({
 	mode,
 	onModeChange,
 }: MapToolbarProps) {
+	const { t } = useTranslation();
 	const handleZoomIn = () => {
 		const map = mapRef.current;
 		if (!map) return;
@@ -207,26 +231,26 @@ function MapToolbar({
 
 	return (
 		<div className="absolute bottom-[4.5rem] md:bottom-[2.5rem] right-4 z-20 flex flex-col overflow-hidden rounded-xl border border-zinc-200/80 bg-white/95 shadow-lg backdrop-blur-md dark:border-zinc-700/60 dark:bg-zinc-900/95">
-			<ToolbarBtn onClick={handleZoomIn} title="Zoom in">
+			<ToolbarBtn onClick={handleZoomIn} title={t("map.zoomIn")}>
 				<Plus className="h-4 w-4" />
 			</ToolbarBtn>
-			<ToolbarBtn onClick={handleZoomOut} title="Zoom out">
+			<ToolbarBtn onClick={handleZoomOut} title={t("map.zoomOut")}>
 				<Minus className="h-4 w-4" />
 			</ToolbarBtn>
 
 			<ToolbarDivider />
 
-			<ToolbarBtn onClick={handleResetNorth} title="Reset north">
+			<ToolbarBtn onClick={handleResetNorth} title={t("map.resetNorth")}>
 				<Compass className="h-4 w-4" />
 			</ToolbarBtn>
 
 			<ToolbarDivider />
 
-			<ToolbarBtn onClick={handleHome} title="Home — Bogor overview">
+			<ToolbarBtn onClick={handleHome} title={t("map.home")}>
 				<Home className="h-4 w-4" />
 			</ToolbarBtn>
 
-			<ToolbarBtn onClick={handlePanToZone} title="Pan to selected zone">
+			<ToolbarBtn onClick={handlePanToZone} title={t("map.panToZone")}>
 				<Crosshair className="h-4 w-4" />
 			</ToolbarBtn>
 
@@ -236,8 +260,8 @@ function MapToolbar({
 				active={mode === "box-zoom"}
 				title={
 					mode === "box-zoom"
-						? "Exit box zoom (Esc)"
-						: "Box zoom — drag a rectangle to zoom"
+						? t("map.exitBoxZoom")
+						: t("map.boxZoom")
 				}
 			>
 				<RectangleHorizontal className="h-4 w-4" />
@@ -408,7 +432,6 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 	const layersAddedRef = useRef(false);
 	const rasterLayerAddedRef = useRef(false);
 	const eventsRegisteredRef = useRef(false);
-	const prevRasterUrlRef = useRef<string | null>(null);
 	const displayedRasterUrlRef = useRef<string | null>(null);
 
 	const zonesRef = useRef(zones);
@@ -447,6 +470,8 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 		placeholderData: keepPreviousData,
 	});
 
+	// Blob URL lifecycle is managed by the module-level blobCache.
+	// No eager revokeObjectURL here — URLs stay valid while the map uses them.
 	rasterImageUrlRef.current = rasterImageUrl;
 
 	if (geojson) {
@@ -478,17 +503,7 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 	}
 
 	// Blob URL cleanup
-	useEffect(() => {
-		const prevUrl = prevRasterUrlRef.current;
-		if (prevUrl && prevUrl !== rasterImageUrl) URL.revokeObjectURL(prevUrl);
-		prevRasterUrlRef.current = rasterImageUrl ?? null;
-		return () => {
-			if (prevRasterUrlRef.current) {
-				URL.revokeObjectURL(prevRasterUrlRef.current);
-				prevRasterUrlRef.current = null;
-			}
-		};
-	}, [rasterImageUrl]);
+	// No-op: lifecycle managed by module-level blobCache with LRU eviction.
 
 	const syncZoneLayers = useCallback(() => {
 		const map = mapRef.current;
@@ -572,8 +587,7 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 		const currentUrl = rasterImageUrlRef.current ?? null;
 		const bounds = rasterBoundsRef.current;
 
-		if (currentUrl === displayedRasterUrlRef.current) return;
-
+		// Always remove old raster layer first to avoid stale state
 		if (rasterLayerAddedRef.current) {
 			if (map.getLayer("raster-overlay")) map.removeLayer("raster-overlay");
 			if (map.getSource("raster-overlay")) map.removeSource("raster-overlay");
@@ -696,7 +710,7 @@ export const MapOverlay = memo(function MapOverlay({ zones }: MapOverlayProps) {
 	useEffect(() => {
 		displayedRasterUrlRef.current = null;
 		applyRasterLayer();
-	}, [rasterImageUrl, applyRasterLayer]);
+	}, [rasterImageUrl, dateStr, activeVariableId, applyRasterLayer]);
 
 	useEffect(() => {
 		applyRasterLayer();

@@ -19,3 +19,4 @@ wheels/
 
 # Draw.io files
 *.drawio.*
+src/agrisat-web/tsconfig.tsbuildinfo

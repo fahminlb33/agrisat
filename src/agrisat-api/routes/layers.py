@@ -1,7 +1,6 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from sqlite3 import Connection
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel
 from fastapi import APIRouter, Response, HTTPException, Depends, Query

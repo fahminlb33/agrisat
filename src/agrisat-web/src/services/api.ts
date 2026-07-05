@@ -16,6 +16,8 @@ import type {
 	ComparisonResult,
 } from "#/types/api";
 
+import { env } from "#/lib/env";
+
 // -----------------------------------------------------------
 // HTTP Client
 // -----------------------------------------------------------
@@ -28,7 +30,7 @@ import type {
  * Requirements: 10.3 (retry with exponential backoff)
  */
 export const httpClient = ky.create({
-	prefix: import.meta.env.VITE_API_HOST,
+	prefix: env.VITE_API_HOST,
 	retry: {
 		limit: 3,
 		delay: (attemptCount) => {
@@ -41,8 +43,8 @@ export const httpClient = ky.create({
 	hooks: {
 		beforeRequest: [
 			({ request }) => {
-				const username = import.meta.env.VITE_API_USERNAME;
-				const password = import.meta.env.VITE_API_PASSWORD;
+				const username = env.VITE_API_USERNAME;
+				const password = env.VITE_API_PASSWORD;
 				const credential = btoa(`${username}:${password}`);
 				request.headers.set("Authorization", `Basic ${credential}`);
 			},
@@ -111,7 +113,7 @@ export async function listVariables(): Promise<Variable[]> {
 }
 
 export function getPolygonUrl({ levelId }: { levelId: number }): string {
-	return `${import.meta.env.VITE_API_HOST}/layers/polygons?level_id=${levelId}`;
+	return `${env.VITE_API_HOST}/layers/polygons?level_id=${levelId}`;
 }
 
 export function getRasterUrl({
@@ -122,7 +124,7 @@ export function getRasterUrl({
 	ts: Date;
 }): string {
 	const tsFormat = dayjs(ts).format("YYYY-MM-DD");
-	return `${import.meta.env.VITE_API_HOST}/layers/rasters?variable_id=${variableId}&ts=${tsFormat}`;
+	return `${env.VITE_API_HOST}/layers/rasters?variable_id=${variableId}&ts=${tsFormat}`;
 }
 
 // -----------------------------------------------------------
@@ -135,10 +137,10 @@ export const ZoneGeoJsonSchema = z.object({
 });
 
 export async function getZoneGeoJson(params: {
-	zoneId: number;
+	levelId: number;
 }): Promise<z.infer<typeof ZoneGeoJsonSchema>> {
 	const res = await httpClient
-		.get(`layers/zones/${params.zoneId}/geojson`)
+		.get("layers/polygons", { searchParams: { level_id: params.levelId } })
 		.json();
 	return ZoneGeoJsonSchema.parse(res);
 }
