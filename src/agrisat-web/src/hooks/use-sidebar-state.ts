@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 const STORAGE_KEY = "sidebar-collapsed";
 
 function readCollapsedState(): boolean {
+	if (typeof window === "undefined") return true;
 	try {
 		const stored = localStorage.getItem(STORAGE_KEY);
 		if (stored === "true") return true;
@@ -16,6 +17,7 @@ function readCollapsedState(): boolean {
 }
 
 function persistCollapsedState(collapsed: boolean): void {
+	if (typeof window === "undefined") return;
 	try {
 		localStorage.setItem(STORAGE_KEY, String(collapsed));
 	} catch {

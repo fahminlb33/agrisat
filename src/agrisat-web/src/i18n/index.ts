@@ -26,14 +26,21 @@ export const AVAILABLE_LOCALES: { code: Locale; label: string }[] = [
   { code: "en", label: "English" },
 ];
 
-const savedLocale = (localStorage.getItem("agrisat-locale") ?? "id") as Locale;
+function getSavedLocale(): Locale {
+  if (typeof window === "undefined") return "id";
+  try {
+    return (localStorage.getItem("agrisat-locale") ?? "id") as Locale;
+  } catch {
+    return "id";
+  }
+}
 
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
     id: { translation: id },
   },
-  lng: savedLocale,
+  lng: getSavedLocale(),
   fallbackLng: "en",
   interpolation: {
     escapeValue: false, // React already escapes
@@ -42,7 +49,12 @@ i18n.use(initReactI18next).init({
 
 // Persist language changes to localStorage
 i18n.on("languageChanged", (lng) => {
-  localStorage.setItem("agrisat-locale", lng);
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem("agrisat-locale", lng);
+  } catch {
+    // localStorage unavailable
+  }
 });
 
 export default i18n;
