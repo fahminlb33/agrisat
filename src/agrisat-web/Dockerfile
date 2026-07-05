@@ -27,12 +27,9 @@ RUN pnpm run build
 FROM base AS runner
 
 COPY --from=build /app/.output /app/dist
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-
-RUN chmod +x /app/docker-entrypoint.sh
 
 USER node
 
 EXPOSE 3000
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["node", "/app/dist/server/index.mjs"]
