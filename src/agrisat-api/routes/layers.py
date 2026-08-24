@@ -14,7 +14,6 @@ from ..repository.layers import (
     get_raster,
 )
 
-router = APIRouter(prefix="/api/layers", tags=["Layers"])
 
 # ------------------------------------------------------
 # Schemas
@@ -33,6 +32,8 @@ class GetLayerRequest(BaseModel):
 # ------------------------------------------------------
 # API Endpoints
 # ------------------------------------------------------
+
+router = APIRouter(prefix="/api/layers", tags=["Layers"])
 
 
 @router.get("/levels", dependencies=[Depends(get_current_user)])

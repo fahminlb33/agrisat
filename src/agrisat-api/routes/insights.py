@@ -18,9 +18,6 @@ from ..insights import (
     ComparisonDelta,
 )
 
-router = APIRouter(
-    prefix="/api/insights", tags=["Insights"], dependencies=[Depends(get_current_user)]
-)
 
 # ------------------------------------------------------
 # Schemas
@@ -130,6 +127,10 @@ def _compute_zone_analysis(
 # ------------------------------------------------------
 # API Endpoints
 # ------------------------------------------------------
+
+router = APIRouter(
+    prefix="/api/insights", tags=["Insights"], dependencies=[Depends(get_current_user)]
+)
 
 
 @router.get("/analysis/{zone_id}")

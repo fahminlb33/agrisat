@@ -11,10 +11,6 @@ from ..repository.weather import (
     get_time_series,
 )
 
-router = APIRouter(
-    prefix="/api/weather", tags=["Weather"], dependencies=[Depends(get_current_user)]
-)
-
 # ------------------------------------------------------
 # Schemas
 # ------------------------------------------------------
@@ -37,6 +33,11 @@ class TimeSeriesQuery(BaseModel):
 # ------------------------------------------------------
 # API Endpoints
 # ------------------------------------------------------
+
+
+router = APIRouter(
+    prefix="/api/weather", tags=["Weather"], dependencies=[Depends(get_current_user)]
+)
 
 
 @router.get("/indices")
