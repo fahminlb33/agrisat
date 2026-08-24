@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
+from .routes.chatbot import router as chatbot_router
 from .routes.layers import router as layers_router
 from .routes.weather import router as weather_router
 from .routes.satellite import router as satellite_router
@@ -53,6 +54,7 @@ class CORSEverythingMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(CORSEverythingMiddleware)
 
+app.include_router(chatbot_router)
 app.include_router(layers_router)
 app.include_router(weather_router)
 app.include_router(satellite_router)
