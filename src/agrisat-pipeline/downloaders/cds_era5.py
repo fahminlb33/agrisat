@@ -23,6 +23,7 @@ from prefect.artifacts import create_progress_artifact, update_progress_artifact
 # Tasks
 # ------------------------------------------------
 
+
 @task
 def download():
     days_in_month = calendar.monthrange(year, month)[1]
@@ -55,6 +56,7 @@ def download():
     }
 
     client.retrieve(dataset, request, download_path)
+
 
 @task
 def preprocess(download_path: str, extract_path: str):
@@ -89,9 +91,11 @@ def preprocess(download_path: str, extract_path: str):
     # delete extracted
     shutil.rmtree(extracted_path, True)
 
+
 # ------------------------------------------------
 # Flow
 # ------------------------------------------------
+
 
 @flow
 def download_era5_data(download_root: str, time_range: str, bbox_str: str):
@@ -112,6 +116,7 @@ def download_era5_data(download_root: str, time_range: str, bbox_str: str):
         download(year, month, download_path)
 
     preprocess(download_path, extract_path)
+
 
 # ------------------------------------------------
 # Entry Point

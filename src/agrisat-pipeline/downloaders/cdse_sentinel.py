@@ -47,6 +47,7 @@ CDSE_SENTINEL_2_BANDS = [
 # Functions
 # ------------------------------------------------
 
+
 class S3Progress:
     def __init__(self, total_size: float):
         self.total_size = max(float(total_size), -1)
@@ -62,6 +63,7 @@ class S3Progress:
             artifact_id=self.progress_artifact_id,
             progress=self.total_transferred / self.total_size * 100,
         )
+
 
 @task(tags=["sentinel-2"])
 def download_s3(url: str, root_path: Path, save_path: str):
@@ -132,7 +134,7 @@ def download_http(url: str, root_path: Path, save_path: str):
                     artifact_id=progress_artifact_id,
                     progress=bytes_transferred / total_size * 100,
                 )
-        
+
     logger.info("File downloaded from HTTP")
 
 
@@ -203,9 +205,7 @@ def download(catalogue_item: CatalogueItem, root_path: Path) -> str:
 
 
 @flow
-def download_sentinel_data(
-    download_root: str, time_range: str, bbox_str: str
-):
+def download_sentinel_data(download_root: str, time_range: str, bbox_str: str):
     logger = get_run_logger()
     root_path = Path(download_root) / "sentinel-2"
 
@@ -217,7 +217,7 @@ def download_sentinel_data(
 
         tasks = [download.submit(x, root_path) for x in item[1]]
         logger.info(f"Queued {len(tasks)} tasks")
-        
+
         wait(tasks)
 
         logger.info("Catalogue downloaded")

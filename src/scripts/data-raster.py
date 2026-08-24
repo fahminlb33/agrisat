@@ -138,7 +138,7 @@ def load_data(db: sqlite3.Connection, var_path: Path, replace: bool):
         """,
         data,
     )
-    
+
     db.commit()
 
 

@@ -46,7 +46,7 @@ def download(time_step: int, time_range: list[int], download_path: str):
         param=["2t", "tp", "tcc", "ptype"],
         target=download_path,
     )
-    
+
     logger.info("Finished download from ECMWF")
 
 
