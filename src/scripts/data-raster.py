@@ -32,28 +32,9 @@ def parse_timestamp(s: str):
     return f"{ts.group(1)}-{ts.group(2)}-{ts.group(3)} {ts.group(4)}:{ts.group(5)}:{ts.group(6)}"
 
 
-def get_color_ramp(var_name: str):
-    return "/mnt/data/workspace/bogor-agrisat/data/color-palette/spectral.txt"
-
-
-def extract_raster_data(path: str, color_ramp_path: str) -> bytes:
-    result = subprocess.run([
-        "gdal", "raster", "pipeline",
-        # read input raster
-        "read", path, "!",
-        # reproject to WGS84 (4326)
-        "reproject", "--dst-crs=EPSG:4326", "!",
-        # render color map
-        "color-map", "--band", "1", "--color-map", color_ramp_path, "--add-alpha", "!",
-        # write to stdout
-        "write", "--of", "WEBP", "--overwrite", "/vsistdout/"
-    ], capture_output=True)  # fmt: skip
-
-    if result.returncode != 0 and len(result.stdout) == 0:
-        print(result.stderr)
-        return None
-
-    return result.stdout
+def extract_raster_data(path: str) -> bytes:
+    with open(path, "rb") as f:
+        return f.read()
 
 
 # ------------------------------------------------------
@@ -61,10 +42,10 @@ def extract_raster_data(path: str, color_ramp_path: str) -> bytes:
 # ------------------------------------------------------
 
 
-def single_process(raster_path: Path, color_ramp_path: str) -> RenderResult:
+def single_process(raster_path: Path) -> RenderResult:
     file_name = parse_filename(raster_path)
     timestamp = parse_timestamp(raster_path.name)
-    raster_data = extract_raster_data(raster_path, color_ramp_path)
+    raster_data = extract_raster_data(raster_path)
 
     if raster_data is None:
         return {
@@ -98,7 +79,6 @@ def load_data(db: sqlite3.Connection, var_path: Path, replace: bool):
     # run params
     var_name = var_path.name
     variable_id = variable_id_map[var_name]
-    color_ramp = get_color_ramp(var_name)
 
     # discover files
     files = [x for x in var_path.glob("*.tif") if parse_filename(x) not in loaded_files]
@@ -107,8 +87,7 @@ def load_data(db: sqlite3.Connection, var_path: Path, replace: bool):
     data = []
     with multiprocessing.Pool(processes=args["jobs"]) as pool:
         # spawn tasks
-        task_fun = partial(single_process, color_ramp_path=color_ramp)
-        tasks = pool.imap_unordered(task_fun, files)
+        tasks = pool.imap_unordered(single_process, files)
 
         # collect results
         for result in (pbar := tqdm(tasks, total=len(files))):
@@ -150,6 +129,12 @@ def load_data(db: sqlite3.Connection, var_path: Path, replace: bool):
 def main(args):
     root_dir = Path(args["data_dir"])
     con = sqlite3.connect(args["db"])
+
+    cursor = con.cursor()
+    s = cursor.execute(
+        "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%';"
+    )
+    print(s.fetchall())
 
     print("Discovering variables...")
     var_paths = list(root_dir.glob("*"))
